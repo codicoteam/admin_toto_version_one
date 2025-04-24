@@ -1,10 +1,11 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import logimage from "@/assets/login.jpg";
+import logo from "@/assets/logo2.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,77 +24,91 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center  from-toto-light-blue p-4">
-      <div className="w-full max-w-md">
+    //outer div
+    <div className="w-full h-screen flex bg-blue-100 ">
+      {/* box div */}
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 m-auto h-[700px] shadow-[0_4px_6px_rgba(255,255,255,0.3)] sm:max-w-[1300px]
+      bg-white rounded-xl"
+      >
+        {/* image container div left*/}
+        <div className="w-full h-[700px] hidden md:block">
+          <img
+            className="w-full h-full rounded-xl rounded-r-none"
+            src={logimage}
+          />
+        </div>
+        {/* image div end */}
 
-        <div className="flex items-center justify-center mb-6 bg-white/80 rounded-xl p-2 shadow-md backdrop-blur-sm">
-          <div className="">
+        <div className=" p-4 flex flex-col items-center justify-center w-full  bg-gradient-to-b from-white to-blue-200  rounded-xl rounded-l-none  ">
+          <div className="flex items-center justify-center mb-4">
+            <img src={logo} alt="Toto Academy Logo" className=" w-17 h-16" />
+            <p className="text-3xl font-semibold text-blue-950 text-center">
+              Welcome TO Toto Academy
+            </p>
+          </div>
 
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <img
-                  src="."
-                  alt="Toto Logo"
-                  className="h-12"
-                />
-              </div>
-              <h2 className="text-xl font-semibold mb-2">Sign in to continue your learning journey</h2>
-              <p className="text-muted-foreground">Welcome back! Please enter your details.</p>
+          <p className="text-xl mb-8 text-blue-950 font-bold text-center">
+            Sign up to get started
+          </p>
+
+          {/* Form now centered with mx-auto and wider inputs */}
+          <form className="w-full max-w-md flex flex-col p-6 mx-auto bg">
+            <div className="mb-4 w-full">
+              <label className="w-full block mb-2 text-m font-bold text-black">
+                Full Name
+              </label>
+              <input
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
+                type="text"
+                placeholder="Enter Full Name"
+              />
+
+              <label
+                htmlFor="phoneInput"
+                className="block mb-2 text-sm text-m font-bold text-black"
+              >
+                Phone Number
+              </label>
+              <input
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
+                type="text"
+                id="phoneInput"
+                placeholder="Enter Phone Number"
+              />
+
+              <label
+                htmlFor="emailInput"
+                className="block mb-2 text-sm text-m font-bold text-black"
+              >
+                Email
+              </label>
+              <input
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
+                type="text"
+                id="emailInput"
+                placeholder="Enter Email"
+              />
+
+              <label className="block mb-2 text-sm text-m font-bold text-black">
+                Level
+              </label>
+              <input
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
+                type="text"
+                id="levelInput"
+                placeholder="Enter Level"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4  py-20">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
+            <button className="font-sans font-semibold w-full p-2 my-4 bg-blue-400 hover:bg-blue-200 rounded-full">
+              SIGN UP
+            </button>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="pl-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <Button className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Sign up
-                </Link>
-              </p>
-            </form>
-          </div>
+            <p className="text-center text-sm font-semibold">
+              ALREADY HAVE AN ACCOUNT? SIGN IN
+            </p>
+          </form>
         </div>
       </div>
     </div>
