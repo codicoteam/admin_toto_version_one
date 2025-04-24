@@ -1,10 +1,10 @@
 
 import { NavLink } from "react-router-dom";
-import { 
-  Home, 
-  BookOpen, 
-  MessageSquare, 
-  Wallet, 
+import {
+  Home,
+  BookOpen,
+  MessageSquare,
+  Wallet,
   Settings,
   X
 } from "lucide-react";
@@ -29,14 +29,14 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     <>
       {/* Mobile sidebar backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/20 z-20 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside 
+      <aside
         className={cn(
           "fixed top-0 left-0 bottom-0 w-64 z-30 bg-white border-r border-border p-4 lg:static transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -53,7 +53,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         <nav className="space-y-1">
           {navItems.map((item) => (
             <NavLink
@@ -61,8 +61,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               to={item.path}
               className={({ isActive }) => cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all",
-                isActive 
-                  ? "bg-primary/10 text-primary" 
+                isActive
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               onClick={() => {
@@ -76,7 +76,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </NavLink>
           ))}
         </nav>
-        
+
         <div className="absolute bottom-4 left-4 right-4">
           <div className="bg-gradient-to-br from-toto-light-blue to-blue-50 p-4 rounded-xl">
             <h3 className="font-medium mb-1">Upgrade to Pro</h3>

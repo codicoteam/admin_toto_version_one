@@ -29,10 +29,10 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
-            {/* <Route path="/courses" element={<Courses />} />
+            <Route path="/courses" element={<Courses />} />
             <Route path="/lesson/:id" element={<Lesson />} />
             <Route path="/qa" element={<QA />} />
-            <Route path="/wallet" element={<Wallet />} /> */}
+            <Route path="/wallet" element={<Wallet />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
