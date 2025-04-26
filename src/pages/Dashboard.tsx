@@ -151,10 +151,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <SectionTitle
-          title="Continue Learning"
 
-      <SectionTitle
+        <SectionTitle
           title="Continue Learning"
           description="Pick up where you left off"
         />
