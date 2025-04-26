@@ -57,58 +57,33 @@ const Register = () => {
           </div>
 
           <p className="text-xl mb-8 text-blue-950 font-bold text-center">
-            Sign into your account
+            FORGOT YOUR PASSWORD?
+          </p>
+          <p className="text-lg mb-8 text-blue-950  text-center">
+            Select Which Contact Detail Should We Use To Reset Your Password
           </p>
 
           {/* Form now centered with mx-auto and wider inputs */}
           <form className="w-full max-w-md flex flex-col p-6 mx-auto bg">
-            <div className="mb-4 w-full">
-              <label className="w-full block mb-2 text-m font-bold text-black">
-                Phone Number
-              </label>
-              <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
-                type="text"
-                placeholder="Enter Phone number"
-              />
-
-              <label
-                htmlFor="password input"
-                className="block mb-2 text-sm text-m font-bold text-black"
-              >
-                Password
-              </label>
-              <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
-                type="text"
-                id="PasswordInput"
-                placeholder="Enter passsword"
-              />
-            </div>
-
             <Link
-              to="/Forgot_Password"
-              className="text-red-600 hover:underline text-right text-sm font-semibold"
+              to="/sms_password_reset"
+              className="font-sans mb-6 text-white font-semibold px-4 py-2 border bg-blue-900 rounded-lg hover:bg-blue-700 inline-block text-center"
             >
-              FORGOT PASSWORD?
+              VIA SMS
             </Link>
 
-            <button
-              className="font-sans font-bold text-white w-full p-2 my-4 bg-yellow-600 hover:bg-yellow-400 rounded-xl"
-              onClick={() => navigate("/")}
+            <Link
+              to="/email_password_reset"
+              className="font-sans  mb-6 text-white font-semibold px-4 py-2 border bg-blue-900 rounded-lg hover:bg-blue-700 inline-block text-center"
             >
-              LOGIN
-            </button>
-
-            <p className="text-center text-sm font-semibold">
-              DONT HAVE AN ACCOUNT?
-              <Link
-                to="/login"
-                className="text-yellow-600 hover:underline px-4"
-              >
-                SIGN UP
-              </Link>
-            </p>
+              VIA EMAIL
+            </Link>
+            <Link
+              to="/Register"
+              className="text-white  px-4 py-1 border bg-yellow-600 hover:bg-yellow-400 inline-block w-[70px] rounded-xl"
+            >
+              Back
+            </Link>
           </form>
         </div>
       </div>

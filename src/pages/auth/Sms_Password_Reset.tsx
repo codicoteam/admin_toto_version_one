@@ -50,65 +50,52 @@ const Register = () => {
 
         <div className=" p-4 flex flex-col items-center justify-center w-full  bg-gradient-to-b from-white to-blue-200  rounded-xl rounded-l-none  ">
           <div className="flex items-center justify-center mb-4">
-            <img src={logo} alt="Toto Academy Logo" className=" w-17 h-16" />
-            <p className="text-3xl font-semibold text-blue-950 text-center">
+            <img
+              src={logo}
+              alt="Toto Academy Logo"
+              className=" w-17 h-16 mb-6"
+            />
+            <p className="text-3xl font-semibold mb-6 text-blue-950 text-center">
               Welcome Back
             </p>
           </div>
 
           <p className="text-xl mb-8 text-blue-950 font-bold text-center">
-            Sign into your account
+            Enter New Credentials
           </p>
 
           {/* Form now centered with mx-auto and wider inputs */}
           <form className="w-full max-w-md flex flex-col p-6 mx-auto bg">
             <div className="mb-4 w-full">
               <label className="w-full block mb-2 text-m font-bold text-black">
-                Phone Number
+                New Password
               </label>
               <input
                 className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
                 type="text"
-                placeholder="Enter Phone number"
+                placeholder="Enter New Password......."
               />
 
-              <label
-                htmlFor="password input"
-                className="block mb-2 text-sm text-m font-bold text-black"
-              >
-                Password
+              <label className="w-full block mb-2 text-m font-bold text-black">
+                Confirm Password
               </label>
               <input
                 className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
                 type="text"
-                id="PasswordInput"
-                placeholder="Enter passsword"
+                placeholder="Confirm Password......"
               />
             </div>
 
-            <Link
-              to="/Forgot_Password"
-              className="text-red-600 hover:underline text-right text-sm font-semibold"
-            >
-              FORGOT PASSWORD?
-            </Link>
-
-            <button
-              className="font-sans font-bold text-white w-full p-2 my-4 bg-yellow-600 hover:bg-yellow-400 rounded-xl"
-              onClick={() => navigate("/")}
-            >
-              LOGIN
+            <button className="font-sans text-white font-semibold w-full p-2 my-4 bg-yellow-600 hover:bg-yellow-400 rounded-xl">
+              CONTINUE
             </button>
 
-            <p className="text-center text-sm font-semibold">
-              DONT HAVE AN ACCOUNT?
-              <Link
-                to="/login"
-                className="text-yellow-600 hover:underline px-4"
-              >
-                SIGN UP
-              </Link>
-            </p>
+            <Link
+              to="/forgot_password"
+              className="text-yellow-600 hover:underline text-right"
+            >
+              Back
+            </Link>
           </form>
         </div>
       </div>
