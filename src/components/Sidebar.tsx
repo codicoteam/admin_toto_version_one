@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -38,7 +37,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 z-30 bg-white border-r border-border p-4 lg:static transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 bottom-0 w-64 z-30 bg-white dark:bg-slate-950 h-screen border-r border-border p-4 lg:static transition-transform duration-300 ease-in-out overflow-y-auto",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -78,7 +77,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-gradient-to-br from-toto-light-blue to-blue-50 p-4 rounded-xl">
+          <div className="bg-primary-foreground p-4 rounded-xl">
             <h3 className="font-medium mb-1">Upgrade to Pro</h3>
             <p className="text-sm text-muted-foreground mb-3">Get unlimited access to all courses</p>
             <Button size="sm" className="w-full bg-primary">

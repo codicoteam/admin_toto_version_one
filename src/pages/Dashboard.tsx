@@ -38,7 +38,7 @@ const Dashboard = () => {
       progress: 30,
     },
   ];
-  
+
   // Mock upcoming lessons
   const upcomingLessons = [
     {
@@ -69,7 +69,7 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
         <div className="w-full md:w-2/3">
           <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-xl p-6">
+            <div className="bg-primary-foreground rounded-xl p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div>
                   <h1 className="text-3xl font-bold">Welcome back, Alex!</h1>
@@ -80,35 +80,35 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <StatCard 
-                title="Hours Learned" 
+              <StatCard
+                title="Hours Learned"
                 value="32"
                 icon={<Clock className="h-5 w-5" />}
                 trend={{ value: 12, positive: true }}
               />
-              <StatCard 
-                title="Courses Enrolled" 
+              <StatCard
+                title="Courses Enrolled"
                 value="5"
                 icon={<BookOpen className="h-5 w-5" />}
                 trend={{ value: 20, positive: true }}
               />
-              <StatCard 
-                title="Wallet Balance" 
+              <StatCard
+                title="Wallet Balance"
                 value="$125.00"
                 icon={<DollarSign className="h-5 w-5" />}
               />
-              <StatCard 
-                title="Certificates" 
+              <StatCard
+                title="Certificates"
                 value="3"
                 icon={<PieChart className="h-5 w-5" />}
               />
             </div>
           </div>
         </div>
-        
-        <div className="w-full md:w-1/3 bg-white rounded-xl p-6">
+
+        <div className="w-full md:w-1/3 bg-primary-foreground rounded-xl p-6">
           <h3 className="font-semibold text-lg mb-4">Upcoming Lessons</h3>
           <div className="space-y-3">
             {upcomingLessons.map((lesson) => (
@@ -130,17 +130,17 @@ const Dashboard = () => {
           <Button variant="outline" className="w-full mt-4">View All Scheduled Lessons</Button>
         </div>
       </div>
-      
-      <SectionTitle 
-        title="Continue Learning" 
+
+      <SectionTitle
+        title="Continue Learning"
         description="Pick up where you left off"
       />
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {enrolledCourses.map((course) => (
           <CourseCard key={course.id} {...course} />
         ))}
-        
+
         <Card className="flex flex-col justify-center items-center p-6 border-dashed">
           <CardContent className="text-center">
             <div className="rounded-full bg-muted p-4 mx-auto mb-4">
