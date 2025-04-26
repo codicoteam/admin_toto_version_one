@@ -16,6 +16,9 @@ import QA from "./pages/QA";
 import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
+import Forgot_password from "./pages/auth/Forgot_password";
+import Sms_Password_Reset from "./pages/auth/Sms_Password_Reset";
+import Email_Password_Reset from "./pages/auth/Email_Password_Reset";
 
 const queryClient = new QueryClient();
 
@@ -25,10 +28,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider> {/* Move AuthProvider inside BrowserRouter */}
+        <AuthProvider>
+          {" "}
+          {/* Move AuthProvider inside BrowserRouter */}
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot_password" element={<Forgot_password />} />
+            <Route
+              path="/sms_password_reset"
+              element={<Sms_Password_Reset />}
+            />
+            <Route
+              path="/email_password_reset"
+              element={<Email_Password_Reset />}
+            />
 
             {/* Protect routes using PrivateRoute */}
             <Route
