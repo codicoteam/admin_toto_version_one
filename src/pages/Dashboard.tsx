@@ -89,31 +89,27 @@ const Dashboard = () => {
 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <StatCard
-                title="Hours Learned"
+
               <StatCard
                 title="Hours Learned"
                 value="32"
                 icon={<Clock className="h-5 w-5" />}
                 trend={{ value: 12, positive: true }}
               />
-              <StatCard
-                title="Courses Enrolled"
+
               <StatCard
                 title="Courses Enrolled"
                 value="5"
                 icon={<BookOpen className="h-5 w-5" />}
                 trend={{ value: 20, positive: true }}
               />
-              <StatCard
-                title="Wallet Balance"
+
               <StatCard
                 title="Wallet Balance"
                 value="$125.00"
                 icon={<DollarSign className="h-5 w-5" />}
               />
-              <StatCard
-                title="Certificates"
+
               <StatCard
                 title="Certificates"
                 value="3"
@@ -186,17 +182,18 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-      );
+    </div>
+  );
 };
 
-      // Mock Clock component that should be imported from lucide-react
-      const Clock = ({className}: {className: string }) => {
+// Mock Clock component that should be imported from lucide-react
+const Clock = ({ className }: { className: string }) => {
   return <div className={className}></div>;
 };
 
-      // Mock Plus component that should be imported from lucide-react
-      const Plus = ({className}: {className: string }) => {
+// Mock Plus component that should be imported from lucide-react
+const Plus = ({ className }: { className: string }) => {
   return <div className={className}></div>;
 };
 
-      export default Dashboard;
+export default Dashboard;
