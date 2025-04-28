@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -29,7 +28,7 @@ const CourseCard = ({
   lessonsCount,
   duration,
   enrolled = false,
-  progress
+  progress,
 }: CourseCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-card transition-shadow duration-300 w-full">
@@ -50,7 +49,9 @@ const CourseCard = ({
             <AvatarImage src={instructor.avatar} />
             <AvatarFallback>{instructor.name[0]}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground">{instructor.name}</span>
+          <span className="text-sm text-muted-foreground">
+            {instructor.name}
+          </span>
         </div>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
@@ -62,7 +63,7 @@ const CourseCard = ({
             <span>{duration}</span>
           </div>
         </div>
-        
+
         {enrolled && progress !== undefined && (
           <div className="mt-3">
             <div className="flex justify-between text-xs mb-1">
@@ -70,8 +71,8 @@ const CourseCard = ({
               <span>{progress}%</span>
             </div>
             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full" 
+              <div
+                className="h-full bg-primary rounded-full"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -79,9 +80,11 @@ const CourseCard = ({
         )}
       </CardContent>
       <CardFooter className="pt-0">
-        <Button 
+        <Button
           variant={enrolled ? "outline" : "default"}
-          className={`w-full ${enrolled ? "" : "bg-primary hover:bg-primary/90"}`}
+          className={`w-full ${
+            enrolled ? "" : "bg-primary hover:bg-primary/90"
+          }`}
         >
           {enrolled ? "Continue Learning" : "Enroll Now"}
         </Button>

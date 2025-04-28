@@ -16,9 +16,10 @@ import QA from "./pages/QA";
 import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
-import Forgot_password from "./pages/auth/Forgot_password";
+import Forgot_password from "./pages/auth/Forgot_Password";
 import Sms_Password_Reset from "./pages/auth/Sms_Password_Reset";
 import Email_Password_Reset from "./pages/auth/Email_Password_Reset";
+import Admin_Dashboard from "./pages/Admin_Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               path="/email_password_reset"
               element={<Email_Password_Reset />}
             />
+            <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
 
             {/* Protect routes using PrivateRoute */}
             <Route

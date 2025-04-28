@@ -1,93 +1,50 @@
-
+import React from "react";
 import { NavLink } from "react-router-dom";
-import {
-  Home,
-  BookOpen,
-  MessageSquare,
-  Wallet,
-  Settings,
-  X
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo2.png";
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+const Sidebar = () => {
   const navItems = [
-    { icon: Home, label: "Dashboard", path: "/" },
-    { icon: BookOpen, label: "Courses", path: "/courses" },
-    { icon: MessageSquare, label: "Q&A Forum", path: "/qa" },
-    { icon: Wallet, label: "Wallet", path: "/wallet" },
-    { icon: Settings, label: "Settings", path: "/settings" },
+    { label: "DASHBOARD", path: "/" },
+    { label: "COURSES", path: "/courses" },
+    { label: "STUDENTS", path: "/students" },
+    { label: "CHAT", path: "/chat" },
+    { label: "LIBRARY", path: "/library" },
+    { label: "PAYMENTS", path: "/payments" },
+    { label: "ANALYTICS", path: "/analytics" },
+    { label: "SETTINGS", path: "/settings" },
   ];
 
   return (
-    <>
-      {/* Mobile sidebar backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-20 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 z-30 bg-white border-r border-border p-4 lg:static transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white font-bold">T</span>
-            </div>
-            <h1 className="font-bold text-xl text-primary">Toto Academy</h1>
+    <aside className="w-48 bg-white min-h-screen flex flex-col shadow-md">
+      {/* Logo Section */}
+      <div className="flex justify-center py-6">
+        <div className="relative">
+          <div className=" w-16 h-16 flex items-center justify-center overflow-hidden">
+            <img src={logo} className="w-25 h-25 " />
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden">
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
 
-        <nav className="space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all",
+          {/* <div className="text-center mt-1 font-semibold">Toto Academy </div> */}
+        </div>
+      </div>
+      {/* Navigation Links */}
+      <nav className="flex-1 px-3 py-4">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `block py-3 px-4 mb-2 rounded-md font-medium text-sm transition-colors ${
                 isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-              onClick={() => {
-                if (window.innerWidth < 1024) {
-                  onClose();
-                }
-              }}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-gradient-to-br from-toto-light-blue to-blue-50 p-4 rounded-xl">
-            <h3 className="font-medium mb-1">Upgrade to Pro</h3>
-            <p className="text-sm text-muted-foreground mb-3">Get unlimited access to all courses</p>
-            <Button size="sm" className="w-full bg-primary">
-              Upgrade Now
-            </Button>
-          </div>
-        </div>
-      </aside>
-    </>
+                  ? "bg-blue-900 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`
+            }
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+    </aside>
   );
 };
 
