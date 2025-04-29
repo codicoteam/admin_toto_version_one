@@ -10,7 +10,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Pages
 import Login from "./pages/auth/user/Register";
 import Register from "./pages/auth/user/Login";
-import Dashboard from "./pages/Dashboard";
+// import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import Lesson from "./pages/Lesson";
 import QA from "./pages/QA";
@@ -23,6 +23,7 @@ import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
 import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
 import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
+import AdminCourses from "./pages/Admin_Pages/Courses";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,8 @@ const App = () => (
               element={<Email_Password_Reset />}
             />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
+            {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+            <Route path="/courses" element={<AdminCourses />} />
 
             {/* Protect routes using PrivateRoute */}
             <Route
@@ -59,8 +62,8 @@ const App = () => (
                 </PrivateRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/courses" element={<Courses />} />
+              <Route path="/" element={<Admin_Dashboard />} />
+              <Route path="/user_courses" element={<Courses />} />
               <Route path="/lesson/:id" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />
               <Route path="/wallet" element={<Wallet />} />

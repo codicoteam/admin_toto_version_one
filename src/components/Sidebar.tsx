@@ -4,7 +4,7 @@ import logo from "@/assets/logo2.png";
 
 const Sidebar = () => {
   const navItems = [
-    { label: "DASHBOARD", path: "/" },
+    { label: "DASHBOARD", path: "/admin_dashboard" },
     { label: "COURSES", path: "/courses" },
     { label: "STUDENTS", path: "/students" },
     { label: "CHAT", path: "/chat" },
@@ -19,8 +19,8 @@ const Sidebar = () => {
       {/* Logo Section */}
       <div className="flex justify-center py-6">
         <div className="relative">
-          <div className=" w-16 h-16 flex items-center justify-center overflow-hidden">
-            <img src={logo} className="w-25 h-25 " />
+          <div className=" w-17 h-17 flex items-center justify-center overflow-hidden">
+            <img src={logo} className="w-26 h-26 " />
           </div>
 
           {/* <div className="text-center mt-1 font-semibold">Toto Academy </div> */}

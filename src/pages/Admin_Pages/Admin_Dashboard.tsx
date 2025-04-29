@@ -1,205 +1,232 @@
-import { useState } from "react";
-import {
-  Search,
-  Bell,
-  ChevronRight,
-  BarChart2,
-  CreditCard,
-  Book,
-  MessageSquare,
-  Users,
-  Settings,
-  Home,
-} from "lucide-react";
+import { BookOpen, Calendar, DollarSign, PieChart, Clock } from "lucide-react";
+import StatCard from "@/components/StatCard";
+import SectionTitle from "@/components/SectionTitle";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Sidebar from "@/components/Sidebar"; // Import the Sidebar component
 
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("DASHBOARD");
-
-  // Sample data - in a real application, you would fetch this from your backend
-  const stats = {
-    students: 100,
-    courses: 12,
-    topStudents: [
-      "John Doe",
-      "Jane Smith",
-      "Robert Johnson",
-      "Emily Wilson",
-      "Michael Brown",
-    ],
-    topCourses: [
-      "Web Development",
-      "Data Science",
-      "UI/UX Design",
-      "Mobile App Development",
-      "Machine Learning",
-    ],
-    notifications: [
-      "New student registered",
-      "Course completion: Web Development",
-      "Payment received: $299",
-    ],
-  };
-
-  const navItems = [
-    { name: "DASHBOARD", icon: <Home size={20} /> },
-    { name: "COURSES", icon: <Book size={20} /> },
-    { name: "STUDENTS", icon: <Users size={20} /> },
-    { name: "CHAT", icon: <MessageSquare size={20} /> },
-    { name: "LIBRARY", icon: <Book size={20} /> },
-    { name: "PAYMENTS", icon: <CreditCard size={20} /> },
-    { name: "ANALYTICS", icon: <BarChart2 size={20} /> },
-    { name: "SETTINGS", icon: <Settings size={20} /> },
-  ];
-
+const Admin_Dashboard = () => {
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-48 bg-white shadow-lg flex flex-col">
-        <div className="p-4 flex justify-center">
-          <div className="flex flex-col items-center">
-            <div className="bg-yellow-400 h-16 w-24 rounded-b-full relative overflow-hidden">
-              <div className="absolute bg-blue-900 h-10 w-10 rounded-full left-2 top-6"></div>
-              <div className="absolute bg-blue-900 h-10 w-10 rounded-full right-2 top-6"></div>
-            </div>
-            <span className="text-blue-900 font-bold text-2xl mt-2">TOTO</span>
-            <span className="text-gray-500 text-xs">ACADEMY</span>
-          </div>
-        </div>
-
-        <div className="flex-1 mt-6">
-          {navItems.map((item) => (
-            <button
-              key={item.name}
-              className={`w-full py-3 px-4 flex items-center text-sm font-medium ${
-                activeTab === item.name
-                  ? "bg-blue-900 text-white"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-              } mb-2`}
-              onClick={() => setActiveTab(item.name)}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {item.name}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 p-6 overflow-auto">
-        {/* Header */}
-        <div className="flex justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-900">DASHBOARD</h1>
-
-          <div className="flex items-center">
-            <div className="relative mr-2">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 rounded-lg bg-purple-100 w-64"
-              />
-              <Search
-                className="absolute left-3 top-2.5 text-gray-400"
-                size={18}
-              />
-            </div>
-            <button className="bg-white p-2 rounded-full shadow">
-              <Bell size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-200 p-6 rounded-lg">
-            <h2 className="text-4xl font-bold text-center">{stats.students}</h2>
-            <p className="text-center text-gray-600">Students</p>
-          </div>
-          <div className="bg-gray-200 p-6 rounded-lg">
-            <h2 className="text-4xl font-bold text-center">{stats.courses}</h2>
-            <p className="text-center text-gray-600">Courses</p>
-          </div>
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-4xl font-bold text-center">87%</h2>
-            <p className="text-center text-gray-600">Completion</p>
-          </div>
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-4xl font-bold text-center">$12k</h2>
-            <p className="text-center text-gray-600">Revenue</p>
-          </div>
-        </div>
-
-        {/* Top Lists Row */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">TOP STUDENTS</h2>
-            <div className="space-y-2">
-              {stats.topStudents.map((student, index) => (
-                <div key={`student-${index}`} className="flex items-center">
-                  <span className="mr-2 font-bold">{index + 1}.</span>
-                  <span className="font-medium">STUDENT NAME</span>
-                  <span className="text-sm text-gray-600 ml-2">
-                    ({student})
-                  </span>
+      <div className="flex-1">
+        <div className="w-full min-h-screen p-4 md:p-6">
+          <div className="flex flex-col gap-6 mb-6">
+            <div className="w-full">
+              <div className="flex flex-col gap-4">
+                <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-bold">
+                        ADMIN DASHBOARD
+                      </h1>
+                      <p className="text-muted-foreground mt-1">
+                        Welcome back, Admin! Here's what's happening today.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">TOP ENROLLED COURSES</h2>
-            <div className="space-y-2">
-              {stats.topCourses.map((course, index) => (
-                <div key={`course-${index}`} className="flex items-center">
-                  <span className="mr-2 font-bold">{index + 1}.</span>
-                  <span className="font-medium">COURSE</span>
-                  <span className="text-sm text-gray-600 ml-2">({course})</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Bottom Row */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">NOTIFICATIONS</h2>
-            <div className="space-y-2">
-              {stats.notifications.map((notification, index) => (
-                <div
-                  key={`notification-${index}`}
-                  className="flex items-center"
-                >
-                  <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span>{notification}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                  <StatCard
+                    title="Total Students"
+                    value="32"
+                    icon={<Clock className="h-5 w-5" />}
+                  />
+                  <StatCard
+                    title="Active Courses"
+                    value="5"
+                    icon={<BookOpen className="h-5 w-5" />}
+                    trend={{ value: 20, positive: true }}
+                  />
+                  <StatCard
+                    title="Revenue"
+                    value="$12,500"
+                    icon={<DollarSign className="h-5 w-5" />}
+                  />
+                  <StatCard
+                    title="Completion Rate"
+                    value="76%"
+                    icon={<PieChart className="h-5 w-5" />}
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">RECENT ACTIVITIES</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span>New course added</span>
-                <ChevronRight size={16} />
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Student progress updated</span>
-                <ChevronRight size={16} />
               </div>
             </div>
           </div>
-          <div className="bg-blue-200 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">QUICK ACTIONS</h2>
-            <div className="space-y-2">
-              <button className="w-full bg-blue-500 text-white py-2 px-4 rounded">
-                Add New Course
-              </button>
-              <button className="w-full bg-green-500 text-white py-2 px-4 rounded">
-                Enroll Student
-              </button>
+
+          <SectionTitle title="Platform Overview" />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8 ">
+            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
+              <h3 className="text-lg md:text-xl font-bold text-left">
+                TOP STUDENTS
+              </h3>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">1.</span>
+                  <span className="font-medium">John Smith</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">2.</span>
+                  <span className="font-medium">Sarah Johnson</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">3.</span>
+                  <span className="font-medium">Michael Williams</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">4.</span>
+                  <span className="font-medium">Emily Brown</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
+              <h3 className="text-lg md:text-xl font-bold text-left">
+                POPULAR COURSES
+              </h3>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">1.</span>
+                  <span className="font-medium">Web Development</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">2.</span>
+                  <span className="font-medium">Data Science</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">3.</span>
+                  <span className="font-medium">UI/UX Design</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">4.</span>
+                  <span className="font-medium">Mobile Development</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
+              <h3 className="text-lg md:text-xl font-bold text-left">
+                UPCOMING EVENTS
+              </h3>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">Apr 30:</span>
+                  <span className="font-medium">New Course Launch</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">May 5:</span>
+                  <span className="font-medium">Teacher Conference</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">May 10:</span>
+                  <span className="font-medium">Platform Update</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
+              <h3 className="text-lg md:text-xl font-bold text-left">
+                PLATFORM STATS
+              </h3>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">👥</span>
+                  <span className="font-medium">95% User Satisfaction</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">📈</span>
+                  <span className="font-medium">32% Growth this month</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2 font-bold">🔄</span>
+                  <span className="font-medium">88% Retention Rate</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="mt-6">
+            <SectionTitle
+              title="Recent Course Activity"
+              description="Latest updates from your courses"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <Card className="flex flex-col h-full">
+                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
+                <CardContent className="flex-1 p-4">
+                  <h3 className="font-bold text-lg">Advanced React Patterns</h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    15 new students enrolled this week
+                  </p>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="font-bold">$89.99</span>
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="flex flex-col h-full">
+                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
+                <CardContent className="flex-1 p-4">
+                  <h3 className="font-bold text-lg">
+                    Data Science Fundamentals
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    8 new students enrolled this week
+                  </p>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="font-bold">$79.99</span>
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="flex flex-col h-full">
+                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
+                <CardContent className="flex-1 p-4">
+                  <h3 className="font-bold text-lg">UI/UX Design Principles</h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    12 new students enrolled this week
+                  </p>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="font-bold">$69.99</span>
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="flex flex-col h-full">
+                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
+                <CardContent className="flex-1 p-4">
+                  <h3 className="font-bold text-lg">Mobile App Development</h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    6 new students enrolled this week
+                  </p>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="font-bold">$99.99</span>
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Admin_Dashboard;

@@ -1,7 +1,7 @@
 import axios from "axios";
 // import TokenStorageService from "helper/local_storage_helper";
 
-const BASE_URL = "https://toto-academy-backend.onrender.com";
+const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/admin_route";
 
 const loginAdmin = async (userData) => {
   try {
