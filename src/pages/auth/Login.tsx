@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import logimage from "@/assets/log.jpg";
 import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -149,7 +151,7 @@ const Login = () => {
         {/* Left image container */}
         <div className="w-full h-[700px] hidden md:block">
           <img
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover "
             src={logimage}
             alt="Login background"
           />
@@ -159,27 +161,27 @@ const Login = () => {
         <div className="p-4 flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-blue-200 rounded-xl rounded-l-none">
           <div className="flex items-center justify-center mb-2">
             <img src={logo} alt="Toto Academy Logo" className="w-16 h-16" />
-            <p className="text-3xl font-semibold text-blue-950 text-center ml-2">
+            <p className="text-3xl font-bold text-blue-950 text-center ml-2">
               Welcome to Toto Academy
             </p>
           </div>
 
-          <p className="text-xl text-blue-950 font-bold text-center">
+          <p className="text-md text-blue-950 font-bold text-center">
             Sign up to get started
           </p>
 
-          <p className="text-sm  text-blue-700 font-medium">
+          <p className="text-sm  text-blue-700 font-medium ">
             Step {currentStep} of 2
           </p>
 
           {/* Step indicator */}
           <div className="flex w-64 mb-3">
             <div
-              className={`h-2 flex-1 rounded-l-full ${currentStep === 1 ? "bg-blue-500" : "bg-blue-300"
+              className={`h-2 flex-1 rounded-l-full ${currentStep >= 1 ? "bg-blue-500" : "bg-blue-300"
                 }`}
             ></div>
             <div
-              className={`h-2 flex-1 rounded-r-full ${currentStep === 2 ? "bg-blue-500" : "bg-blue-300"
+              className={`h-2 flex-1 rounded-r-full ${currentStep >= 2 ? "bg-blue-500" : "bg-blue-300"
                 }`}
             ></div>
           </div>
@@ -194,8 +196,8 @@ const Login = () => {
                 <label className="block mb-1 text-m font-bold text-black">
                   First Name
                 </label>
-                <input
-                  className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-3 placeholder-black"
+                <Input
+                  className="bg-transparent border  text-black p-2 rounded-md w-full mb-3 placeholder-black"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
@@ -414,11 +416,11 @@ const Login = () => {
             </form>
           )}
 
-          <p className="text-center text-sm font-semibold">
-            ALREADY HAVE AN ACCOUNT?
+          <p className="text-center text-xs font-semibold">
+            Already have an account?
             <Link
               to="/Register"
-              className="text-yellow-600 hover:underline px-4"
+              className="text-yellow-600 hover:underline px-1 underline underline-offset-4"
             >
               SIGN IN
             </Link>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, BookOpen } from "lucide-react";
 
-interface CourseCardProps {
+export interface CourseCardProps {
   id: string;
   title: string;
   instructor: {
@@ -62,7 +62,7 @@ const CourseCard = ({
             <span>{duration}</span>
           </div>
         </div>
-        
+
         {enrolled && progress !== undefined && (
           <div className="mt-3">
             <div className="flex justify-between text-xs mb-1">
@@ -70,8 +70,8 @@ const CourseCard = ({
               <span>{progress}%</span>
             </div>
             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full" 
+              <div
+                className="h-full bg-primary rounded-full"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -79,7 +79,7 @@ const CourseCard = ({
         )}
       </CardContent>
       <CardFooter className="pt-0">
-        <Button 
+        <Button
           variant={enrolled ? "outline" : "default"}
           className={`w-full ${enrolled ? "" : "bg-primary hover:bg-primary/90"}`}
         >

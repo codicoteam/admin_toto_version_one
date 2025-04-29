@@ -16,9 +16,11 @@ import QA from "./pages/QA";
 import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
-import Forgot_password from "./pages/auth/Forgot_password";
+import Forgot_password from "./pages/auth/Forgot_Password";
+import Auth_Layout from "./pages/auth/authLayout";
 import Sms_Password_Reset from "./pages/auth/Sms_Password_Reset";
 import Email_Password_Reset from "./pages/auth/Email_Password_Reset";
+import Homepage from "./pages/Homepage";
 
 const queryClient = new QueryClient();
 
@@ -29,20 +31,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          {" "}
-          {/* Move AuthProvider inside BrowserRouter */}
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot_password" element={<Forgot_password />} />
+            <Route path="/" element={<Homepage />} />
             <Route
-              path="/sms_password_reset"
-              element={<Sms_Password_Reset />}
-            />
-            <Route
-              path="/email_password_reset"
-              element={<Email_Password_Reset />}
-            />
+              element={<Auth_Layout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot_password" element={<Forgot_password />} />
+              <Route
+                path="/sms_password_reset"
+                element={<Sms_Password_Reset />}
+              />
+              <Route
+                path="/email_password_reset"
+                element={<Email_Password_Reset />}
+              />
+            </Route>
 
             {/* Protect routes using PrivateRoute */}
             <Route
@@ -52,7 +56,7 @@ const App = () => (
                 </PrivateRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/lesson/:id" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />
