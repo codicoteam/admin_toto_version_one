@@ -9,7 +9,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   const { isAuthenticated } = useAuth();
   console.log("PrivateRoute isAuthenticated:", isAuthenticated);
 
-  return true ? <>{children}</> : <Navigate to="/login" />;
+  return false ? <>{children}</> : <Navigate to="/admin_register" />;
 };
 
 export default PrivateRoute;
