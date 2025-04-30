@@ -34,7 +34,7 @@ const Register = () => {
         backgroundPosition: "center",
       }}>
       <div
-        className="grid grid-cols-1 md:grid-cols-2 m-auto max-w-screen-lg shadow-2xl rounded-2xl overflow-hidden"
+        className="grid grid-cols-1 md:grid-cols-2 m-auto max-w-screen-lg shadow-2xl rounded-2xl overflow-hidden border"
       >
         <div className=" p-4 flex flex-col items-center justify-center w-full bg-background  ">
           <div className="text-center items-center justify-center mb-4">
@@ -52,9 +52,9 @@ const Register = () => {
             <div className="mb-4 w-full space-y-6">
               <div>
 
-                <label className="w-full block mb-2 text-sm font-bold">
+                <Label className="w-full block mb-2 text-sm font-bold">
                   Phone Number
-                </label>
+                </Label>
                 <Input
                   className=""
                   type="text"
@@ -64,9 +64,9 @@ const Register = () => {
               </div>
 
 
-              <label className="w-full block mb-2 text-sm font-bold">
+              <Label className="w-full block mb-2 text-sm font-bold">
                 Password
-              </label>
+              </Label>
               <Input
                 type="text"
                 id="PasswordInput"

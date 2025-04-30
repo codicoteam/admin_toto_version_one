@@ -32,10 +32,10 @@ const authLayout = () => {
     };
     return (
         <div className='relative'>
-            {/* <Button
+            <Button
                 variant="ghost"
                 size="icon"
-                className="ml-2 rounded-full absolute top-2 z-50 right-4 bg-background"
+                className="ml-2 rounded-full absolute top-4 z-50 right-4 bg-background"
                 onClick={toggleTheme}
             >
                 <AnimatePresence mode="wait">
@@ -53,7 +53,7 @@ const authLayout = () => {
                         )}
                     </motion.div>
                 </AnimatePresence>
-            </Button> */}
+            </Button>
             <div className="absolute inset-0 -z-10 overflow-hidden">
                 <div className="hero-blur w-96 h-96 bg-blue-500 rounded-full -top-20 -right-20"></div>
                 <div className="hero-blur w-96 h-96 bg-purple-500 rounded-full bottom-10 -left-20"></div>
