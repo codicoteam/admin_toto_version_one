@@ -24,6 +24,7 @@ import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
 import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
 import AdminCourses from "./pages/Admin_Pages/Courses";
+import Homepage from "./pages/User_Pages/Hompage";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />
+            <Route path="/homepage" element={<Homepage />} />
 
             {/* Protect routes using PrivateRoute */}
             <Route
