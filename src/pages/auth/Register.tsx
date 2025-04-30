@@ -33,18 +33,28 @@ const Register = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}>
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: .6, delay: 0.4 }}
         className="grid grid-cols-1 md:grid-cols-2 m-auto max-w-screen-lg shadow-2xl rounded-2xl overflow-hidden border"
       >
         <div className=" p-4 flex flex-col items-center justify-center w-full bg-background  ">
           <div className="text-center items-center justify-center mb-4">
-            <img src={'./logo-full.png'} alt="Toto Academy Logo" className="h-24 mx-auto my-4" />
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.4 }}>
+
+              <Link to={'/'}>
+                <img src={'./logo-full.png'} alt="Toto Academy Logo" className="h-24 mx-auto my-4" />
+              </Link>
+            </motion.div>
             <motion.h1
               className="text-sm font-bold text-gray-800 dark:text-gray-50"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
+              transition={{ duration: .8, delay: 0.4 }}>
               Sign into your account
             </motion.h1>
           </div>
@@ -109,7 +119,7 @@ const Register = () => {
         </div>
 
 
-      </div>
+      </motion.div>
     </div>
   );
 };
