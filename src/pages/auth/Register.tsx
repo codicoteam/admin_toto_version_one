@@ -7,6 +7,7 @@ import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import logimage from "@/assets/log.jpg";
 import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -27,90 +28,87 @@ const Register = () => {
   return (
     //outer div
     <div
-      className="w-full h-screen flex"
+      className="w-full h-screen flex justify-center"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-      }}
-    >
-      {/* box div */}
+      }}>
       <div
-        className="grid grid-cols-1 md:grid-cols-2 m-auto h-[700px] shadow-[0_4px_6px_rgba(255,255,255,0.3)] sm:max-w-[1300px]
-     bg-white rounded-xl"
+        className="grid grid-cols-1 md:grid-cols-2 m-auto max-w-screen-lg shadow-2xl rounded-2xl overflow-hidden"
       >
-        {/* image container div left*/}
-        <div className="w-full h-[700px] hidden md:block">
-          <img
-            className="w-full h-full rounded-xl rounded-r-none"
-            src={logimage}
-          />
-        </div>
-        {/* image div end */}
-
-        <div className=" p-4 flex flex-col items-center justify-center w-full  bg-gradient-to-b from-white to-blue-200  rounded-xl rounded-l-none  ">
-          <div className="flex items-center justify-center mb-4">
-            <img src={logo} alt="Toto Academy Logo" className=" w-17 h-16" />
-            <p className="text-3xl font-semibold text-blue-950 text-center">
-              Welcome Back
-            </p>
+        <div className=" p-4 flex flex-col items-center justify-center w-full bg-background  ">
+          <div className="text-center items-center justify-center mb-4">
+            <img src={'./logo-full.png'} alt="Toto Academy Logo" className="h-24 mx-auto my-4" />
+            <motion.h1
+              className="text-sm font-bold text-gray-800 dark:text-gray-50"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
+              Sign into your account
+            </motion.h1>
           </div>
+          <form className="w-full max-w-md flex flex-col p-6 mx-auto space-y-4">
+            <div className="mb-4 w-full space-y-6">
+              <div>
 
-          <p className="text-xl mb-8 text-blue-950 font-bold text-center">
-            Sign into your account
-          </p>
+                <label className="w-full block mb-2 text-sm font-bold">
+                  Phone Number
+                </label>
+                <Input
+                  className=""
+                  type="text"
+                  placeholder="Enter Phone number"
 
-          {/* Form now centered with mx-auto and wider inputs */}
-          <form className="w-full max-w-md flex flex-col p-6 mx-auto bg">
-            <div className="mb-4 w-full">
-              <label className="w-full block mb-2 text-m font-bold text-black">
-                Phone Number
-              </label>
-              <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
-                type="text"
-                placeholder="Enter Phone number"
-              />
+                />
+              </div>
 
-              <label
-                htmlFor="password input"
-                className="block mb-2 text-sm text-m font-bold text-black"
-              >
+
+              <label className="w-full block mb-2 text-sm font-bold">
                 Password
               </label>
-              <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full mb-6 placeholder-black"
+              <Input
                 type="text"
                 id="PasswordInput"
                 placeholder="Enter passsword"
               />
+
             </div>
 
             <Link
               to="/Forgot_Password"
-              className="text-red-600 hover:underline text-right text-sm font-semibold"
+              className="text-gray-400 hover:underline text-right text-sm font-semibold"
             >
-              FORGOT PASSWORD?
+              forgot password?
             </Link>
 
-            <button
-              className="font-sans font-bold text-white w-full p-2 my-4 bg-yellow-600 hover:bg-yellow-400 rounded-xl"
-              onClick={() => navigate("/")}
+            <Button
+              variant='ghost'
+              onClick={() => navigate("/dashboard")}
             >
               LOGIN
-            </button>
+            </Button>
 
             <p className="text-center text-sm font-semibold">
-              DONT HAVE AN ACCOUNT?
+              Don't have an account?
               <Link
                 to="/login"
-                className="text-yellow-600 hover:underline px-4"
+                className="text-yellow-600 hover:underline px-2"
               >
-                SIGN UP
+                Sign Up
               </Link>
             </p>
           </form>
         </div>
+
+        <div className="w-full  hidden md:block  ">
+          <img
+            className="h-full object-cover "
+            src={logimage}
+          />
+        </div>
+
+
       </div>
     </div>
   );

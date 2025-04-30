@@ -54,6 +54,10 @@ const authLayout = () => {
                     </motion.div>
                 </AnimatePresence>
             </Button> */}
+            <div className="absolute inset-0 -z-10 overflow-hidden">
+                <div className="hero-blur w-96 h-96 bg-blue-500 rounded-full -top-20 -right-20"></div>
+                <div className="hero-blur w-96 h-96 bg-purple-500 rounded-full bottom-10 -left-20"></div>
+            </div>
             <Outlet />
         </div>
     )

@@ -9,18 +9,23 @@ import PrivateRoute from "./components/PrivateRoute";
 // Pages
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import Dashboard from "./pages/Dashboard";
-import Courses from "./pages/Courses";
-import Lesson from "./pages/Lesson";
-import QA from "./pages/QA";
-import Wallet from "./pages/Wallet";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Courses from "./pages/dashboard/Courses";
+import Lesson from "./pages/dashboard/Lesson";
+import QA from "./pages/dashboard/QA";
+import Wallet from "./pages/dashboard/Wallet";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import Forgot_password from "./pages/auth/Forgot_Password";
 import Auth_Layout from "./pages/auth/authLayout";
 import Sms_Password_Reset from "./pages/auth/Sms_Password_Reset";
 import Email_Password_Reset from "./pages/auth/Email_Password_Reset";
-import Homepage from "./pages/Homepage";
+import Homepage from "./pages/welcome/Homepage";
+import WelcomeLayout from "./pages/welcome/WelcomeLayout";
+import About from "./pages/welcome/About";
+import Contact from "./pages/welcome/Contact";
+import CoursesHome from "./pages/welcome/CoursesHome";
+import Pricing from "./pages/welcome/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +37,13 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route element={<WelcomeLayout />}>
+              <Route path="/" element={<Homepage />} />
+              <Route path="/courses" element={<CoursesHome />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/pricing" element={<Pricing />} />
+            </Route>
             <Route
               element={<Auth_Layout />}>
               <Route path="/login" element={<Login />} />
