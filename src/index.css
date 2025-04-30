@@ -97,3 +97,9 @@
     text-wrap: balance;
   }
 }
+@layer base{
+  li{
+    
+  @apply p-6
+  }
+}

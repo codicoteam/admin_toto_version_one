@@ -26,6 +26,8 @@ import Admin_login from "./pages/auth/Admin/Login";
 import AdminCourses from "./pages/Admin_Pages/Courses";
 import Homepage from "./pages/User_Pages/Hompage";
 
+import Navrbar from "./components/Navbar";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -55,6 +57,7 @@ const App = () => (
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />
             <Route path="/homepage" element={<Homepage />} />
+            <Route path="/navbar" element={<Navrbar />} />
 
             {/* Protect routes using PrivateRoute */}
             <Route
