@@ -8,6 +8,11 @@ const Home_page = () => {
       {/* Nav bar */}
       <Navrbar />
 
+      {/* Decorative Elements */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-blue-400 rounded-full opacity-20 blur-xl dark:bg-blue-600"></div>
+      <div className="absolute top-40 right-20 w-40 h-40 bg-purple-400 rounded-full opacity-20 blur-xl dark:bg-purple-600"></div>
+      <div className="absolute bottom-20 left-1/4 w-52 h-52 bg-indigo-400 rounded-full opacity-20 blur-xl dark:bg-indigo-600"></div>
+
       {/* Slanted Blue Background - moved BEFORE content so it appears behind */}
       <div className="absolute bottom-0 left-0 right-0 z-0 overflow-hidden">
         <svg

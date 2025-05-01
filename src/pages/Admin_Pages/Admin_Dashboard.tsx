@@ -1,226 +1,311 @@
-import { BookOpen, Calendar, DollarSign, PieChart, Clock } from "lucide-react";
-import StatCard from "@/components/StatCard";
-import SectionTitle from "@/components/SectionTitle";
+import React, { useState, useEffect } from "react";
+import { BookOpen, Calendar, Menu, Search, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import Sidebar from "@/components/Sidebar"; // Import the Sidebar component
+import Sidebar from "@/components/Sidebar";
+import student from "@/assets/home1.png";
 
 const Admin_Dashboard = () => {
+  // Set initial sidebar state based on screen size
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Update screen size state and handle sidebar visibility
+  useEffect(() => {
+    // Check initial screen size
+    const checkScreenSize = () => {
+      const isLarge = window.innerWidth >= 768;
+      setIsLargeScreen(isLarge);
+      setSidebarOpen(isLarge);
+    };
+
+    // Run on initial load
+    checkScreenSize();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+      {/* Mobile Menu Toggle */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-md"
+        onClick={toggleSidebar}
+      >
+        {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Sidebar - Mobile: overlay, Desktop: static */}
+      <div
+        className={`
+        ${
+          sidebarOpen
+            ? "translate-x-0 opacity-100"
+            : "-translate-x-full opacity-0"
+        } 
+        transition-all duration-300 ease-in-out 
+        fixed md:relative z-40 md:z-auto w-64
+      `}
+      >
+        <Sidebar />
+      </div>
+
+      {/* Backdrop Overlay for Mobile */}
+      {sidebarOpen && !isLargeScreen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={toggleSidebar}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 w-full">
         <div className="w-full min-h-screen p-4 md:p-6">
-          <div className="flex flex-col gap-6 mb-6">
-            <div className="w-full">
-              <div className="flex flex-col gap-4">
-                <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div>
-                      <h1 className="text-2xl md:text-3xl font-bold">
-                        ADMIN DASHBOARD
-                      </h1>
-                      <p className="text-muted-foreground mt-1">
-                        Welcome back, Admin! Here's what's happening today.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 space-y-4 md:space-y-0 mt-10 md:mt-0">
+            <h1 className="text-2xl font-bold text-blue-900">DASHBOARD</h1>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                  <StatCard
-                    title="Total Students"
-                    value="32"
-                    icon={<Clock className="h-5 w-5" />}
-                  />
-                  <StatCard
-                    title="Active Courses"
-                    value="5"
-                    icon={<BookOpen className="h-5 w-5" />}
-                    trend={{ value: 20, positive: true }}
-                  />
-                  <StatCard
-                    title="Revenue"
-                    value="$12,500"
-                    icon={<DollarSign className="h-5 w-5" />}
-                  />
-                  <StatCard
-                    title="Completion Rate"
-                    value="76%"
-                    icon={<PieChart className="h-5 w-5" />}
-                  />
-                </div>
+            {/* Search Bar */}
+            <div className="relative w-full md:w-1/3">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
               </div>
+              <input
+                type="text"
+                className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Search..."
+              />
+              <button className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <span className="text-xl text-gray-400">+</span>
+              </button>
+            </div>
+
+            {/* Admin Profile */}
+            <div className="bg-blue-900 text-white rounded-md py-2 px-4 flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              <span className="font-medium">admin name</span>
             </div>
           </div>
 
-          <SectionTitle title="Platform Overview" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8 ">
-            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
-              <h3 className="text-lg md:text-xl font-bold text-left">
-                TOP STUDENTS
-              </h3>
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">1.</span>
-                  <span className="font-medium">John Smith</span>
+          {/* Stats Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* Students Stat */}
+            <Card className="bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-stretch">
+                  <div className="bg-gray-200 p-4 flex items-center justify-center w-1/3">
+                    <img
+                      src={student}
+                      alt="Students"
+                      className="h-16 w-16 md:h-20 md:w-20 object-cover"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col justify-center">
+                    <div className="text-2xl md:text-3xl font-bold text-blue-900">
+                      100+
+                    </div>
+                    <div className="text-sm font-medium text-blue-900">
+                      Students
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">2.</span>
-                  <span className="font-medium">Sarah Johnson</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">3.</span>
-                  <span className="font-medium">Michael Williams</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">4.</span>
-                  <span className="font-medium">Emily Brown</span>
-                </div>
-              </div>
+              </CardContent>
             </Card>
 
-            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
-              <h3 className="text-lg md:text-xl font-bold text-left">
-                POPULAR COURSES
-              </h3>
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">1.</span>
-                  <span className="font-medium">Web Development</span>
+            {/* Courses Stat */}
+            <Card className="bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-stretch">
+                  <div className="bg-gray-200 p-4 flex items-center justify-center w-1/3">
+                    <img
+                      src="/api/placeholder/100/100"
+                      alt="Courses"
+                      className="h-12 w-12 md:h-16 md:w-16 object-cover"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col justify-center">
+                    <div className="text-2xl md:text-3xl font-bold text-blue-900">
+                      12+
+                    </div>
+                    <div className="text-sm font-medium text-blue-900">
+                      Courses
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">2.</span>
-                  <span className="font-medium">Data Science</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">3.</span>
-                  <span className="font-medium">UI/UX Design</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">4.</span>
-                  <span className="font-medium">Mobile Development</span>
-                </div>
-              </div>
+              </CardContent>
             </Card>
 
-            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
-              <h3 className="text-lg md:text-xl font-bold text-left">
-                UPCOMING EVENTS
-              </h3>
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">Apr 30:</span>
-                  <span className="font-medium">New Course Launch</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">May 5:</span>
-                  <span className="font-medium">Teacher Conference</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">May 10:</span>
-                  <span className="font-medium">Platform Update</span>
-                </div>
-              </div>
+            {/* Empty Cards - Hide on mobile to save space */}
+            <Card className="hidden sm:block bg-white shadow-sm">
+              <CardContent className="p-4"></CardContent>
             </Card>
-
-            <Card className="h-full p-4 md:p-6 border-dashed bg-blue-100">
-              <h3 className="text-lg md:text-xl font-bold text-left">
-                PLATFORM STATS
-              </h3>
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">👥</span>
-                  <span className="font-medium">95% User Satisfaction</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">📈</span>
-                  <span className="font-medium">32% Growth this month</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-bold">🔄</span>
-                  <span className="font-medium">88% Retention Rate</span>
-                </div>
-              </div>
+            <Card className="hidden sm:block bg-white shadow-sm">
+              <CardContent className="p-4"></CardContent>
             </Card>
           </div>
 
-          <div className="mt-6">
-            <SectionTitle
-              title="Recent Course Activity"
-              description="Latest updates from your courses"
-            />
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Left Column - Top Performing Students */}
+            <div className="col-span-1">
+              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-medium text-blue-900">
+                    Top Performing Students
+                  </h2>
+                  <a href="#" className="text-xs text-gray-500">
+                    All Students
+                  </a>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              <Card className="flex flex-col h-full">
-                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
-                <CardContent className="flex-1 p-4">
-                  <h3 className="font-bold text-lg">Advanced React Patterns</h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    15 new students enrolled this week
-                  </p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="font-bold">$89.99</span>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Student List */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {[1, 2, 3, 4, 5].map((index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2"
+                    >
+                      <div className="flex items-center mb-2 sm:mb-0">
+                        <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
+                          <User className="h-6 w-6 text-blue-900" />
+                        </div>
+                        <span>Student Name</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 text-xs w-full sm:w-auto"
+                      >
+                        View Progress
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-              <Card className="flex flex-col h-full">
-                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
-                <CardContent className="flex-1 p-4">
-                  <h3 className="font-bold text-lg">
-                    Data Science Fundamentals
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    8 new students enrolled this week
-                  </p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="font-bold">$79.99</span>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
+            {/* Middle Column - Overall Pass Rate */}
+            <div className="col-span-1">
+              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+                <h2 className="text-xl font-bold text-blue-900 mb-4">
+                  Overall Pass Rate
+                </h2>
+                <div className="min-h-32 bg-gray-100 rounded-md flex items-center justify-center">
+                  {/* This would be a chart in the real implementation */}
+                  <div className="text-center text-gray-500 py-8">
+                    Chart Placeholder
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="flex flex-col h-full">
-                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
-                <CardContent className="flex-1 p-4">
-                  <h3 className="font-bold text-lg">UI/UX Design Principles</h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    12 new students enrolled this week
-                  </p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="font-bold">$69.99</span>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Schedule Section */}
+              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+                <h2 className="text-xl font-bold text-blue-900 mb-4">
+                  Schedule
+                </h2>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {[...Array(10)].map((_, index) => (
+                    <div key={index} className="flex">
+                      <div className="font-medium text-blue-900">Date:</div>
+                      <div className="ml-2 text-blue-900">Program</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-              <Card className="flex flex-col h-full">
-                <div className="bg-gray-200 h-40 rounded-t-lg"></div>
-                <CardContent className="flex-1 p-4">
-                  <h3 className="font-bold text-lg">Mobile App Development</h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    6 new students enrolled this week
-                  </p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="font-bold">$99.99</span>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
+            {/* Right Column - Popular Courses */}
+            <div className="col-span-1">
+              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-medium text-blue-900">
+                    Popular Courses
+                  </h2>
+                  <a href="#" className="text-xs text-gray-500">
+                    All Courses
+                  </a>
+                </div>
+
+                {/* Course List */}
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {[
+                    { name: "Mathematics", topics: "30+ Topics" },
+                    { name: "Biology", topics: "30+ Topics" },
+                    { name: "Chemistry", topics: "30+ Topics" },
+                    { name: "Physics", topics: "30+ Topics" },
+                    { name: "Geography", topics: "30+ Topics" },
+                  ].map((course, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between"
+                    >
+                      <div className="flex items-center mb-2 sm:mb-0">
+                        <div className="h-10 w-10 bg-gray-200 rounded-md mr-3"></div>
+                        <div>
+                          <div className="font-medium text-blue-900">
+                            {course.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {course.topics}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-white border border-blue-900 hover:bg-blue-50 text-blue-900 text-xs w-full sm:w-auto"
+                      >
+                        View Course
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Calendar Widget */}
+              <div className="bg-white p-4 rounded-md shadow-sm">
+                <h2 className="text-sm font-medium text-gray-700 mb-2">
+                  Select date:
+                </h2>
+                <div className="font-medium mb-2">Mon, Aug 17</div>
+
+                <div className="border-t border-b py-2 mb-2">
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                    <div>S</div>
+                    <div>M</div>
+                    <div>T</div>
+                    <div>W</div>
+                    <div>T</div>
+                    <div>F</div>
+                    <div>S</div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs mt-2">
+                    {/* Calendar days - would be dynamically generated in real app */}
+                    {Array.from({ length: 31 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`h-6 w-6 flex items-center justify-center rounded-full mx-auto
+                        ${i === 16 ? "bg-blue-900 text-white" : ""}`}
+                      >
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button className="text-xs text-gray-500 mr-2">Cancel</button>
+                  <button className="text-xs text-gray-500">OK</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

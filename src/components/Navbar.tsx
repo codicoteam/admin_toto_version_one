@@ -5,6 +5,7 @@ import { LogIn, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Navrbar = () => {
   const [nav, setNav] = useState(false);
@@ -49,8 +50,12 @@ const Navrbar = () => {
               Toto Academy
             </h1>
             <ul className="hidden md:flex ml-28 font-bold text-base text-black dark:text-white">
-              <li className="mx-2 hover:text-blue-500 transition">Home</li>
-              <li className="mx-2 hover:text-blue-500 transition">About Us</li>
+              <li className="mx-2 hover:text-blue-500 transition">
+                <Link to="/homepage">Home</Link>
+              </li>
+              <li className="mx-2 hover:text-blue-500 transition">
+                <Link to="/aboutpage">About Us</Link>
+              </li>
               <li className="mx-2 hover:text-blue-500 transition">Courses</li>
               <li className="mx-2 hover:text-blue-500 transition">Library</li>
               <li className="mx-2 hover:text-blue-500 transition">Chat</li>

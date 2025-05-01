@@ -25,6 +25,9 @@ import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
 import AdminCourses from "./pages/Admin_Pages/Courses";
 import Homepage from "./pages/User_Pages/Hompage";
+import Aboutpage from "./pages/User_Pages/Aboutpage";
+import StudentDashboard from "./pages/Admin_Pages/Student";
+import ChatApp from "./pages/Admin_Pages/Chat";
 
 import Navrbar from "./components/Navbar";
 
@@ -54,9 +57,14 @@ const App = () => (
               element={<Email_Password_Reset />}
             />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
+            <Route path="/students_dashboard" element={<StudentDashboard />} />
+            <Route path="/chat" element={<ChatApp />} />
+
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />
             <Route path="/homepage" element={<Homepage />} />
+            <Route path="/aboutpage" element={<Aboutpage />} />
+
             <Route path="/navbar" element={<Navrbar />} />
 
             {/* Protect routes using PrivateRoute */}
