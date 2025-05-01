@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import logimage from "@/assets/log.jpg";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,7 +34,9 @@ const Register = () => {
   const handleNext = (e) => {
     e.preventDefault();
     if (!formData.firstName || !formData.phoneNumber || !formData.email) {
-      alert("Please fill out all fields in this step.");
+      toast({
+        title: "Please fill out all fields in this step.",
+      });
       return;
     }
     setCurrentStep(2);
@@ -40,20 +46,51 @@ const Register = () => {
     setCurrentStep(1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match");
+      toast({
+        title: "Passwords don't match",
+      });
       setIsLoading(false);
       return;
     }
 
-    setTimeout(() => {
+    try {
+
+
+
       setIsLoading(false);
-      navigate("/");
-    }, 1000);
+      const reg = await register({
+        name: formData.firstName,
+        phone: formData.phoneNumber,
+        email: formData.email,
+        level: formData.educationLevel,
+        password: formData.password,
+        role: "student",
+        profile: "default",
+
+      });
+
+      if (!reg) {
+        toast({
+          title: "Registration successful",
+        });
+        navigate("/");
+      } else {
+        toast({
+          title: "An error occurred while registering",
+        });
+      }
+
+    } catch (error) {
+      toast({
+        title: "An error occurred while registering",
+      });
+
+    }
   };
 
   return (

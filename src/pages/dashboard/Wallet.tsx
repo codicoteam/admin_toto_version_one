@@ -8,7 +8,7 @@ import SectionTitle from "@/components/SectionTitle";
 
 const Wallet = () => {
   const [activeTab, setActiveTab] = useState("transactions");
-  
+
   // Mock wallet data
   const walletData = {
     balance: 125.00,
@@ -71,14 +71,14 @@ const Wallet = () => {
       },
     ],
   };
-  
+
   return (
-    <div>
-      <SectionTitle 
-        title="Wallet" 
+    <div className="py-4 md:py-6">
+      <SectionTitle
+        title="Wallet"
         description="Manage your balance and transactions"
       />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Balance Card */}
         <Card className="md:col-span-2">
@@ -105,7 +105,7 @@ const Wallet = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Quick Actions */}
         <Card>
           <CardHeader className="pb-2">
@@ -143,43 +143,41 @@ const Wallet = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Transactions & Payment Methods */}
       <Tabs defaultValue="transactions" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="transactions">Transaction History</TabsTrigger>
           <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="transactions" className="bg-white rounded-lg p-6">
           <div className="space-y-4">
             {walletData.transactions.map((transaction) => (
               <div key={transaction.id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">
-                <div className={`rounded-full p-2 ${
-                  transaction.type === "deposit" 
-                    ? "bg-green-100 text-green-600" 
+                <div className={`rounded-full p-2 ${transaction.type === "deposit"
+                    ? "bg-green-100 text-green-600"
                     : transaction.type === "refund"
                       ? "bg-blue-100 text-blue-600"
                       : "bg-red-100 text-red-600"
-                }`}>
+                  }`}>
                   {transaction.type === "deposit" || transaction.type === "refund" ? (
                     <ArrowDownLeft className="h-5 w-5" />
                   ) : (
                     <ArrowUpRight className="h-5 w-5" />
                   )}
                 </div>
-                
+
                 <div className="flex-1">
                   <h4 className="font-medium">{transaction.description}</h4>
                   <p className="text-sm text-muted-foreground">{transaction.date}</p>
                 </div>
-                
+
                 <div className="text-right">
-                  <div className={`font-medium ${
-                    transaction.type === "deposit" || transaction.type === "refund" 
-                      ? "text-green-600" 
+                  <div className={`font-medium ${transaction.type === "deposit" || transaction.type === "refund"
+                      ? "text-green-600"
                       : "text-red-600"
-                  }`}>
+                    }`}>
                     {transaction.type === "deposit" || transaction.type === "refund" ? "+" : "-"}${transaction.amount.toFixed(2)}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
@@ -191,7 +189,7 @@ const Wallet = () => {
             ))}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="payment-methods" className="bg-white rounded-lg p-6">
           <div className="space-y-4">
             {walletData.paymentMethods.map((method) => (
@@ -203,7 +201,7 @@ const Wallet = () => {
                     <span className="text-orange-600 font-bold">MC</span>
                   )}
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium capitalize">{method.type}</h4>
@@ -215,11 +213,11 @@ const Wallet = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">•••• {method.lastDigits} | Expires: {method.expiryDate}</p>
                 </div>
-                
+
                 <Button variant="ghost" size="sm">Edit</Button>
               </div>
             ))}
-            
+
             <div className="mt-4">
               <Button variant="outline" className="w-full gap-2">
                 <Plus className="h-4 w-4" />

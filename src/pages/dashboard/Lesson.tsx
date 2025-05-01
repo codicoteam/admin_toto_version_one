@@ -12,7 +12,7 @@ const Lesson = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("content");
   const [commentText, setCommentText] = useState("");
-  
+
   // Mock lesson data
   const lessonData = {
     id: "1",
@@ -50,16 +50,16 @@ const Lesson = () => {
       },
     ],
   };
-  
+
   const handleCommentSubmit = () => {
     if (!commentText.trim()) return;
     console.log("Submitting comment:", commentText);
     setCommentText("");
     // In a real app, you'd add the comment to the list
   };
-  
+
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto py-4 md:py-6">
       <div className="mb-6">
         <Button variant="ghost" className="mb-2">
           <ChevronLeft className="mr-2 h-4 w-4" />
@@ -68,22 +68,22 @@ const Lesson = () => {
         <h1 className="text-2xl font-bold">{lessonData.title}</h1>
         <p className="text-muted-foreground">{lessonData.courseTitle}</p>
       </div>
-      
+
       <div className="flex flex-col md:flex-row gap-6">
         {/* Main content */}
         <div className="w-full md:w-2/3">
           {/* Video player */}
           <div className="bg-black aspect-video rounded-lg overflow-hidden mb-6">
-            <video 
+            <video
               className="w-full h-full object-contain"
-              controls 
+              controls
               src={lessonData.videoUrl}
               poster="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=450&q=80"
             >
               Your browser does not support the video tag.
             </video>
           </div>
-          
+
           {/* Lesson content tabs */}
           <Tabs defaultValue="content" className="mb-8" onValueChange={setActiveTab}>
             <TabsList>
@@ -95,7 +95,7 @@ const Lesson = () => {
                 </span>
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="content" className="p-4 bg-white rounded-lg mt-4">
               <div className="prose max-w-none">
                 <h3 className="text-xl font-semibold mb-4">Lesson Overview</h3>
@@ -122,7 +122,7 @@ const Lesson = () => {
                 </ul>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="comments" className="p-4 bg-white rounded-lg mt-4">
               {/* Comment form */}
               <div className="mb-8">
@@ -133,9 +133,9 @@ const Lesson = () => {
                     <AvatarFallback>YA</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Textarea 
-                      placeholder="Add a comment..." 
-                      className="mb-3 resize-none" 
+                    <Textarea
+                      placeholder="Add a comment..."
+                      className="mb-3 resize-none"
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
                     />
@@ -143,7 +143,7 @@ const Lesson = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Comments list */}
               <div className="space-y-6">
                 {lessonData.comments.map((comment) => (
@@ -175,7 +175,7 @@ const Lesson = () => {
             </TabsContent>
           </Tabs>
         </div>
-        
+
         {/* Sidebar */}
         <div className="w-full md:w-1/3">
           <div className="bg-white rounded-lg p-6 space-y-6 sticky top-6">
@@ -187,7 +187,7 @@ const Lesson = () => {
               </div>
               <Progress value={lessonData.progress} className="h-2" />
             </div>
-            
+
             {/* Instructor */}
             <div>
               <h3 className="font-semibold mb-3">Your Instructor</h3>
@@ -202,7 +202,7 @@ const Lesson = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Navigation buttons */}
             <div className="pt-4 border-t border-border">
               <h3 className="font-semibold mb-3">Lesson Navigation</h3>
@@ -217,7 +217,7 @@ const Lesson = () => {
                 </Button>
               </div>
             </div>
-            
+
             {/* Resources */}
             <div className="pt-4 border-t border-border">
               <h3 className="font-semibold mb-3">Resources</h3>

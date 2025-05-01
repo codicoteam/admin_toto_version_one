@@ -8,10 +8,10 @@ import { Clock, BookOpen } from "lucide-react";
 export interface CourseCardProps {
   id: string;
   title: string;
-  instructor: {
-    name: string;
-    avatar?: string;
-  };
+  // instructor: {
+  //   name: string;
+  //   avatar?: string;
+  // };
   thumbnailUrl: string;
   category: string;
   lessonsCount: number;
@@ -23,7 +23,6 @@ export interface CourseCardProps {
 const CourseCard = ({
   id,
   title,
-  instructor,
   thumbnailUrl,
   category,
   lessonsCount,
@@ -39,19 +38,19 @@ const CourseCard = ({
           alt={title}
           className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
         />
-        <Badge className="absolute top-3 left-3 bg-white/90 text-foreground hover:bg-white/90 backdrop-blur-sm">
+        <Badge className="absolute top-3 left-3 bg-white/40 dark:bg-background/40 text-foreground hover:bg-white/90 backdrop-blur-sm border border-input">
           {category}
         </Badge>
       </div>
       <CardContent className="pt-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
-        <div className="flex items-center gap-2 mb-3">
+        {/* <div className="flex items-center gap-2 mb-3">
           <Avatar className="h-6 w-6">
             <AvatarImage src={instructor.avatar} />
             <AvatarFallback>{instructor.name[0]}</AvatarFallback>
           </Avatar>
           <span className="text-sm text-muted-foreground">{instructor.name}</span>
-        </div>
+        </div> */}
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
@@ -83,7 +82,7 @@ const CourseCard = ({
           variant={enrolled ? "outline" : "default"}
           className={`w-full ${enrolled ? "" : "bg-primary hover:bg-primary/90"}`}
         >
-          {enrolled ? "Continue Learning" : "Enroll Now"}
+          {enrolled ? "Continue Learning" : "Subscribe"}
         </Button>
       </CardFooter>
     </Card>

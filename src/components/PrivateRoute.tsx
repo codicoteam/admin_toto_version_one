@@ -3,13 +3,14 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { log } from "console";
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
+const PrivateRoute: React.FC<{ children: React.ReactNode; redirectTo?: string }> = ({
   children,
+  redirectTo = "/login",
 }) => {
   const { isAuthenticated } = useAuth();
   console.log("PrivateRoute isAuthenticated:", isAuthenticated);
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <>{children}</> : <Navigate to={redirectTo} />;
 };
 
 export default PrivateRoute;

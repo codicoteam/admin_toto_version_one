@@ -1,11 +1,20 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/context/AuthContext'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRightCircle, ExternalLink, Facebook, Instagram, LogIn, Mail, Moon, StretchHorizontal, Sun, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 const WelcomeLayout = () => {
+    const { isAuthenticated } = useAuth();
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/student')
+            return;
+        }
+    }, [])
+
     const navigate = useNavigate();
     const [darkMode, setDarkMode] = useState(
         localStorage.getItem("theme") === "dark" ||
@@ -69,7 +78,7 @@ const WelcomeLayout = () => {
                     className={`fixed top-0 p-1 w-full z-40 transition-all  ${scrolled ? 'bg-background/60  backdrop-blur border-b shadow-lg' : 'bg-transparent'}`}>
                     <div className=" max-w-screen-xl  mx-auto">
                         <div className='flex justify-between items-center'>
-                            <Link to={'/'}>
+                            <Link to={'/welcome/'}>
                                 <img
                                     className="w-16 my-2"
                                     src={'./logo.png'}
@@ -78,22 +87,19 @@ const WelcomeLayout = () => {
                             </Link>
 
                             <nav className="hidden md:flex items-center space-x-1 gap-4">
-                                <NavLink to={'/'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                                <NavLink to={'/welcome/'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                                     Home
                                 </NavLink>
-                                <NavLink to={'/about'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
-                                    About Us
+                                <NavLink to={'/welcome/about'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                                    About us
                                 </NavLink>
-                                <NavLink to={'/courses'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                                <NavLink to={'/welcome/courses'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                                     Courses
                                 </NavLink>
-                                <NavLink to={'/pricing'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                                <NavLink to={'/welcome/pricing'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                                     Pricing
                                 </NavLink>
-                                <NavLink to={'/pricing'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
-                                    Chat
-                                </NavLink>
-                                <NavLink to={'/contact'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                                <NavLink to={'/welcome/contact'} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                                     Contact
                                 </NavLink>
                                 <Link to={'/register'} className='border-[#002157] border rounded-full      p-2 px-5 dark:text-gray-50 flex text-sm items-center'>
@@ -160,22 +166,22 @@ const WelcomeLayout = () => {
                             </Button>
                             {mobileNavOpen && (
                                 <nav className="absolute top-0 left-0 w-full h-screen bg-background/90 z-30 flex flex-col items-center justify-center space-y-4">
-                                    <NavLink to={'/'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
                                         Home
                                     </NavLink>
-                                    <NavLink to={'/about'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/about'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
                                         About Us
                                     </NavLink>
-                                    <NavLink to={'/courses'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/courses'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
                                         Courses
                                     </NavLink>
-                                    <NavLink to={'/pricing'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/pricing'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
                                         Pricing
                                     </NavLink>
-                                    <NavLink to={'/contact'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/contact'} className="text-lg font-semibold" onClick={() => setMobileNavOpen(false)}>
                                         Contact
                                     </NavLink>
-                                    <NavLink to={'/login'} className="bg-[#002157] rounded-full text-white p-2 px-5 dark:text-gray-50 flex text-sm items-center" onClick={() => setMobileNavOpen(false)}>
+                                    <NavLink to={'/welcome/login'} className="bg-[#002157] rounded-full text-white p-2 px-5 dark:text-gray-50 flex text-sm items-center" onClick={() => setMobileNavOpen(false)}>
                                         <p>Login</p>
                                         <LogIn className="h-4" />
                                     </NavLink>

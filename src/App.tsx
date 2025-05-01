@@ -14,7 +14,7 @@ import Courses from "./pages/dashboard/Courses";
 import Lesson from "./pages/dashboard/Lesson";
 import QA from "./pages/dashboard/QA";
 import Wallet from "./pages/dashboard/Wallet";
-import Layout from "./components/Layout";
+import Layout from "./pages/dashboard/components/Layout";
 import NotFound from "./pages/NotFound";
 import Forgot_password from "./pages/auth/Forgot_Password";
 import Auth_Layout from "./pages/auth/authLayout";
@@ -38,11 +38,11 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route element={<WelcomeLayout />}>
-              <Route path="/" element={<Homepage />} />
-              <Route path="/courses" element={<CoursesHome />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/welcome" element={<Homepage />} />
+              <Route path="/welcome/courses" element={<CoursesHome />} />
+              <Route path="/welcome/about" element={<About />} />
+              <Route path="/welcome/contact" element={<Contact />} />
+              <Route path="/welcome/pricing" element={<Pricing />} />
             </Route>
             <Route
               element={<Auth_Layout />}>
@@ -67,7 +67,7 @@ const App = () => (
                 </PrivateRoute>
               }
             >
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" index element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/lesson/:id" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />

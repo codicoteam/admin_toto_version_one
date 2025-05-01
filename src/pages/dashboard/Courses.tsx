@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import CourseCard from "@/components/CourseCard";
 import { Input } from "@/components/ui/input";
@@ -9,92 +9,88 @@ import { Search, Filter } from "lucide-react";
 
 const Courses = () => {
   const [activeTab, setActiveTab] = useState("all");
-  
+
   // Mock course data
   const courses = [
     {
+      id: "0",
+      title: "Physics",
+      thumbnailUrl: "/physics.png",
+      category: "Advanced Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
       id: "1",
-      title: "Introduction to Web Development",
-      instructor: {
-        name: "Sarah Johnson",
-        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Programming",
+      title: "English Language",
+      thumbnailUrl: "/english.png",
+      category: "Ordinary Level",
       lessonsCount: 12,
       duration: "6 hours",
     },
     {
       id: "2",
-      title: "Advanced Data Science with Python",
-      instructor: {
-        name: "Michael Chen",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Data Science",
-      lessonsCount: 18,
-      duration: "10 hours",
+      title: "Maths",
+      thumbnailUrl: "/maths.png",
+      category: "Advanced Level",
+      lessonsCount: 12,
+      duration: "6 hours",
     },
     {
       id: "3",
-      title: "User Experience Design Fundamentals",
-      instructor: {
-        name: "Emily Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Design",
-      lessonsCount: 10,
-      duration: "5 hours",
+      title: "Accounts",
+      thumbnailUrl: "/accounts.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
     },
     {
       id: "4",
-      title: "Digital Marketing Strategies",
-      instructor: {
-        name: "Robert Smith",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Marketing",
-      lessonsCount: 15,
-      duration: "8 hours",
+      title: "Religious Studies",
+      thumbnailUrl: "/religious.png",
+      category: "Primary School",
+      lessonsCount: 12,
+      duration: "6 hours",
     },
     {
       id: "5",
-      title: "Mobile App Development with React Native",
-      instructor: {
-        name: "David Kim",
-        avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Programming",
-      lessonsCount: 20,
-      duration: "12 hours",
+      title: "Chemistry",
+      thumbnailUrl: "/chemistry.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
     },
     {
       id: "6",
-      title: "Business Analytics and Intelligence",
-      instructor: {
-        name: "Lisa Wang",
-        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-      },
-      thumbnailUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&h=400&q=80",
-      category: "Business",
-      lessonsCount: 14,
-      duration: "7 hours",
+      title: "Biology",
+      thumbnailUrl: "/biology.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
+      id: "7",
+      title: "Shona Language",
+      thumbnailUrl: "/shona.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
     },
   ];
-  
-  // Filter courses based on active tab
-  const filteredCourses = activeTab === "all" 
-    ? courses 
-    : courses.filter(course => course.category.toLowerCase() === activeTab);
-  
+
+  const [filteredCourses, setFilteredCourses] = useState([])
+  useEffect(() => {
+    const filterd = activeTab === "all"
+      ? courses
+      : courses.filter(course => course.category.toLowerCase() === activeTab);
+    setFilteredCourses(filterd);
+  }, [activeTab])
+
+
   return (
-    <div>
-      <SectionTitle 
-        title="Course Catalog" 
+    <div className="md:py-6 py-4">
+      <SectionTitle
+        title="Course Catalog"
         description="Explore our extensive collection of courses"
       >
         <div className="flex flex-col sm:flex-row gap-2">
@@ -107,19 +103,18 @@ const Courses = () => {
           </Button>
         </div>
       </SectionTitle>
-      
-      <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveTab}>
+
+      <Tabs defaultValue="all" className=" sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">All Categories</TabsTrigger>
-          <TabsTrigger value="programming">Programming</TabsTrigger>
-          <TabsTrigger value="data science">Data Science</TabsTrigger>
-          <TabsTrigger value="design">Design</TabsTrigger>
-          <TabsTrigger value="business">Business</TabsTrigger>
-          <TabsTrigger value="marketing">Marketing</TabsTrigger>
+          <TabsTrigger value="primary school">Primary School</TabsTrigger>
+          <TabsTrigger value="ordinary level">Ordinary Level</TabsTrigger>
+          <TabsTrigger value="advanced level">Advanced Level</TabsTrigger>
+          <TabsTrigger value="tertiary education">Tertiary Education</TabsTrigger>
         </TabsList>
       </Tabs>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredCourses.map(course => (
           <CourseCard key={course.id} {...course} />
         ))}

@@ -168,7 +168,11 @@ const Homepage = () => {
                     <div className="hero-blur w-96 h-96 bg-blue-500 rounded-full -top-20 -right-20"></div>
                     <div className="hero-blur w-96 h-96 bg-purple-500 rounded-full bottom-10 -left-20"></div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 hidden md:block -scale-x-100">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true }} className="absolute bottom-0 left-0 right-0 hidden md:block -scale-x-100">
                     <svg
                         viewBox="0 0 1200 300"
                         preserveAspectRatio="none"
@@ -192,7 +196,7 @@ const Homepage = () => {
                             className="dark:fill-[#002157]/80"
                         ></path>
                     </svg>
-                </div>
+                </motion.div>
                 <div className=" sm:max-w-screen-xl  mx-auto">
 
 

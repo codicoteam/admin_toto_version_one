@@ -1,9 +1,11 @@
-import { Search, Menu, Bell, Sun, Moon } from "lucide-react";
+import { Search, Menu, Bell, Sun, Moon, User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -16,7 +18,6 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   );
 
   useEffect(() => {
-    // Apply the initial theme on mount
     if (darkMode) {
       document.documentElement.classList.add("dark");
     } else {
@@ -35,6 +36,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       localStorage.setItem("theme", "light");
     }
   };
+
+  const { user, logout } = useAuth();
 
   return (
     <header className="bg-white dark:bg-slate-950 border-b border-border px-4 py-3 flex items-center justify-between shadow-sm">
@@ -78,10 +81,52 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             </motion.div>
           </AnimatePresence>
         </Button>
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=100&h=100&q=80" />
-          <AvatarFallback>SM</AvatarFallback>
-        </Avatar>
+
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button className="outline-none">
+              <Avatar className="h-8 w-8 cursor-pointer">
+                <AvatarImage src={user.profile} />
+                <AvatarFallback>{user.name.slice(0, 1)}</AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="end"
+              sideOffset={8}
+              className="min-w-[220px] bg-white dark:bg-slate-900 rounded-md shadow-lg border border-gray-200 dark:border-slate-700 p-1 z-50"
+            >
+              <DropdownMenu.Label className="px-2 py-1.5 text-sm text-gray-500 dark:text-slate-400">
+                {user.email}
+              </DropdownMenu.Label>
+              <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-slate-700 m-1" />
+
+              <DropdownMenu.Item className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
+                <User className="h-4 w-4" />
+                Profile
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Settings
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-slate-700 m-1" />
+
+              <DropdownMenu.Item
+                onClick={logout}
+                className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                Log out
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Arrow className="fill-gray-200 dark:fill-slate-700" />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </div>
     </header>
   );

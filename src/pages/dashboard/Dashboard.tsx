@@ -5,6 +5,8 @@ import SectionTitle from "@/components/SectionTitle";
 import CourseCard from "@/components/CourseCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
   // Mock data for enrolled courses
@@ -39,6 +41,48 @@ const Dashboard = () => {
     },
   ];
 
+  const courses = [
+    {
+      id: "0",
+      title: "Physics",
+      thumbnailUrl: "/physics.png",
+      category: "Advanced Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
+      id: "1",
+      title: "English Language",
+      thumbnailUrl: "/english.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
+      id: "2",
+      title: "Maths",
+      thumbnailUrl: "/maths.png",
+      category: "Advanced Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
+      id: "3",
+      title: "Accounts",
+      thumbnailUrl: "/accounts.png",
+      category: "Ordinary Level",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+    {
+      id: "4",
+      title: "Religious Studies",
+      thumbnailUrl: "/religious.png",
+      category: "Primary School",
+      lessonsCount: 12,
+      duration: "6 hours",
+    },
+  ]
   // Mock upcoming lessons
   const upcomingLessons = [
     {
@@ -64,15 +108,17 @@ const Dashboard = () => {
     },
   ];
 
+  const { user } = useAuth();
+
   return (
-    <div>
-      <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
-        <div className="w-full md:w-2/3">
+    <div className="py-4 md:py-6">
+      <div className="flex flex-col md:flex-row items-start gap-6 mb-6 md:grid grid-cols-3">
+        <div className="w-full  space-y-6 col-span-2">
           <div className="flex flex-col gap-4">
             <div className="bg-primary-foreground rounded-xl p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold">Welcome back, Alex!</h1>
+                  <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
                   <p className="text-muted-foreground mt-1">Here's what's happening with your learning today.</p>
                 </div>
                 <div className="sm:ml-auto">
@@ -106,54 +152,85 @@ const Dashboard = () => {
               />
             </div>
           </div>
-        </div>
 
-        <div className="w-full md:w-1/3 bg-primary-foreground rounded-xl p-6">
-          <h3 className="font-semibold text-lg mb-4">Upcoming Lessons</h3>
-          <div className="space-y-3">
-            {upcomingLessons.map((lesson) => (
-              <div key={lesson.id} className="flex gap-3 p-3 rounded-lg border border-border">
-                <div className="rounded-full bg-primary/10 p-3 h-11 w-11 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium">{lesson.title}</h4>
-                  <p className="text-sm text-muted-foreground">{lesson.course}</p>
-                  <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                    <span>{lesson.date}</span>
-                    <span>{lesson.duration}</span>
+          <SectionTitle
+            title="Continue Learning"
+            description="Pick up where you left off"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+            {enrolledCourses.map((course) => (
+              <CourseCard key={course.id} {...course} />
+            ))}
+
+
+          </div>
+
+        </div>
+        <div className=" space-y-6">
+
+
+          <Card className="flex flex-col justify-center items-center pt-5 border-dashed">
+            <CardContent className="text-center">
+              <div className="space-y-4">
+                <SectionTitle
+                  title="Popular Sourses"
+                />
+                {courses.map((course) => (
+                  <Card className="flex flex-col justify-center items-center p-2 border-dotted hover:shadow-lg transition">
+
+                    <div className="grid grid-cols-5 text-left">
+                      <div>
+                        <img src={course.thumbnailUrl} className="aspect-square rounded-md" />
+                      </div>
+                      <div className="col-span-4 pl-4 flex items-center">
+                        <div className="flex-1">
+
+                          <h1 className="text-lg md:text-xl font-bold text text-[#032155]">{course.title}</h1>
+                          <p className="font-semibold text-gray-600">30+ Topics</p>
+                        </div>
+                        <Button className="bg-[#032155]">
+                          View Course
+                        </Button>
+                      </div>
+                    </div>
+
+
+                  </Card>
+                ))}
+              </div>
+              <h3 className="font-semibold mb-2 mt-8">Discover New Courses</h3>
+              <p className="text-sm text-muted-foreground mb-4">Explore our catalog and find your next learning adventure</p>
+              <Button variant="outline" asChild>
+                <Link to={"/student/courses"}>Browse Courses</Link>
+              </Button>
+            </CardContent>
+          </Card>
+          <div className="w-full bg-primary-foreground rounded-xl p-6">
+            <h3 className="font-semibold text-lg mb-4">Upcoming Lessons</h3>
+            <div className="space-y-3">
+              {upcomingLessons.map((lesson) => (
+                <div key={lesson.id} className="flex gap-3 p-3 rounded-lg border border-border">
+                  <div className="rounded-full bg-primary/10 p-3 h-11 w-11 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{lesson.title}</h4>
+                    <p className="text-sm text-muted-foreground">{lesson.course}</p>
+                    <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                      <span>{lesson.date}</span>
+                      <span>{lesson.duration}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <Button variant="outline" className="w-full mt-4">View All Scheduled Lessons</Button>
           </div>
-          <Button variant="outline" className="w-full mt-4">View All Scheduled Lessons</Button>
         </div>
       </div>
 
-      <SectionTitle
-        title="Continue Learning"
-        description="Pick up where you left off"
-      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {enrolledCourses.map((course) => (
-          <CourseCard key={course.id} {...course} />
-        ))}
-
-        <Card className="flex flex-col justify-center items-center p-6 border-dashed">
-          <CardContent className="text-center">
-            <div className="rounded-full bg-muted p-4 mx-auto mb-4">
-              <Plus className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="font-semibold mb-2">Discover New Courses</h3>
-            <p className="text-sm text-muted-foreground mb-4">Explore our catalog and find your next learning adventure</p>
-            <Button variant="outline" asChild>
-              <a href="/courses">Browse Courses</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

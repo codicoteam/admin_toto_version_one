@@ -21,7 +21,7 @@ const Layout = () => {
         <Header onMenuClick={toggleSidebar} />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto animate-fade-in">
+        <main className="flex-1 px-4 md:px-6 overflow-y-auto animate-fade-in">
           <Outlet />
         </main>
       </div>

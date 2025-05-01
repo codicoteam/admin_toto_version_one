@@ -10,7 +10,7 @@ import SectionTitle from "@/components/SectionTitle";
 
 const QA = () => {
   const [activeTab, setActiveTab] = useState("all");
-  
+
   // Mock Q&A data
   const questions = [
     {
@@ -74,29 +74,29 @@ const QA = () => {
       tags: ["API", "Security", "Authentication"],
     },
   ];
-  
+
   // Filter questions based on active tab
-  const filteredQuestions = activeTab === "all" 
-    ? questions 
-    : activeTab === "solved" 
-      ? questions.filter(q => q.solved) 
+  const filteredQuestions = activeTab === "all"
+    ? questions
+    : activeTab === "solved"
+      ? questions.filter(q => q.solved)
       : questions.filter(q => !q.solved);
-  
+
   return (
-    <div>
-      <SectionTitle 
-        title="Q&A Forum" 
+    <div className="py-4 md:py-6">
+      <SectionTitle
+        title="Q&A Forum"
         description="Get answers from instructors and fellow students"
       >
         <Button>Ask a Question</Button>
       </SectionTitle>
-      
+
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input placeholder="Search questions..." className="pl-10" />
         </div>
-        
+
         <Tabs defaultValue="all" className="w-full sm:w-auto" onValueChange={setActiveTab}>
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="all">All Questions</TabsTrigger>
@@ -105,7 +105,7 @@ const QA = () => {
           </TabsList>
         </Tabs>
       </div>
-      
+
       {/* Questions list */}
       <div className="space-y-4">
         {filteredQuestions.map((question) => (
@@ -115,7 +115,7 @@ const QA = () => {
                 <AvatarImage src={question.user.avatar} />
                 <AvatarFallback>{question.user.name[0]}</AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h3 className="font-medium hover:text-primary cursor-pointer">{question.title}</h3>
@@ -126,9 +126,9 @@ const QA = () => {
                     </Badge>
                   )}
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{question.body}</p>
-                
+
                 <div className="flex flex-wrap gap-2 mb-3">
                   {question.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs font-normal bg-secondary/50">
@@ -136,12 +136,12 @@ const QA = () => {
                     </Badge>
                   ))}
                 </div>
-                
+
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span>Posted by {question.user.name}</span>
                   <span>in {question.course}</span>
                   <span>{question.timestamp}</span>
-                  
+
                   <div className="ml-auto flex items-center gap-3">
                     <div className="flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />

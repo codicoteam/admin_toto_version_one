@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
 
@@ -25,6 +25,8 @@ const Login = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { login } = useAuth();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -32,15 +34,23 @@ const Login = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate registration
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const attempt = await login(formData);
+    if (!attempt) {
+      toast({
+        title: "Login successful",
+      });
       navigate("/");
-    }, 1000);
+    } else {
+      toast({
+        title: "Invalid phone number or password",
+      });
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -101,16 +111,17 @@ const Login = () => {
                 <Lock className="h-4" />
                 Password
               </Label>
-              <Input
-                type="text"
-                placeholder="Enter passsword"
-                id="passsword"
-                name="passsword"
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <div className="relative border border-input rounded-md">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter Password"
+                  required
+                />
 
-
+              </div>
             </div>
 
             <Link
