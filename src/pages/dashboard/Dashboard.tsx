@@ -202,7 +202,7 @@ const Dashboard = () => {
               <h3 className="font-semibold mb-2 mt-8">Discover New Courses</h3>
               <p className="text-sm text-muted-foreground mb-4">Explore our catalog and find your next learning adventure</p>
               <Button variant="outline" asChild>
-                <Link to={"/student/courses"}>Browse Courses</Link>
+                <Link to={"/courses"}>Browse Courses</Link>
               </Button>
             </CardContent>
           </Card>

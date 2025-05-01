@@ -17,11 +17,11 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navItems = [
-    { icon: Home, label: "Dashboard", path: "./student/" },
-    { icon: BookOpen, label: "Courses", path: "/student/courses" },
-    { icon: MessageSquare, label: "Q&A Forum", path: "/student/qa" },
-    { icon: Wallet, label: "Wallet", path: "/student/wallet" },
-    { icon: Settings, label: "Settings", path: "/student/settings" },
+    { icon: Home, label: "Dashboard", path: "/" },
+    { icon: BookOpen, label: "Courses", path: "/courses" },
+    { icon: MessageSquare, label: "Q&A Forum", path: "/qa" },
+    { icon: Wallet, label: "Wallet", path: "/wallet" },
+    { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
   return (
