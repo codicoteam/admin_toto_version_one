@@ -95,7 +95,7 @@ const Contact: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen pt-16 ">
             {/* Hero Section */}
             <section className="py-20 relative overflow-hidden">
 
@@ -131,7 +131,7 @@ const Contact: React.FC = () => {
             </section>
 
             {/* Contact Content */}
-            <section className="py-16 bg-secondary/30">
+            <section className="py-16 bg-gray-50 dark:bg-gray-800">
                 <div className="container mx-auto px-4">
                     <div className="max-w-6xl mx-auto">
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">

@@ -92,7 +92,7 @@ const CoursesHome = () => {
         : courses.filter(course => course.category.toLowerCase() === activeTab);
 
     return (
-        <div className=" max-w-screen-xl  mx-auto my-16"    >
+        <div className=" max-w-screen-xl  mx-auto my-16 pt-16"    >
             <SectionTitle
                 title="Course Catalog"
                 description="Explore our extensive collection of courses"

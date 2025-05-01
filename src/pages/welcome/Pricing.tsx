@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Pricing = () => {
     const navigate = useNavigate();
     return (
-        <div className="">
+        <div className="pt-16">
             <div className="min-h-screen">
                 {/* Hero Section */}
                 <section className="relative overflow-hidden">

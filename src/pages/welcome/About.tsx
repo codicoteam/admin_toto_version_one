@@ -8,7 +8,7 @@ const About = () => {
 
     const aboutData = 'Toto Academy is an E-Learning Platform designed to make education more accessible through digital platforms. We offer structured learning via multimedia content combined with a community driven Q&A System for deeper understandings.\n\n  We are passionate about empowering learners Worldwide with high-quality, accessible & engaging education. Our mission is simple: Empower every student to learn, connect and succeed! Toto Academy is an E-Learning Platform designed to make education more accessible through digital platforms. We offer structured learning via multimedia content combined with a community driven Q&A System for deeper understandings.\n\n  We are passionate about empowering learners Worldwide with high-quality, accessible & engaging education. Our mission is simple: Empower every student to learn, connect and succeed!'
     return (
-        <div className="">
+        <div className="pt-16">
             <div className="min-h-screen">
                 {/* Hero Section */}
                 <section className="relative overflow-hidden">
