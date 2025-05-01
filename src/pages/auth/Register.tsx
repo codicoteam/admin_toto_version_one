@@ -3,16 +3,32 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
 import logimage from "@/assets/log.jpg";
 import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    phone: "",
+    password: "",
+
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,7 +53,7 @@ const Register = () => {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: .6, delay: 0.4 }}
-        className="grid grid-cols-1 md:grid-cols-2 m-auto max-w-screen-lg shadow-2xl rounded-2xl overflow-hidden border"
+        className="grid grid-cols-1 md:grid-cols-2 m-auto sm:max-w-screen-lg w-[80%] shadow-2xl rounded-2xl overflow-hidden border"
       >
         <div className=" p-4 flex flex-col items-center justify-center w-full bg-background  ">
           <div className="text-center items-center justify-center mb-4">
@@ -58,30 +74,40 @@ const Register = () => {
               Sign into your account
             </motion.h1>
           </div>
-          <form className="w-full max-w-md flex flex-col p-6 mx-auto space-y-4">
+          <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col p-6 mx-auto space-y-4">
             <div className="mb-4 w-full space-y-6">
               <div>
 
-                <Label className="w-full block mb-2 text-sm font-bold">
+                <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
+                  <Phone className="h-4" />
                   Phone Number
                 </Label>
                 <Input
                   className=""
-                  type="text"
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
                   placeholder="Enter Phone number"
 
                 />
               </div>
 
 
-              <Label className="w-full block mb-2 text-sm font-bold">
+              <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
+                <Lock className="h-4" />
                 Password
               </Label>
               <Input
                 type="text"
-                id="PasswordInput"
                 placeholder="Enter passsword"
+                id="passsword"
+                name="passsword"
+                value={formData.password}
+                onChange={handleChange}
               />
+
 
             </div>
 
@@ -94,7 +120,7 @@ const Register = () => {
 
             <Button
               variant='ghost'
-              onClick={() => navigate("/dashboard")}
+              type="submit"
             >
               LOGIN
             </Button>
