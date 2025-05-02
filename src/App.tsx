@@ -23,6 +23,7 @@ import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
 import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
 import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
+import  ReserourceUpload from "./pages/Upload";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               path="/email_password_reset"
               element={<Email_Password_Reset />}
             />
+             <Route path="/ reserourceupload" element={< ReserourceUpload />} />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
 
             {/* Protect routes using PrivateRoute */}
@@ -64,6 +66,7 @@ const App = () => (
               <Route path="/lesson/:id" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />
               <Route path="/wallet" element={<Wallet />} />
+             
             </Route>
 
             <Route path="*" element={<NotFound />} />
