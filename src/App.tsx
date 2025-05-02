@@ -1,29 +1,29 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import PrivateRoute from "./components/PrivateRoute";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 // Pages
-import Login from "./pages/auth/user/Register";
-import Register from "./pages/auth/user/Login";
-import Dashboard from "./pages/Dashboard";
-import Courses from "./pages/Courses";
-import Lesson from "./pages/Lesson";
-import QA from "./pages/QA";
-import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
-import NotFound from "./pages/NotFound";
-import Forgot_password from "./pages/auth/user/Forgot_Password";
-import Sms_Password_Reset from "./pages/auth/user/Sms_Password_Reset";
-import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
 import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
-import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
-import  ReserourceUpload from "./pages/Upload";
+import Admin_Register from "./pages/auth/Admin/Register";
+import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
+import Forgot_password from "./pages/auth/user/Forgot_Password";
+import Register from "./pages/auth/user/Login";
+import Login from "./pages/auth/user/Register";
+import Sms_Password_Reset from "./pages/auth/user/Sms_Password_Reset";
+import Courses from "./pages/Courses";
+import Dashboard from "./pages/Dashboard";
+import Lesson from "./pages/Lesson";
+import NotFound from "./pages/NotFound";
+import QA from "./pages/QA";
+import ReserourceUpload from "./pages/Upload";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +50,7 @@ const App = () => (
               path="/email_password_reset"
               element={<Email_Password_Reset />}
             />
-             <Route path="/ reserourceupload" element={< ReserourceUpload />} />
+             <Route path="/reserourceupload" element={< ReserourceUpload />} />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
 
             {/* Protect routes using PrivateRoute */}
