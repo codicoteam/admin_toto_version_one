@@ -54,7 +54,7 @@ const Admin_login = () => {
       localStorage.setItem("user", JSON.stringify(response.user));
 
       // Navigate to dashboard or home page
-      navigate("/homepage");
+      navigate("/admin_dashboard");
     } catch (error) {
       console.error("Login error:", error);
       showMessage(

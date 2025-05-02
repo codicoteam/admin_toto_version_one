@@ -28,6 +28,8 @@ import Homepage from "./pages/User_Pages/Hompage";
 import Aboutpage from "./pages/User_Pages/Aboutpage";
 import StudentDashboard from "./pages/Admin_Pages/Student";
 import ChatApp from "./pages/Admin_Pages/Chat";
+import ReserourceUpload from "./pages/Admin_Pages/Upload";
+import Library from "./pages/Admin_Pages/Library";
 
 import Navrbar from "./components/Navbar";
 
@@ -59,6 +61,8 @@ const App = () => (
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
             <Route path="/students_dashboard" element={<StudentDashboard />} />
             <Route path="/chat" element={<ChatApp />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/reserourceupload" element={<ReserourceUpload />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />
