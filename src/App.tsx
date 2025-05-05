@@ -23,6 +23,8 @@ import Lesson from "./pages/Lesson";
 import NotFound from "./pages/NotFound";
 import QA from "./pages/QA";
 import ReserourceUpload from "./pages/Upload";
+import ReserourceWalle from "./pages/Walle";
+
 import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
@@ -50,7 +52,9 @@ const App = () => (
               path="/email_password_reset"
               element={<Email_Password_Reset />}
             />
+            
              <Route path="/reserourceupload" element={< ReserourceUpload />} />
+             <Route path="/reserourcewalle" element={< ReserourceWalle />} />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
 
             {/* Protect routes using PrivateRoute */}

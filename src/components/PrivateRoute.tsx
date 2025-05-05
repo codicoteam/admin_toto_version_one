@@ -2,6 +2,8 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+
+
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -10,6 +12,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
 
   // eslint-disable-next-line no-constant-condition
   return true ? <>{children}</> : <Navigate to="/reserourceupload" />;
+  
+  
 };
+
 
 export default PrivateRoute;
