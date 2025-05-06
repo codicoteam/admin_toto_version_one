@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Book, Clock, User, Menu, X } from "lucide-react";
+import { Search, Plus, Menu, X } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,47 +19,76 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CourseCard from "@/components/CourseCard";
 
-const CourseCard = ({ title, category, lessons, duration }) => {
-  return (
-    <div className="flex flex-col border border-gray-200 rounded-md overflow-hidden">
-      {/* Course Image Placeholder */}
-      <div className="bg-black h-40 w-full flex items-center justify-center text-white">
-        (Course Image)
-      </div>
+const AddCourseDialog = ({ open, onOpenChange, onCourseAdded }) => {
+  const [courseData, setCourseData] = useState({
+    title: "",
+    category: "",
+    lessons: "",
+    duration: "",
+    description: "",
+  });
 
-      {/* Course Info */}
-      <div className="p-4">
-        <h3 className="font-medium text-blue-900">{title}</h3>
-        <p className="text-gray-600 text-sm">Additional Information</p>
-        <div className="flex justify-between items-center mt-2 text-xs">
-          <span>{lessons} Lessons</span>
-          <span className="text-red-500">Duration Time</span>
-        </div>
-      </div>
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setCourseData((prev) => ({ ...prev, [id]: value }));
+  };
 
-      {/* Empty Space for Additional Content */}
-      <div className="bg-white h-20 border-t border-gray-200"></div>
-    </div>
-  );
-};
+  const handleCategoryChange = (value) => {
+    setCourseData((prev) => ({ ...prev, category: value }));
+  };
 
-const AddCourseDialog = ({ open, onOpenChange }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Create new course with unique ID
+    const newCourse = {
+      id: `course-${Date.now()}`,
+      ...courseData,
+      topics: [],
+    };
+
+    // Pass to parent component
+    onCourseAdded(newCourse);
+
+    // Reset form and close dialog
+    setCourseData({
+      title: "",
+      category: "",
+      lessons: "",
+      duration: "",
+      description: "",
+    });
+    onOpenChange(false);
+  };
+
   return (
     <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
       <DialogHeader>
         <DialogTitle>Add New Course</DialogTitle>
       </DialogHeader>
-      <div className="grid gap-4 py-4">
+
+      <form onSubmit={handleSubmit} className="grid gap-4 py-4">
         <div className="grid gap-2">
           <Label htmlFor="title">Course Title</Label>
-          <Input id="title" placeholder="Enter course title" />
+          <Input
+            id="title"
+            value={courseData.title}
+            onChange={handleChange}
+            placeholder="Enter course title"
+            required
+          />
         </div>
 
         <div className="grid gap-2">
           <Label htmlFor="category">Category</Label>
-          <Select>
-            <SelectTrigger>
+          <Select
+            onValueChange={handleCategoryChange}
+            value={courseData.category}
+            required
+          >
+            <SelectTrigger id="category">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -73,35 +102,57 @@ const AddCourseDialog = ({ open, onOpenChange }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="lessons">Number of Lessons</Label>
-            <Input id="lessons" type="number" placeholder="10" />
+            <Input
+              id="lessons"
+              type="number"
+              value={courseData.lessons}
+              onChange={handleChange}
+              placeholder="10"
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="duration">Duration (hours)</Label>
-            <Input id="duration" type="number" placeholder="5" />
+            <Input
+              id="duration"
+              value={courseData.duration}
+              onChange={handleChange}
+              placeholder="5h"
+              required
+            />
           </div>
         </div>
 
         <div className="grid gap-2">
           <Label htmlFor="description">Description</Label>
-          <Textarea id="description" placeholder="Course description..." />
+          <Textarea
+            id="description"
+            value={courseData.description}
+            onChange={handleChange}
+            placeholder="Course description..."
+            required
+          />
         </div>
 
         <div className="grid gap-2">
           <Label htmlFor="thumbnail">Course Thumbnail</Label>
           <Input id="thumbnail" type="file" />
         </div>
-      </div>
 
-      <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-        <Button
-          onClick={() => onOpenChange(false)}
-          variant="outline"
-          className="w-full sm:w-auto"
-        >
-          Cancel
-        </Button>
-        <Button className="w-full sm:w-auto">Create Course</Button>
-      </div>
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
+          <Button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" className="w-full sm:w-auto">
+            Create Course
+          </Button>
+        </div>
+      </form>
     </DialogContent>
   );
 };
@@ -111,6 +162,121 @@ const AdminCourses = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [courses, setCourses] = useState([
+    {
+      id: "1",
+      title: "Mathematics",
+      category: "o-level",
+      lessons: 10,
+      duration: "2h",
+      topics: [
+        {
+          id: "t1-1",
+          name: "Algebra",
+          description: "Basic algebraic expressions",
+          duration: "30",
+        },
+        {
+          id: "t1-2",
+          name: "Geometry",
+          description: "Angles and shapes",
+          duration: "45",
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "Biology",
+      category: "o-level",
+      lessons: 12,
+      duration: "3h",
+      topics: [
+        {
+          id: "t2-1",
+          name: "Cell Structure",
+          description: "Understanding cell components",
+          duration: "40",
+        },
+        {
+          id: "t2-2",
+          name: "Photosynthesis",
+          description: "How plants make food",
+          duration: "35",
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Physics",
+      category: "a-level",
+      lessons: 15,
+      duration: "4h",
+      topics: [
+        {
+          id: "t3-1",
+          name: "Mechanics",
+          description: "Forces and motion",
+          duration: "50",
+        },
+        {
+          id: "t3-2",
+          name: "Electricity",
+          description: "Current and voltage",
+          duration: "60",
+        },
+      ],
+    },
+    {
+      id: "4",
+      title: "Chemistry",
+      category: "a-level",
+      lessons: 14,
+      duration: "4h",
+      topics: [
+        {
+          id: "t4-1",
+          name: "Atomic Structure",
+          description: "Atoms and elements",
+          duration: "45",
+        },
+      ],
+    },
+    {
+      id: "5",
+      title: "Computer Science",
+      category: "tertiary",
+      lessons: 20,
+      duration: "5h",
+      topics: [
+        {
+          id: "t5-1",
+          name: "Programming Basics",
+          description: "Introduction to coding",
+          duration: "90",
+        },
+      ],
+    },
+    {
+      id: "6",
+      title: "Business Studies",
+      category: "tertiary",
+      lessons: 16,
+      duration: "3h",
+      topics: [
+        {
+          id: "t6-1",
+          name: "Marketing",
+          description: "Principles of marketing",
+          duration: "60",
+        },
+      ],
+    },
+  ]);
+
+  // Add course handler
+  const handleCourseAdded = (newCourse) => {
+    setCourses([...courses, newCourse]);
+  };
 
   // Update screen size state and handle sidebar visibility
   useEffect(() => {
@@ -143,52 +309,6 @@ const AdminCourses = () => {
     { id: "o-level", label: "O' Level" },
     { id: "a-level", label: "A' Level" },
     { id: "tertiary", label: "Tertiary" },
-  ];
-
-  // Mock course data with categories
-  const courses = [
-    {
-      id: "1",
-      title: "Course Name",
-      category: "o-level",
-      lessons: 10,
-      duration: "2h",
-    },
-    {
-      id: "2",
-      title: "Course Name",
-      category: "o-level",
-      lessons: 10,
-      duration: "3h",
-    },
-    {
-      id: "3",
-      title: "Course Name",
-      category: "a-level",
-      lessons: 10,
-      duration: "2h",
-    },
-    {
-      id: "4",
-      title: "Course Name",
-      category: "a-level",
-      lessons: 10,
-      duration: "4h",
-    },
-    {
-      id: "5",
-      title: "Course Name",
-      category: "tertiary",
-      lessons: 10,
-      duration: "5h",
-    },
-    {
-      id: "6",
-      title: "Course Name",
-      category: "tertiary",
-      lessons: 10,
-      duration: "3h",
-    },
   ];
 
   // Filter courses based on active tab
@@ -265,6 +385,7 @@ const AdminCourses = () => {
                 <AddCourseDialog
                   open={dialogOpen}
                   onOpenChange={setDialogOpen}
+                  onCourseAdded={handleCourseAdded}
                 />
               </Dialog>
             </div>
@@ -295,10 +416,12 @@ const AdminCourses = () => {
             {filteredCourses.map((course) => (
               <CourseCard
                 key={course.id}
+                id={course.id}
                 title={course.title}
                 category={course.category}
                 lessons={course.lessons}
                 duration={course.duration}
+                topics={course.topics}
               />
             ))}
           </div>

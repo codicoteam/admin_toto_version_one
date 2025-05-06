@@ -1,95 +1,50 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, BookOpen } from "lucide-react";
-
-export interface CourseCardProps {
-  id: string;
-  title: string;
-  instructor: {
-    name: string;
-    avatar?: string;
-  };
-  thumbnailUrl: string;
-  category: string;
-  lessonsCount: number;
-  duration: string;
-  enrolled?: boolean;
-  progress?: number;
-}
+import { useState } from "react";
+import { CourseTopicsDialog } from "./Course_Topic";
 
 const CourseCard = ({
   id,
   title,
-  instructor,
-  thumbnailUrl,
   category,
-  lessonsCount,
+  lessons,
   duration,
-  enrolled = false,
-  progress,
-}: CourseCardProps) => {
+  topics = [],
+}) => {
+  const [topicsDialogOpen, setTopicsDialogOpen] = useState(false);
+
   return (
-    <Card className="overflow-hidden hover:shadow-card transition-shadow duration-300 w-full">
-      <div className="aspect-video relative overflow-hidden">
-        <img
-          src={thumbnailUrl}
-          alt={title}
-          className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
-        />
-        <Badge className="absolute top-3 left-3 bg-white/90 text-foreground hover:bg-white/90 backdrop-blur-sm">
-          {category}
-        </Badge>
-      </div>
-      <CardContent className="pt-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
-        <div className="flex items-center gap-2 mb-3">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={instructor.avatar} />
-            <AvatarFallback>{instructor.name[0]}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-muted-foreground">
-            {instructor.name}
-          </span>
+    <>
+      <div
+        className="flex flex-col border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => setTopicsDialogOpen(true)}
+      >
+        {/* Course Image Placeholder */}
+        <div className="bg-black h-40 w-full flex items-center justify-center text-white">
+          (Course Image)
         </div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <BookOpen className="h-4 w-4" />
-            <span>{lessonsCount} lessons</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>{duration}</span>
+
+        {/* Course Info */}
+        <div className="p-4">
+          <h3 className="font-medium text-blue-900">{title}</h3>
+          <p className="text-gray-600 text-sm">Category: {category}</p>
+          <div className="flex justify-between items-center mt-2 text-xs">
+            <span>{lessons} Lessons</span>
+            <span className="text-red-500">{duration}</span>
           </div>
         </div>
 
-        {enrolled && progress !== undefined && (
-          <div className="mt-3">
-            <div className="flex justify-between text-xs mb-1">
-              <span>Progress</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter className="pt-0">
-        <Button
-          variant={enrolled ? "outline" : "default"}
-          className={`w-full ${
-            enrolled ? "" : "bg-primary hover:bg-primary/90"
-          }`}
-        >
-          {enrolled ? "Continue Learning" : "Enroll Now"}
-        </Button>
-      </CardFooter>
-    </Card>
+        {/* Empty Space for Additional Content */}
+        <div className="bg-white h-20 border-t border-gray-200"></div>
+      </div>
+
+      {/* Topics Dialog */}
+      <CourseTopicsDialog
+        courseId={id}
+        courseTitle={title}
+        topics={topics}
+        open={topicsDialogOpen}
+        onOpenChange={setTopicsDialogOpen}
+      />
+    </>
   );
 };
 
