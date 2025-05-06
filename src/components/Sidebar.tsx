@@ -9,8 +9,8 @@ const Sidebar = () => {
     { label: "STUDENTS", path: "/students_dashboard" },
     { label: "CHAT", path: "/chat" },
     { label: "LIBRARY", path: "/library" },
-    { label: "WALLET", path: "/wallet" },
-    { label: "SETTINGS", path: "/settings" },
+    { label: "WALLET", path: "/coursedetails" },
+    { label: "SETTINGS", path: "/settingspage" },
   ];
 
   return (

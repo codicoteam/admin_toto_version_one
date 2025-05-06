@@ -30,6 +30,8 @@ import StudentDashboard from "./pages/Admin_Pages/Student";
 import ChatApp from "./pages/Admin_Pages/Chat";
 import ReserourceUpload from "./pages/Admin_Pages/Upload";
 import Library from "./pages/Admin_Pages/Library";
+import SettingsPage from "./pages/Admin_Pages/Settings";
+import CourseDetailPage from "./pages/Admin_Pages/Course_Details";
 
 import Navrbar from "./components/Navbar";
 
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/chat" element={<ChatApp />} />
             <Route path="/library" element={<Library />} />
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
+            <Route path="/settingspage" element={<SettingsPage />} />
+            <Route path="/coursedetails" element={<CourseDetailPage />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />
