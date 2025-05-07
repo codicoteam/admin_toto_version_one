@@ -1,5 +1,5 @@
 
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, MessageSquare, ThumbsUp } from "lucide-react
 import { useState } from "react";
 
 const Lesson = () => {
-  const { id } = useParams();
+  const { id, topicID } = useParams();
   const [activeTab, setActiveTab] = useState("content");
   const [commentText, setCommentText] = useState("");
 
@@ -58,10 +58,12 @@ const Lesson = () => {
     // In a real app, you'd add the comment to the list
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="max-w-6xl mx-auto py-4 md:py-6">
       <div className="mb-6">
-        <Button variant="ghost" className="mb-2">
+        <Button onClick={() => navigate(-1)} variant="ghost" className="mb-2">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Course
         </Button>
@@ -188,20 +190,6 @@ const Lesson = () => {
               <Progress value={lessonData.progress} className="h-2" />
             </div>
 
-            {/* Instructor */}
-            <div>
-              <h3 className="font-semibold mb-3">Your Instructor</h3>
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={lessonData.instructor.avatar} />
-                  <AvatarFallback>{lessonData.instructor.name[0]}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h4 className="font-medium">{lessonData.instructor.name}</h4>
-                  <p className="text-sm text-muted-foreground">Web Development Instructor</p>
-                </div>
-              </div>
-            </div>
 
             {/* Navigation buttons */}
             <div className="pt-4 border-t border-border">

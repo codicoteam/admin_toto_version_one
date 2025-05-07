@@ -26,6 +26,7 @@ import About from "./pages/welcome/About";
 import Contact from "./pages/welcome/Contact";
 import CoursesHome from "./pages/welcome/CoursesHome";
 import Pricing from "./pages/welcome/Pricing";
+import Course from "./pages/dashboard/Course";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +70,8 @@ const App = () => (
             >
               <Route path="/" index element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
-              <Route path="/lesson/:id" element={<Lesson />} />
+              <Route path="/courses/:id" element={<Course />} />
+              <Route path="/courses/:id/topic/:topicID" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />
               <Route path="/wallet" element={<Wallet />} />
             </Route>

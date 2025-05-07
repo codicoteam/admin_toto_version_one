@@ -99,9 +99,9 @@ const Wallet = () => {
               <Button className="flex-1 gap-1">
                 <Plus className="h-4 w-4" /> Add Money
               </Button>
-              <Button variant="outline" className="flex-1 gap-1">
+              {/* <Button variant="outline" className="flex-1 gap-1">
                 Withdraw
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
@@ -156,10 +156,10 @@ const Wallet = () => {
             {walletData.transactions.map((transaction) => (
               <div key={transaction.id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">
                 <div className={`rounded-full p-2 ${transaction.type === "deposit"
-                    ? "bg-green-100 text-green-600"
-                    : transaction.type === "refund"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-red-100 text-red-600"
+                  ? "bg-green-100 text-green-600"
+                  : transaction.type === "refund"
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-red-100 text-red-600"
                   }`}>
                   {transaction.type === "deposit" || transaction.type === "refund" ? (
                     <ArrowDownLeft className="h-5 w-5" />
@@ -175,8 +175,8 @@ const Wallet = () => {
 
                 <div className="text-right">
                   <div className={`font-medium ${transaction.type === "deposit" || transaction.type === "refund"
-                      ? "text-green-600"
-                      : "text-red-600"
+                    ? "text-green-600"
+                    : "text-red-600"
                     }`}>
                     {transaction.type === "deposit" || transaction.type === "refund" ? "+" : "-"}${transaction.amount.toFixed(2)}
                   </div>

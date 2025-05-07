@@ -189,7 +189,7 @@ const Dashboard = () => {
                           <h1 className="text-lg md:text-xl font-bold text text-[#032155]">{course.title}</h1>
                           <p className="font-semibold text-gray-600">30+ Topics</p>
                         </div>
-                        <Button className="bg-[#032155]">
+                        <Button className="bg-[#032155] text-white">
                           View Course
                         </Button>
                       </div>

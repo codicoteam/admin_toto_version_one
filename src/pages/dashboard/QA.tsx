@@ -109,7 +109,7 @@ const QA = () => {
       {/* Questions list */}
       <div className="space-y-4">
         {filteredQuestions.map((question) => (
-          <div key={question.id} className="bg-white rounded-lg p-5 border border-border hover:shadow-card transition-shadow">
+          <div key={question.id} className="dark:bg-background bg-white rounded-lg p-5 border border-border hover:shadow-card transition-shadow">
             <div className="flex items-start gap-4">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={question.user.avatar} />

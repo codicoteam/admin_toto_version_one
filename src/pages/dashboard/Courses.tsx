@@ -104,7 +104,7 @@ const Courses = () => {
         </div>
       </SectionTitle>
 
-      <Tabs defaultValue="all" className=" sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
+      {/* <Tabs defaultValue="all" className=" sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">All Categories</TabsTrigger>
           <TabsTrigger value="primary school">Primary School</TabsTrigger>
@@ -112,7 +112,7 @@ const Courses = () => {
           <TabsTrigger value="advanced level">Advanced Level</TabsTrigger>
           <TabsTrigger value="tertiary education">Tertiary Education</TabsTrigger>
         </TabsList>
-      </Tabs>
+      </Tabs> */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredCourses.map(course => (

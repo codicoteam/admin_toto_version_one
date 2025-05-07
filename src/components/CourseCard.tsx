@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export interface CourseCardProps {
   id: string;
@@ -79,11 +80,15 @@ const CourseCard = ({
       </CardContent>
       <CardFooter className="pt-0">
         <Button
+          asChild
           variant={enrolled ? "outline" : "default"}
           className={`w-full ${enrolled ? "" : "bg-primary hover:bg-primary/90"}`}
         >
-          {enrolled ? "Continue Learning" : "Subscribe"}
+          <Link to={'/courses/244'}>
+            {enrolled ? "Continue Learning" : "View Course"}
+          </Link>
         </Button>
+
       </CardFooter>
     </Card>
   );
