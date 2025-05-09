@@ -1,157 +1,624 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, Book } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Clock, BookOpen, Edit, Plus, Trash2 } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import CourseService from "@/services/Admin_Service/Course_service";
+import TopicInCourseService from "@/services/Admin_Service/Topic_InCourse_service";
 
-const TopicCard = ({ topicNumber, name, price, status }) => {
-  return (
-    <div className="bg-white border border-gray-200 aspect-square flex flex-col">
-      <div className="h-3/4 flex items-center justify-center">
-        {/* Topic content placeholder */}
-      </div>
-      <div className="bg-blue-900 text-white p-2">
-        <div className="flex justify-between items-center">
-          <div className="text-sm font-medium">
-            Topic {topicNumber} {name ? `(${name})` : ""}
-          </div>
-          <div className="text-xs">${price}</div>
-        </div>
-        <div className="flex justify-between items-center mt-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs bg-white text-blue-900 hover:bg-gray-100 px-2 py-1 h-auto"
-          >
-            View Topic
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`text-xs px-2 py-1 h-auto ${
-              status === "Purchased"
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : "bg-red-500 text-white hover:bg-red-600"
-            }`}
-          >
-            {status}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Topic Dialog Component
+const AddTopicDialog = ({ courseId, onTopicAdded, open, onOpenChange }) => {
+  const [topicData, setTopicData] = useState({
+    title: "",
+    description: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-const CourseDetailPage = () => {
-  const [topics, setTopics] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const topicsPerPage = 10;
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setTopicData((prev) => ({ ...prev, [id]: value }));
+  };
 
-  // Simulate fetching topics data
-  useEffect(() => {
-    // Mock data for topics
-    const mockTopics = Array.from({ length: 20 }, (_, index) => ({
-      id: index + 1,
-      name: `Topic Name (if any)`,
-      price: ((index % 3) + 1) * 9.99,
-      status: index % 2 === 0 ? "Pending" : "Purchased",
-    }));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    setTopics(mockTopics);
-  }, []);
+    try {
+      // API call to create topic
+      const result = await TopicInCourseService.createTopic(courseId, {
+        name: topicData.title,
+        description: topicData.description,
+      });
 
-  // Get current topics
-  const indexOfLastTopic = currentPage * topicsPerPage;
-  const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
-  const currentTopics = topics.slice(indexOfFirstTopic, indexOfLastTopic);
+      // Notify parent component
+      onTopicAdded(result.data);
 
-  // Load more topics
-  const handleLoadMore = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
+      // Show success message
+      toast({
+        title: "Topic created",
+        description: "The topic has been added to the course.",
+      });
+
+      // Reset form and close dialog
+      setTopicData({
+        title: "",
+        description: "",
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to create topic:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to create topic. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <div className="flex-1">
-        {/* Main Content */}
-        <div className="flex flex-col md:flex-row min-h-screen">
-          {/* Course Info Sidebar */}
-          <div className="w-full md:w-64 bg-blue-900 text-white p-4">
-            <Button
-              variant="ghost"
-              className="flex items-center text-white mb-4 hover:bg-blue-800 px-2"
-            >
-              <ChevronLeft className="h-5 w-5 mr-1" /> Go Back
-            </Button>
+    <DialogContent className="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle>Add New Topic</DialogTitle>
+      </DialogHeader>
 
-            <div className="bg-white rounded-md p-4 mb-4">
-              <div className="flex justify-center">
-                <div className="w-24 h-24 overflow-hidden">
-                  <img
-                    src="/api/placeholder/100/100"
-                    alt="Biology"
-                    className="w-full h-full object-cover"
-                  />
+      <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="title">Topic Title</Label>
+          <Input
+            id="title"
+            value={topicData.title}
+            onChange={handleChange}
+            placeholder="Enter topic title"
+            required
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={topicData.description}
+            onChange={handleChange}
+            placeholder="Topic description..."
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Topic"}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  );
+};
+
+// Topic Card Component
+const TopicCard = ({ topic, courseId, onTopicUpdated, onTopicDeleted }) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState({
+    title: topic.name || topic.title,
+    description: topic.description || "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleEditChange = (e) => {
+    const { id, value } = e.target;
+    setEditData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const result = await TopicInCourseService.updateTopic(
+        courseId,
+        topic._id,
+        {
+          name: editData.title,
+          description: editData.description,
+        }
+      );
+
+      onTopicUpdated(result.data);
+      setEditDialogOpen(false);
+      toast({
+        title: "Topic updated",
+        description: "The topic has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to update topic:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to update topic. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await TopicInCourseService.deleteTopic(courseId, topic._id);
+      onTopicDeleted(topic._id);
+      setDeleteDialogOpen(false);
+      toast({
+        title: "Topic deleted",
+        description: "The topic has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to delete topic:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to delete topic. Please try again.",
+      });
+    }
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+      <h3 className="font-medium text-lg mb-2">{topic.name || topic.title}</h3>
+      {topic.description && (
+        <p className="text-gray-600 text-sm mb-4">{topic.description}</p>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-1" /> Edit
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Topic</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Topic Title</Label>
+                <Input
+                  id="title"
+                  value={editData.title}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={editData.description}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setEditDialogOpen(false)}
+                  variant="outline"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Topic</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this topic? This action cannot
+                be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  );
+};
+
+const CourseDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [course, setCourse] = useState(null);
+  const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [addTopicDialogOpen, setAddTopicDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Format category for display
+  const formatCategory = (cat) => {
+    if (!cat) return "";
+    // Format category strings like "a-level" to "A' Level"
+    const categoryMap = {
+      "o-level": "O' Level",
+      "a-level": "A' Level",
+      tertiary: "Tertiary",
+    };
+    return categoryMap[cat.toLowerCase()] || cat;
+  };
+
+  // Fetch course and topics
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+        // Fetch course details
+        const courseResult = await CourseService.getCourseById(id);
+        setCourse(courseResult.data);
+
+        // Fetch topics for this course
+        const topicsResult = await TopicInCourseService.getAllTopics(id);
+        setTopics(topicsResult.data || []);
+
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch course data:", err);
+        setError(
+          "Failed to load course details. The course may not exist or you may not have permission to view it."
+        );
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load course details. Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourseData();
+  }, [id, toast]);
+
+  // Handler to add a new topic
+  const handleTopicAdded = (newTopic) => {
+    setTopics((prev) => [...prev, newTopic]);
+  };
+
+  // Handler to update a topic
+  const handleTopicUpdated = (updatedTopic) => {
+    setTopics((prev) =>
+      prev.map((topic) =>
+        topic._id === updatedTopic._id ? updatedTopic : topic
+      )
+    );
+  };
+
+  // Handler to delete a topic
+  const handleTopicDeleted = (topicId) => {
+    setTopics((prev) => prev.filter((topic) => topic._id !== topicId));
+  };
+
+  // Handler to delete the course
+  const handleDeleteCourse = async () => {
+    try {
+      await CourseService.deleteCourse(id);
+      toast({
+        title: "Course deleted",
+        description: "The course has been deleted successfully.",
+      });
+      navigate("/admin/courses");
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to delete course. Please try again.",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-6 rounded-lg my-4">
+          <h2 className="text-xl font-bold mb-2">Error</h2>
+          <p className="mb-4">{error}</p>
+          <Button onClick={() => navigate("/admin/courses")}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl">
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-6 rounded-lg my-4">
+          <h2 className="text-xl font-bold mb-2">Course Not Found</h2>
+          <p className="mb-4">
+            The course you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => navigate("/admin/courses")}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="hidden md:block w-64">
+        <Sidebar />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1">
+        <div className="container mx-auto p-4 max-w-4xl">
+          {/* Back Button */}
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/courses")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
+            </Button>
+          </div>
+
+          {/* Course Header */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge>{formatCategory(course.category)}</Badge>
                 </div>
+                <h1 className="text-2xl font-bold mb-2">
+                  {course.name || course.title}
+                </h1>
+                <div className="flex items-center text-sm text-gray-600 mb-4">
+                  <div className="flex items-center mr-4">
+                    <BookOpen className="h-4 w-4 mr-1" />
+                    <span>
+                      {course.numberOfLessons || course.lessons} Lessons
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>{course.duration}</span>
+                  </div>
+                </div>
+                {course.description && (
+                  <p className="text-gray-700">{course.description}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => navigate(`/admin/courses/${id}/edit`)}
+                  variant="outline"
+                >
+                  <Edit className="h-4 w-4 mr-2" /> Edit
+                </Button>
+                <AlertDialog
+                  open={deleteDialogOpen}
+                  onOpenChange={setDeleteDialogOpen}
+                >
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Course</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this course? All related
+                        content, topics, and lessons will be permanently
+                        removed. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteCourse}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
-
-            <h1 className="text-2xl font-bold mb-2">Course Name</h1>
-
-            <div className="mt-4">
-              <h2 className="text-lg mb-2">Details</h2>
-              <p className="text-sm text-gray-300">(Course Name)</p>
-              <div className="border-t border-blue-800 my-2"></div>
-              <p className="text-sm text-gray-300">
-                ............................................
-              </p>
-              <p className="text-sm text-gray-300">
-                ............................................
-              </p>
-              <p className="text-sm text-gray-300">
-                ............................................
-              </p>
-              <p className="text-sm text-gray-300">
-                ............................................
-              </p>
-            </div>
           </div>
 
-          {/* Topics Grid */}
-          <div className="flex-1 p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {currentTopics.map((topic, index) => (
-                <TopicCard
-                  key={topic.id}
-                  topicNumber={topic.id}
-                  name={topic.name}
-                  price={topic.price.toFixed(2)}
-                  status={topic.status}
-                />
-              ))}
-            </div>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="topics">Topics</TabsTrigger>
+              <TabsTrigger value="lessons">Lessons</TabsTrigger>
+              <TabsTrigger value="students">Students</TabsTrigger>
+            </TabsList>
 
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 mt-8">
-              {topics.length > currentTopics.length && (
-                <Button
-                  variant="outline"
-                  className="border-blue-900 text-blue-900 hover:bg-blue-50"
-                  onClick={handleLoadMore}
-                >
-                  Load more topics
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                className="border-blue-900 text-blue-900 hover:bg-blue-50"
-              >
-                Multi-Selection
-              </Button>
-            </div>
-          </div>
+            {/* Overview Tab */}
+            <TabsContent value="overview">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4">Course Overview</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Description</h3>
+                    <p className="text-gray-700">
+                      {course.description || "No description available."}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">Details</h3>
+                    <dl className="grid grid-cols-2 gap-y-2">
+                      <dt className="text-gray-600">Category:</dt>
+                      <dd>{formatCategory(course.category)}</dd>
+                      <dt className="text-gray-600">Lessons:</dt>
+                      <dd>{course.numberOfLessons || course.lessons}</dd>
+                      <dt className="text-gray-600">Duration:</dt>
+                      <dd>{course.duration}</dd>
+                      <dt className="text-gray-600">Topics:</dt>
+                      <dd>{topics.length}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Topics Tab */}
+            <TabsContent value="topics">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Topics</h2>
+                  <Dialog
+                    open={addTopicDialogOpen}
+                    onOpenChange={setAddTopicDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" /> Add Topic
+                      </Button>
+                    </DialogTrigger>
+                    <AddTopicDialog
+                      courseId={id}
+                      onTopicAdded={handleTopicAdded}
+                      open={addTopicDialogOpen}
+                      onOpenChange={setAddTopicDialogOpen}
+                    />
+                  </Dialog>
+                </div>
+
+                {topics.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">
+                      No topics have been added to this course yet.
+                    </p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" /> Add Your First Topic
+                        </Button>
+                      </DialogTrigger>
+                      <AddTopicDialog
+                        courseId={id}
+                        onTopicAdded={handleTopicAdded}
+                        open={addTopicDialogOpen}
+                        onOpenChange={setAddTopicDialogOpen}
+                      />
+                    </Dialog>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {topics.map((topic) => (
+                      <TopicCard
+                        key={topic._id}
+                        topic={topic}
+                        courseId={id}
+                        onTopicUpdated={handleTopicUpdated}
+                        onTopicDeleted={handleTopicDeleted}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Lessons Tab */}
+            <TabsContent value="lessons">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4">Lessons</h2>
+                <p className="text-gray-500">
+                  Lesson management will be implemented in the future.
+                </p>
+              </div>
+            </TabsContent>
+
+            {/* Students Tab */}
+            <TabsContent value="students">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                  Enrolled Students
+                </h2>
+                <p className="text-gray-500">
+                  Student enrollment information will be implemented in the
+                  future.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
   );
 };
 
-export default CourseDetailPage;
+export default CourseDetail;

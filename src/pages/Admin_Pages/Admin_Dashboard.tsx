@@ -4,16 +4,57 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import student from "@/assets/home1.png";
+import StudentService from "../../services/Admin_Service/Student_service"; // Import the StudentService
+import CourseService from "@/services/Admin_Service/Course_service";
 
 const Admin_Dashboard = () => {
   // Set initial sidebar state based on screen size
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
 
+  // Student data state
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  //course data
+  const [course, setCourse] = useState([]);
+
   // Toggle sidebar function
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  // Fetch students from backend
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await StudentService.getAllStudents();
+        setStudents(response.data || []);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || "Error fetching students");
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  //fetch courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await CourseService.getAllCourses();
+        setCourse(response.data || []);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || "Error fetcing courses");
+        setLoading(false);
+      }
+    };
+    fetchCourses;
+  });
 
   // Update screen size state and handle sidebar visibility
   useEffect(() => {
@@ -33,6 +74,9 @@ const Admin_Dashboard = () => {
     // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  // Get top performing students (assuming higher performance means higher grades)
+  const topPerformingStudents = students.slice(0, 5); // Get top 5 students
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -111,7 +155,7 @@ const Admin_Dashboard = () => {
                   </div>
                   <div className="p-4 flex flex-col justify-center">
                     <div className="text-2xl md:text-3xl font-bold text-blue-900">
-                      100+
+                      {loading ? "..." : students.length}
                     </div>
                     <div className="text-sm font-medium text-blue-900">
                       Students
@@ -127,14 +171,14 @@ const Admin_Dashboard = () => {
                 <div className="flex items-stretch">
                   <div className="bg-gray-200 p-4 flex items-center justify-center w-1/3">
                     <img
-                      src="/api/placeholder/100/100"
+                      src={student}
                       alt="Courses"
-                      className="h-12 w-12 md:h-16 md:w-16 object-cover"
+                      className="h-16 w-16 md:h-20 md:w-20 object-cover"
                     />
                   </div>
                   <div className="p-4 flex flex-col justify-center">
                     <div className="text-2xl md:text-3xl font-bold text-blue-900">
-                      12+
+                      {loading ? "..." : course.length}
                     </div>
                     <div className="text-sm font-medium text-blue-900">
                       Courses
@@ -169,25 +213,37 @@ const Admin_Dashboard = () => {
 
                 {/* Student List */}
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {[1, 2, 3, 4, 5].map((index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2"
-                    >
-                      <div className="flex items-center mb-2 sm:mb-0">
-                        <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
-                          <User className="h-6 w-6 text-blue-900" />
-                        </div>
-                        <span>Student Name</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 text-xs w-full sm:w-auto"
-                      >
-                        View Progress
-                      </Button>
+                  {loading ? (
+                    <div className="text-center p-4">Loading students...</div>
+                  ) : error ? (
+                    <div className="text-center p-4 text-red-500">
+                      Error: {error}
                     </div>
-                  ))}
+                  ) : topPerformingStudents.length > 0 ? (
+                    topPerformingStudents.map((student) => (
+                      <div
+                        key={student._id}
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2"
+                      >
+                        <div className="flex items-center mb-2 sm:mb-0">
+                          <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
+                            <User className="h-6 w-6 text-blue-900" />
+                          </div>
+                          <span>
+                            {student.firstName} {student.lastName}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 text-xs w-full sm:w-auto"
+                        >
+                          View Progress
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-4">No students found</div>
+                  )}
                 </div>
               </div>
             </div>

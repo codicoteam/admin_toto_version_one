@@ -1,0 +1,819 @@
+{
+	"info": {
+		"_postman_id": "50a49ba9-e513-465e-8601-637526c3d884",
+		"name": "Toto_academy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "34985382",
+		"_collection_link": "https://clinpridesoftwaretechco.postman.co/workspace/My-Workspace~a8bdf15c-ddb7-41a0-8ab4-2648791c0b61/collection/34985382-50a49ba9-e513-465e-8601-637526c3d884?action=share&source=collection_link&creator=34985382"
+	},
+	"item": [
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "sigup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"ppppp@gmail.com\",\n    \"contactNumber\": \"1234567890\",\n    \"profilePicture\":\"hhhhhhhh/hjhhjhud\",\n    \"password\": \"clinpride\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/admin_route/signup"
+					},
+					"response": []
+				},
+				{
+					"name": "getAll",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1NDAxOTIyLCJleHAiOjE3NDU0MzA3MjJ9._Jk8k6NZGSqow6QrI5XLAL2Mz78i0TDE7X2KHTdgvCo"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/admin_route/getalladmins"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"ppppp@gmail.com\",\n    \"password\":\"clinpride\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/admin_route/login"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "student",
+			"item": [
+				{
+					"name": "sign up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Tinashe\",\n  \"lastName\": \"Moyo\",\n  \"email\": \"tinashe.moyo@example.com\",\n  \"phone_number\": \"+263771234567\",\n  \"password\": \"SecurePass123!\",\n  \"level\": \"A-Level\",\n  \"address\": \"123 Borrowdale Road, Harare, Zimbabwe\",\n  \"school\": \"Prince Edward High School\",\n  \"subjects\": [\"Mathematics\", \"Physics\", \"Chemistry\"],\n  \"subscription_status\": \"active\",\n  \"profile_picture\": \"https://example.com/uploads/tinashe_profile.jpg\",\n  \"next_of_kin_full_name\": \"Memory Moyo\",\n  \"next_of_kin_phone_number\": \"+263772345678\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/student_route/signup"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"tinashe.moyo@example.com\",\n    \"password\": \"SecurePass123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/student_route/login"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone_number\": \"+263771234567\",\n    \"password\": \"SecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/student_route/loginbyphone"
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/student_route/getallstudents"
+					},
+					"response": []
+				},
+				{
+					"name": "updatestudent",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhjYmM2ZDQwN2MzMjIxZjM2YjVlMCIsInBob25lIjoiKzI2Mzc3MTIzNDU2NyIsImlhdCI6MTc0NTQwNzgzMSwiZXhwIjoxNzQ1NDM2NjMxfQ.e8ZVy7ddDlJcJ1IdpnRGsl2kgpiFhYDi4bl6fZgpZPc"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Tinaye Moyo\",\n  \"email\": \"tinashe.moyo@example.com\",\n  \"phone_number\": \"+263771234567\",\n  \"password\": \"SecurePass123\",\n  \"level\": \"O-Level\",\n  \"address\": \"123 Borrowdale Road, Harare, Zimbabwe\",\n  \"school\": \"Prince Edward High School\",\n  \"subjects\": [\"Mathematics\", \"Physics\", \"Chemistry\"],\n  \"subscription_status\": \"active\",\n  \"profile_picture\": \"https://example.com/uploads/tinashe_profile.jpg\",\n  \"next_of_kin_full_name\": \"Memory Moyo\",\n  \"next_of_kin_phone_number\": \"+263772345678\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/student_route/updatestudent/6808cbc6d407c3221f36b5e0"
+					},
+					"response": []
+				},
+				{
+					"name": "updatestudent",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/student_route/deletestudent/6808cbc6d407c3221f36b5e0"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "content_system",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "subjects",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subjectName\": \"Physics\",\n    \"imageUrl\": \"sdvfkhdhfkashdbfkhvakfds\",\n    \"Level\": \"A Level\",\n    \"showSubject\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/subject/create"
+					},
+					"response": []
+				},
+				{
+					"name": "edit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1ODQxMjMzLCJleHAiOjE3NDU4NzAwMzN9.tuLSsxNAQkQL-PITsQZC3Db-6bi_Kzjw3ZFP_YOvtrg"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subjectName\": \"English\",\n  \"Level\": \"A Level\",\n  \"showSubject\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/subject/update/680f6c8ce4e0804cf98cab35"
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/subject/getall"
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/subject/delete/680f6c8ce4e0804cf98cab35"
+					},
+					"response": []
+				},
+				{
+					"name": "getone",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Topics",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Introduction to Indices\",\n    \"description\": \"This topic covers basic algebra concepts including variables, expressions, and equations.\",\n    \"subject\": \"681374c7a32332081e3da353\",\n    \"subjectName\": \"Shona\",\n    \"showTopic\": true,\n    \"price\": 10,\n    \"regularPrice\": 15,\n    \"subscriptionPeriod\": \"Monthly\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/topic_in_subject/create"
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/topic_in_subject/getall"
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Topics Content",
+			"item": [
+				{
+					"name": "topic_content_coment",
+					"item": [
+						{
+							"name": "create",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+									}
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": \"681374a1a32332081e3da351\",\n    \"topic_content_id\": \"6814887e24dcd63d82ad6521\",\n    \"comment_on_content\": \"This topic was really insightful and easy to follow!\",\n    \"showComment\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "http://localhost:4071/api/v1/comment_topic_content/create"
+							},
+							"response": []
+						},
+						{
+							"name": "getall",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+									}
+								},
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:4071/api/v1/comment_topic_content/getall"
+							},
+							"response": []
+						},
+						{
+							"name": "getallbytopicid",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+									}
+								},
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:4071/api/v1/comment_topic_content/bytopic/6814887e24dcd63d82ad6521"
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "http://localhost:4071/api/v1/comment_topic_content/delete/6814887e24dcd63d82ad6521"
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+									}
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": \"681374a1a32332081e3da351\",\n    \"topic_content_id\": \"6814887e24dcd63d82ad6521\",\n    \"comment_on_content\": \"This topic was really insightful and easy to follow!\",\n    \"showComment\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "http://localhost:4071/api/v1/comment_topic_content/update/6814887e24dcd63d82ad6521"
+							},
+							"response": []
+						},
+						{
+							"name": "deletemanybytopicid",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": "http://localhost:4071/api/v1/comment_topic_content/delete/bytopic/6814887e24dcd63d82ad6521"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Introduction to Algebra\",\n    \"description\": \"This content covers the basic principles of algebra including variables and equations.\",\n    \"file_path\": [\n        \"uploads/lesson1.pdf\",\n        \"uploads/lesson1_video.mp4\"\n    ],\n    \"file_type\": \"document\",\n    \"Topic\": \"6814813924dcd63d82ad6519\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/topic_content/create"
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Introduction to Logarithms\",\n    \"description\": \"This content covers the basic principles of algebra including variables and equations.\",\n    \"file_path\": [\n        \"uploads/lesson1.pdf\",\n        \"uploads/lesson1_video.mp4\"\n    ],\n    \"file_type\": \"document\",\n    \"Topic\": \"6814813924dcd63d82ad6519\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/topic_content/update/6814887724dcd63d82ad651f"
+					},
+					"response": []
+				},
+				{
+					"name": "getone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/topic_content/get/6814887724dcd63d82ad651f"
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/topic_content/delete/6814887724dcd63d82ad651f"
+					},
+					"response": []
+				},
+				{
+					"name": "getbytopicid",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/topic_content/by-topic/6814813924dcd63d82ad6519"
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Community",
+			"item": [
+				{
+					"name": "message-community",
+					"item": [
+						{
+							"name": "create-message",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "getall",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "gatallbycomunityid",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "deletebycomunitid",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "updatemessage",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "deletemessage",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "\n{\n  \"name\": \"A Level Science Study Group\",\n  \"profilePicture\": \"https://example.com/images/group3.jpg\",\n  \"subject\": \"681c67c388b9909f563ee689\",     // Subject ObjectId from your DB\n  \"Level\": \"Form 3\",\n  \"students\": [\"681374a1a32332081e3da351\", \"680f9e902aba5e42cfb4770b\"]  // Optional: Array of Student ObjectIds\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/community_service/create"
+					},
+					"response": []
+				},
+				{
+					"name": "getall",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/community_service/getall"
+					},
+					"response": []
+				},
+				{
+					"name": "getone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/community_service/get/681c6a3e88b9909f563ee690"
+					},
+					"response": []
+				},
+				{
+					"name": "updateone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"O Level Science Study Group\",\n    \"profilePicture\": \"https://example.com/images/group3.jpg\",\n    \"subject\": \"681c67c388b9909f563ee689\", // Subject ObjectId from your DB\n    \"Level\": \"Form 3\",\n    \"students\": [\n        \"681374a1a32332081e3da351\",\n        \"680f9e902aba5e42cfb4770b\"\n    ] \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/community_service/update/681c6a3e88b9909f563ee690"
+					},
+					"response": []
+				},
+				{
+					"name": "deleteone",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:4071/api/v1/community_service/delete/681c6a3e88b9909f563ee690"
+					},
+					"response": []
+				},
+				{
+					"name": "join-comunity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"studentId\": \"680a45800493d5f6686d6959\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/community_service/join/681c6a3e88b9909f563ee690"
+					},
+					"response": []
+				},
+				{
+					"name": "getbysubjectid",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/community_service/subject/681c67c388b9909f563ee689"
+					},
+					"response": []
+				},
+				{
+					"name": "removestudent fromcomunity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"studentId\": \"680a45800493d5f6686d6959\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:4071/api/v1/community_service/leave/681c6a3e88b9909f563ee690"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

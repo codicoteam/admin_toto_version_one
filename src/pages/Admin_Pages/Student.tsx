@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { ChevronDown, User, Menu, X, Search } from "lucide-react";
+import {
+  ChevronDown,
+  User,
+  Menu,
+  X,
+  Search,
+  Phone,
+  Mail,
+  School,
+  Book,
+  Home,
+  Users,
+  AlertCircle,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -11,55 +24,17 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import logo from "@/assets/logo2.png";
 import Sidebar from "@/components/Sidebar";
-
-// Mock data for examination results chart
-const examData = [
-  { name: "Year 1", "O' Level": 75, "A' Level": 85, Tertiary: 65 },
-  { name: "Year 2", "O' Level": 85, "A' Level": 80, Tertiary: 70 },
-  { name: "Year 3", "O' Level": 80, "A' Level": 90, Tertiary: 75 },
-  { name: "Year 4", "O' Level": 90, "A' Level": 85, Tertiary: 80 },
-];
-
-// Mock data for student count by level
-const studentLevelData = [
-  { level: "O' Level", count: 570 },
-  { level: "A' Level", count: 280 },
-  { level: "Tertiary", count: 150 },
-];
-
-// Student profile data for the cards
-const studentProfiles = [
-  {
-    name: "Student Name",
-    level: "Level",
-    metric: "89%",
-    metricLabel: "Overall Pass Rate",
-    type: "marks",
-  },
-  {
-    name: "Student Name",
-    level: "Level",
-    metric: "92%",
-    metricLabel: "Overall Attendance",
-    type: "attendance",
-  },
-  {
-    name: "Student Name",
-    level: "Level",
-    metric: "10%",
-    metricLabel: "Improvement",
-    type: "marks-improved",
-  },
-  {
-    name: "Student Name",
-    level: "Level",
-    metric: "22%",
-    metricLabel: "Improvement",
-    type: "attendance-improved",
-  },
-];
+import StudentService from "../../services/Admin_Service/Student_service"; // Adjust path as needed
 
 // Dropdown component for reusability
 const Dropdown = ({ options, value, onChange, placeholder }) => {
@@ -95,25 +70,495 @@ const Dropdown = ({ options, value, onChange, placeholder }) => {
   );
 };
 
+// Student Detail Modal Component
+const StudentDetailModal = ({ student, isOpen, onClose }) => {
+  if (!student) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-blue-900 flex items-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
+              <User className="h-6 w-6 text-blue-900" />
+            </div>
+            Student Profile
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+          {/* Left Column - Personal Info */}
+          <div className="col-span-1">
+            <h3 className="font-medium text-gray-700 mb-2">Personal Info</h3>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <User className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="font-semibold">
+                    {student.firstName} {student.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    ID: {student.studentId || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Mail className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">{student.email || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Email</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Phone className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">{student.phone_number || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Phone</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Home className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">{student.address || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Address</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Column - Academic Info */}
+          <div className="col-span-1">
+            <h3 className="font-medium text-gray-700 mb-2">Academic Info</h3>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <School className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">{student.school || "N/A"}</p>
+                  <p className="text-xs text-gray-500">School</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Book className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">{student.level || "N/A"}</p>
+                  <p className="text-xs text-gray-500">Level</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Book className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <div className="text-sm">
+                    {Array.isArray(student.subjects) &&
+                    student.subjects.length > 0
+                      ? student.subjects.join(", ")
+                      : "No subjects listed"}
+                  </div>
+                  <p className="text-xs text-gray-500">Subjects</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <AlertCircle className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm font-medium">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs ${
+                        student.subscription_status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {(student.subscription_status || "N/A").toUpperCase()}
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-500">Subscription Status</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Performance & Next of Kin */}
+          <div className="col-span-1">
+            <h3 className="font-medium text-gray-700 mb-2">Additional Info</h3>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <Users className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">
+                    {student.next_of_kin_full_name || "N/A"}
+                  </p>
+                  <p className="text-xs text-gray-500">Next of Kin</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Phone className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <div>
+                  <p className="text-sm">
+                    {student.next_of_kin_phone_number || "N/A"}
+                  </p>
+                  <p className="text-xs text-gray-500">Next of Kin Phone</p>
+                </div>
+              </div>
+
+              {student.overallMark !== undefined && (
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-500">Overall Mark</span>
+                    <span className="text-xs font-semibold">
+                      {student.overallMark}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-900 h-2 rounded-full"
+                      style={{ width: `${student.overallMark}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {student.attendance !== undefined && (
+                <div className="mt-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-500">Attendance</span>
+                    <span className="text-xs font-semibold">
+                      {student.attendance}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: `${student.attendance}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="border-t pt-4">
+          <Button className="bg-blue-900 hover:bg-blue-800" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const StudentDashboard = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [examData, setExamData] = useState([]);
+  const [studentLevelData, setStudentLevelData] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [studentProfiles, setStudentProfiles] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [adminName, setAdminName] = useState("Admin User"); // Added admin name state
+
+  // State for student details modal
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Available options for dropdowns
-  const yearOptions = ["2022", "2023", "2024", "2025"];
+  const yearOptions = ["2022", "2023", "2024", "2025", "All years"];
   const levelOptions = ["O' Level", "A' Level", "Tertiary", "All Levels"];
-
-  // Calculate total student count
-  const totalStudents = studentLevelData.reduce(
-    (acc, curr) => acc + curr.count,
-    0
-  );
 
   // Toggle sidebar function
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  // Handle opening student details modal
+  const handleViewStudentDetails = (student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  // Fetch all students on component mount
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoading(true);
+      try {
+        const response = await StudentService.getAllStudents();
+        // Check if response and response.data are valid
+        if (response && Array.isArray(response.data)) {
+          setStudents(response.data);
+          processStudentData(response.data);
+        } else {
+          throw new Error("Invalid student data received");
+        }
+      } catch (err) {
+        setError(err.message || "Error fetching students");
+        console.error("Error fetching students:", err);
+        // Set empty arrays to prevent errors in the UI
+        setStudents([]);
+        setFilteredStudents([]);
+        setExamData([
+          { name: "No Data", "O' Level": 0, "A' Level": 0, Tertiary: 0 },
+        ]);
+        setStudentLevelData([]);
+        setStudentProfiles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Also fetch admin name if needed
+    const fetchAdminName = async () => {
+      try {
+        // Add your admin name fetching logic here if needed
+        // For now using default value
+      } catch (err) {
+        console.error("Error fetching admin info:", err);
+      }
+    };
+
+    fetchStudents();
+    fetchAdminName();
+  }, []);
+
+  // Process student data to extract relevant statistics
+  const processStudentData = (data) => {
+    if (!data || data.length === 0) {
+      // Set default values for empty data
+      setTotalStudents(0);
+      setStudentLevelData([]);
+      setExamData([
+        { name: "No Data", "O' Level": 0, "A' Level": 0, Tertiary: 0 },
+      ]);
+      setStudentProfiles([
+        {
+          name: "N/A",
+          level: "N/A",
+          metric: "N/A",
+          metricLabel: "Overall Pass Rate",
+          type: "marks",
+        },
+        {
+          name: "N/A",
+          level: "N/A",
+          metric: "N/A",
+          metricLabel: "Overall Attendance",
+          type: "attendance",
+        },
+        {
+          name: "N/A",
+          level: "N/A",
+          metric: "N/A",
+          metricLabel: "Improvement",
+          type: "marks-improved",
+        },
+        {
+          name: "N/A",
+          level: "N/A",
+          metric: "N/A",
+          metricLabel: "Improvement",
+          type: "attendance-improved",
+        },
+      ]);
+      return;
+    }
+
+    // Calculate total students
+    setTotalStudents(data.length);
+
+    // Calculate student level breakdown
+    const levelCounts = data.reduce((acc, student) => {
+      const level = student.level || "Unknown";
+      acc[level] = (acc[level] || 0) + 1;
+      return acc;
+    }, {});
+
+    const levelData = Object.keys(levelCounts).map((level) => ({
+      level,
+      count: levelCounts[level],
+    }));
+    setStudentLevelData(levelData);
+
+    // Create exam results data grouped by year and level
+    const examResults = {};
+
+    data.forEach((student) => {
+      const year = student.academicYear || "Unknown";
+      const level = student.level || "Unknown";
+
+      if (!examResults[year]) {
+        examResults[year] = {
+          "O' Level": 0,
+          "A' Level": 0,
+          Tertiary: 0,
+          count: {},
+        };
+      }
+
+      if (!examResults[year].count[level]) {
+        examResults[year].count[level] = 0;
+      }
+
+      // Add student marks to total
+      examResults[year][level] =
+        (examResults[year][level] || 0) + (student.overallMark || 0);
+      examResults[year].count[level]++;
+    });
+
+    // Calculate averages
+    const formattedExamData = Object.keys(examResults).map((year) => {
+      const result = { name: `Year ${year}` };
+
+      Object.keys(examResults[year]).forEach((level) => {
+        if (level !== "count") {
+          const count = examResults[year].count[level] || 1;
+          result[level] = Math.round(examResults[year][level] / count);
+        }
+      });
+
+      return result;
+    });
+
+    setExamData(
+      formattedExamData.length > 0
+        ? formattedExamData
+        : [{ name: "No Data", "O' Level": 0, "A' Level": 0, Tertiary: 0 }]
+    );
+
+    // Find top-performing students for display cards
+    const topStudents = {
+      marks: getTopStudent(data, "overallMark"),
+      attendance: getTopStudent(data, "attendance"),
+      marksImproved: getTopStudent(data, "improvement"),
+      attendanceImproved: getTopStudent(data, "attendanceImprovement"),
+    };
+
+    const profiles = [
+      {
+        name: formatStudentName(topStudents.marks),
+        level: topStudents.marks?.level || "N/A",
+        metric: topStudents.marks
+          ? `${topStudents.marks.overallMark || 0}%`
+          : "N/A",
+        metricLabel: "Overall Pass Rate",
+        type: "marks",
+      },
+      {
+        name: formatStudentName(topStudents.attendance),
+        level: topStudents.attendance?.level || "N/A",
+        metric: topStudents.attendance
+          ? `${topStudents.attendance.attendance || 0}%`
+          : "N/A",
+        metricLabel: "Overall Attendance",
+        type: "attendance",
+      },
+      {
+        name: formatStudentName(topStudents.marksImproved),
+        level: topStudents.marksImproved?.level || "N/A",
+        metric: topStudents.marksImproved
+          ? `${topStudents.marksImproved.improvement || 0}%`
+          : "N/A",
+        metricLabel: "Improvement",
+        type: "marks-improved",
+      },
+      {
+        name: formatStudentName(topStudents.attendanceImproved),
+        level: topStudents.attendanceImproved?.level || "N/A",
+        metric: topStudents.attendanceImproved
+          ? `${topStudents.attendanceImproved.attendanceImprovement || 0}%`
+          : "N/A",
+        metricLabel: "Improvement",
+        type: "attendance-improved",
+      },
+    ];
+
+    setStudentProfiles(profiles);
+  };
+
+  // Helper function to safely get top student by a metric
+  const getTopStudent = (data, metricField) => {
+    if (!data || data.length === 0) return null;
+
+    // Filter out students with undefined or null metric values
+    const validStudents = data.filter(
+      (student) => student && typeof student[metricField] === "number"
+    );
+
+    if (validStudents.length === 0) return null;
+
+    // Sort and return the top student
+    return [...validStudents].sort(
+      (a, b) => (b[metricField] || 0) - (a[metricField] || 0)
+    )[0];
+  };
+
+  // Helper function to safely format student name
+  const formatStudentName = (student) => {
+    if (!student) return "N/A";
+    const firstName = student.firstName || "";
+    const lastName = student.lastName || "";
+
+    if (!firstName && !lastName) return "N/A";
+    return `${firstName} ${lastName}`.trim();
+  };
+
+  // Filter students based on selected year and level
+  useEffect(() => {
+    if (!students || students.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+
+    let filtered = [...students];
+
+    if (selectedYear) {
+      filtered = filtered.filter(
+        (student) => student.academicYear === selectedYear
+      );
+    }
+
+    if (selectedLevel && selectedLevel !== "All Levels") {
+      filtered = filtered.filter((student) => student.level === selectedLevel);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (student) =>
+          (student.firstName || "").toLowerCase().includes(query) ||
+          (student.lastName || "").toLowerCase().includes(query) ||
+          (student.studentId || "").toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredStudents(filtered);
+  }, [selectedYear, selectedLevel, students, searchQuery]);
+
+  // Calculate average attendance from the data
+  const calculateAverageAttendance = () => {
+    if (!students || students.length === 0) return 0;
+
+    const studentsWithAttendance = students.filter(
+      (student) => student && typeof student.attendance === "number"
+    );
+
+    if (studentsWithAttendance.length === 0) return 0;
+
+    const totalAttendance = studentsWithAttendance.reduce(
+      (sum, student) => sum + (student.attendance || 0),
+      0
+    );
+    return Math.round(totalAttendance / studentsWithAttendance.length);
   };
 
   // Update screen size state and handle sidebar visibility
@@ -184,6 +629,8 @@ const StudentDashboard = () => {
                 type="text"
                 className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
               <button className="absolute inset-y-0 right-0 flex items-center pr-3">
                 <span className="text-xl text-gray-400">+</span>
@@ -193,203 +640,285 @@ const StudentDashboard = () => {
             {/* Admin Profile */}
             <div className="bg-blue-900 text-white rounded-md py-2 px-4 flex items-center">
               <User className="h-5 w-5 mr-2" />
-              <span className="font-medium">admin name</span>
+              <span className="font-medium">{adminName}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Section - Filters and Student Count */}
-            <div className="col-span-1 lg:col-span-5 space-y-6">
-              <div className="mb-4 flex flex-col sm:flex-row gap-4">
-                {/* Year Dropdown */}
-                <div className="w-full sm:w-1/2">
-                  <Dropdown
-                    options={yearOptions}
-                    value={selectedYear}
-                    onChange={setSelectedYear}
-                    placeholder="Select Year"
-                  />
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <p>Loading student data...</p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-64 text-red-500">
+              <p>Error: {error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Section - Filters and Student Count */}
+              <div className="col-span-1 lg:col-span-5 space-y-6">
+                <div className="mb-4 flex flex-col sm:flex-row gap-4">
+                  {/* Year Dropdown */}
+                  <div className="w-full sm:w-1/2">
+                    <Dropdown
+                      options={yearOptions}
+                      value={selectedYear}
+                      onChange={setSelectedYear}
+                      placeholder="Select Year"
+                    />
+                  </div>
+
+                  {/* Level Dropdown */}
+                  <div className="w-full sm:w-1/2">
+                    <Dropdown
+                      options={levelOptions}
+                      value={selectedLevel}
+                      onChange={setSelectedLevel}
+                      placeholder="Select Level"
+                    />
+                  </div>
                 </div>
 
-                {/* Level Dropdown */}
-                <div className="w-full sm:w-1/2">
-                  <Dropdown
-                    options={levelOptions}
-                    value={selectedLevel}
-                    onChange={setSelectedLevel}
-                    placeholder="Select Level"
-                  />
+                {/* Student Count Card */}
+                <div className="bg-white p-6 rounded-md shadow-sm">
+                  <h3 className="text-lg font-medium mb-6">Student Count</h3>
+
+                  <div className="flex flex-col sm:flex-row mb-8 gap-4 sm:gap-0">
+                    <div className="flex-1">
+                      <div className="text-4xl font-bold text-blue-900">
+                        {totalStudents.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">Student Count</div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-4xl font-bold text-blue-900">
+                        {calculateAverageAttendance()}%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Student Attendance
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Student Level Breakdown */}
+                  <div className="space-y-3">
+                    {studentLevelData.map((item, index) => (
+                      <div key={index} className="flex items-center">
+                        <div className="w-20 text-xs">{item.level}</div>
+                        <div className="flex-1 relative h-6">
+                          <div
+                            className={`absolute top-0 left-0 h-full ${
+                              index === 0
+                                ? "bg-blue-900"
+                                : index === 1
+                                ? "bg-yellow-400"
+                                : "bg-blue-300"
+                            }`}
+                            style={{
+                              width: `${
+                                totalStudents > 0
+                                  ? (item.count / totalStudents) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div className="w-12 text-xs text-right">
+                          {item.count}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Examination Results */}
+                <div className="bg-white p-6 rounded-md shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    Examination Results
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-4 mb-4">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-900 mr-1"></div>
+                      <span className="text-xs">O' Level</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-yellow-400 mr-1"></div>
+                      <span className="text-xs">A' Level</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-blue-300 mr-1"></div>
+                      <span className="text-xs">Tertiary</span>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={examData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" />
+                        <YAxis hide={true} />
+                        <Bar dataKey="O' Level" fill="#102C57" barSize={15} />
+                        <Bar dataKey="A' Level" fill="#FFC107" barSize={15} />
+                        <Bar dataKey="Tertiary" fill="#90CAF9" barSize={15} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
 
-              {/* Student Count Card */}
-              <div className="bg-white p-6 rounded-md shadow-sm">
-                <h3 className="text-lg font-medium mb-6">Student Count</h3>
-
-                <div className="flex flex-col sm:flex-row mb-8 gap-4 sm:gap-0">
-                  <div className="flex-1">
-                    <div className="text-4xl font-bold text-blue-900">
-                      {totalStudents.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Student Count</div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-4xl font-bold text-blue-900">90%</div>
-                    <div className="text-sm text-gray-600">
-                      Student Attendance
-                    </div>
-                  </div>
-                </div>
-
-                {/* Student Level Breakdown */}
-                <div className="space-y-3">
-                  {studentLevelData.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-20 text-xs">{item.level}</div>
-                      <div className="flex-1 relative h-6">
-                        <div
-                          className={`absolute top-0 left-0 h-full ${
-                            index === 0
-                              ? "bg-blue-900"
-                              : index === 1
-                              ? "bg-yellow-400"
-                              : "bg-blue-300"
-                          }`}
-                          style={{
-                            width: `${(item.count / totalStudents) * 100}%`,
-                          }}
-                        ></div>
+              {/* Right Section - Student Profile Cards */}
+              <div className="col-span-1 lg:col-span-7 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Student Cards */}
+                  {studentProfiles.map((student, index) => (
+                    <div
+                      key={index}
+                      className="bg-white p-4 rounded-md shadow-sm"
+                    >
+                      <div className="mb-2 text-sm font-medium">
+                        {index === 0
+                          ? "Best in Marks"
+                          : index === 1
+                          ? "Best in Attendance"
+                          : index === 2
+                          ? "Most Improved in Marks"
+                          : "Most Improved in Attendance"}
                       </div>
-                      <div className="w-12 text-xs text-right">
-                        {item.count}
+
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex-shrink-0"></div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">
+                            {student.name}
+                          </div>
+                          <div className="text-sm font-medium">
+                            {student.name}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {student.level}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <div className="text-xl font-bold text-blue-900">
+                            {student.metric}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {student.metricLabel}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* Examination Results */}
-              <div className="bg-white p-6 rounded-md shadow-sm">
-                <h3 className="text-lg font-medium mb-4">
-                  Examination Results
-                </h3>
-                <div className="flex flex-wrap items-center gap-4 mb-4">
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 bg-blue-900 mr-1"></div>
-                    <span className="text-xs">O' Level</span>
+                {/* Students Table */}
+                <div className="bg-white p-6 rounded-md shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">Students</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-spacing-y-2 border-separate">
+                      <thead>
+                        <tr>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Name
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            ID
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Level
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            School
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Status
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredStudents.length > 0 ? (
+                          filteredStudents.map((student, index) => (
+                            <tr key={index}>
+                              <td className="px-2 py-3 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 flex-shrink-0"></div>
+                                  <div>
+                                    <div className="text-sm font-medium">
+                                      {student.firstName} {student.lastName}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {student.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                {student.studentId || "N/A"}
+                              </td>
+                              <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                {student.level || "N/A"}
+                              </td>
+                              <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                {student.school || "N/A"}
+                              </td>
+                              <td className="px-2 py-3 whitespace-nowrap">
+                                <span
+                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    student.subscription_status === "active"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {(
+                                    student.subscription_status || "N/A"
+                                  ).toUpperCase()}
+                                </span>
+                              </td>
+                              <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-blue-900 border-blue-900 hover:bg-blue-50"
+                                  onClick={() =>
+                                    handleViewStudentDetails(student)
+                                  }
+                                >
+                                  View
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-2 py-4 text-center text-gray-500"
+                            >
+                              No students found matching your criteria
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 bg-yellow-400 mr-1"></div>
-                    <span className="text-xs">A' Level</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 bg-blue-300 mr-1"></div>
-                    <span className="text-xs">Tertiary</span>
-                  </div>
-                </div>
-
-                <div className="w-full h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={examData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="name" />
-                      <YAxis hide={true} />
-                      <Bar dataKey="O' Level" fill="#102C57" barSize={15} />
-                      <Bar dataKey="A' Level" fill="#FFC107" barSize={15} />
-                      <Bar dataKey="Tertiary" fill="#90CAF9" barSize={15} />
-                    </BarChart>
-                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
-
-            {/* Right Section - Student Profile Cards */}
-            <div className="col-span-1 lg:col-span-7 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Student Cards */}
-                {studentProfiles.map((student, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-4 rounded-md shadow-sm"
-                  >
-                    <div className="mb-2 text-sm font-medium">
-                      {index === 0
-                        ? "Best in Marks"
-                        : index === 1
-                        ? "Best in Attendance"
-                        : index === 2
-                        ? "Most Improved in Marks"
-                        : "Most Improved in Attendance"}
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex-shrink-0"></div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">
-                          {student.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {student.level}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div
-                          className={`text-xl font-bold ${
-                            index === 2 || index === 3
-                              ? "flex items-center"
-                              : ""
-                          }`}
-                        >
-                          {index === 2 || index === 3 ? (
-                            <>
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="text-green-500 mr-1"
-                              >
-                                <path d="M5 15l7-7 7 7"></path>
-                              </svg>
-                            </>
-                          ) : null}
-                          {student.metric}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {student.metricLabel}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Student Details Card */}
-              <div className="bg-white p-6 rounded-md shadow-sm">
-                <h3 className="text-lg font-medium mb-4">Student Details</h3>
-                {selectedYear && selectedLevel ? (
-                  <div className="p-4 border border-gray-200 rounded">
-                    <p className="text-sm mb-2">
-                      <span className="font-medium">Selected Filters:</span>
-                    </p>
-                    <p className="text-sm">Academic Year: {selectedYear}</p>
-                    <p className="text-sm">Education Level: {selectedLevel}</p>
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 p-4">
-                    Please select a year and level to view student details
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Student Details Modal */}
+      <StudentDetailModal
+        student={selectedStudent}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

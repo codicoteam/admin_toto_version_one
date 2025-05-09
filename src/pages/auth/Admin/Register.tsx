@@ -5,20 +5,28 @@ import logimage from "@/assets/log.jpg";
 import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
 
-const Register = () => {
+// Import services
+import SignUpAdmin from "@/services/Admin_Service/Auth_service/sign_up_service";
+// Import components
+import CustomSpin from "@/components/customised_spins/customised_sprin";
+import { showMessage } from "@/components/helper/feedback_message";
+
+const Admin_Register = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Updated form state with the specified fields
+  // Form state with the specified fields
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     contactNumber: "",
-    profilePicture: "",
     password: "",
   });
+
+  // State for file upload
+  const [profilePicture, setProfilePicture] = useState(null);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -33,15 +41,12 @@ const Register = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prevState) => ({
-        ...prevState,
-        profilePicture: file,
-      }));
+      setProfilePicture(file);
     }
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -53,17 +58,59 @@ const Register = () => {
       !formData.contactNumber ||
       !formData.password
     ) {
-      alert("Please fill all required fields");
+      showMessage("error", "Please fill all required fields");
       setIsLoading(false);
       return;
     }
 
-    // Simulate signup
-    setTimeout(() => {
+    try {
+      // Create FormData object for sending multipart/form-data (for file upload)
+      const adminData = new FormData();
+
+      // Append form fields to FormData
+      Object.keys(formData).forEach((key) => {
+        adminData.append(key, formData[key]);
+      });
+
+      // Append profile picture if exists
+      if (profilePicture) {
+        adminData.append("profilePicture", profilePicture);
+      }
+
+      // Log form data for debugging
+      console.log("Form data fields:");
+      for (let pair of adminData.entries()) {
+        console.log(
+          pair[0] +
+            ": " +
+            (pair[0] === "profilePicture" ? "File object" : pair[1])
+        );
+      }
+
+      // Call SignUpAdmin service
+      const response = await SignUpAdmin(adminData);
+
+      // Handle successful response
+      showMessage("success", "Registration successful!");
+
+      // Save user data if needed
+      if (response.user) {
+        localStorage.setItem("adminUser", JSON.stringify(response.user));
+      }
+
+      // Navigate to login page or dashboard
+      navigate("/Admin_login");
+    } catch (error) {
+      console.error("Registration error:", error);
+      // Enhanced error message display
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Registration failed. Please try again.";
+      showMessage("error", errorMessage);
+    } finally {
       setIsLoading(false);
-      console.log("Form submitted:", formData);
-      navigate("/");
-    }, 1000);
+    }
   };
 
   return (
@@ -101,7 +148,7 @@ const Register = () => {
             Sign up to get started
           </p>
 
-          {/* Single-step form */}
+          {/* Form */}
           <form
             className="w-full max-w-md flex flex-col p-4 mx-auto"
             onSubmit={handleSubmit}
@@ -112,7 +159,7 @@ const Register = () => {
                 First Name
               </label>
               <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full  placeholder-black"
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full placeholder-black"
                 type="text"
                 name="firstName"
                 value={formData.firstName}
@@ -126,7 +173,7 @@ const Register = () => {
                 Last Name
               </label>
               <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full  placeholder-black"
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full placeholder-black"
                 type="text"
                 name="lastName"
                 value={formData.lastName}
@@ -154,7 +201,7 @@ const Register = () => {
                 Contact Number
               </label>
               <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full  placeholder-black"
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full placeholder-black"
                 type="tel"
                 name="contactNumber"
                 value={formData.contactNumber}
@@ -168,7 +215,7 @@ const Register = () => {
                 Profile Picture
               </label>
               <input
-                className="bg-transparent border border-black text-black p-2 rounded-md w-full "
+                className="bg-transparent border border-black text-black p-2 rounded-md w-full"
                 type="file"
                 name="profilePicture"
                 accept="image/*"
@@ -201,10 +248,10 @@ const Register = () => {
 
             <button
               type="submit"
-              className="font-sans text-white font-bold w-full p-2  bg-yellow-600 hover:bg-yellow-400 rounded-xl"
+              className="font-sans text-white font-bold w-full p-2 bg-yellow-600 hover:bg-yellow-400 rounded-xl"
               disabled={isLoading}
             >
-              {isLoading ? "SIGNING UP..." : "SIGN UP"}
+              {isLoading ? <CustomSpin /> : "SIGN UP"}
             </button>
           </form>
 
@@ -223,4 +270,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Admin_Register;

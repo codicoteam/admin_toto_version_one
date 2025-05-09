@@ -1,50 +1,110 @@
-import { useState } from "react";
-import { CourseTopicsDialog } from "./Course_Topic";
+import React from "react";
+import { FC } from "react";
+import { Book, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
-const CourseCard = ({
+interface Topic {
+  name?: string;
+  title?: string;
+  _id?: string;
+  id?: string;
+}
+
+interface CourseCardProps {
+  id: string;
+  title?: string;
+  category?: string;
+  lessons?: number;
+  duration?: string;
+  topics?: Topic[];
+  imageUrl?: string;
+  showSubject?: boolean;
+}
+
+const CourseCard: FC<CourseCardProps> = ({
   id,
   title,
   category,
   lessons,
   duration,
   topics = [],
+  imageUrl = "/default-course-image.jpg",
+  showSubject = true,
 }) => {
-  const [topicsDialogOpen, setTopicsDialogOpen] = useState(false);
+  // Ensure we have valid data to display
+  const displayTitle = title || "Untitled Course";
+  const displayCategory = category || "Unknown Category";
+  const displayLessons = lessons || 0;
+  const displayDuration = duration || "0h";
 
   return (
-    <>
-      <div
-        className="flex flex-col border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => setTopicsDialogOpen(true)}
-      >
-        {/* Course Image Placeholder */}
-        <div className="bg-black h-40 w-full flex items-center justify-center text-white">
-          (Course Image)
+    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full border border-gray-200">
+      {/* Course Image */}
+      <div className="h-40 bg-gray-200 relative">
+        <img
+          src={imageUrl}
+          alt={displayTitle}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // Type assertion to tell TypeScript this is an HTMLImageElement
+            const imgElement = e.target as HTMLImageElement;
+            imgElement.src = "/default-course-image.jpg";
+          }}
+        />
+        <div className="absolute top-3 left-3 bg-blue-900 text-white text-xs px-2 py-1 rounded-md">
+          {displayCategory}
         </div>
+      </div>
 
-        {/* Course Info */}
-        <div className="p-4">
-          <h3 className="font-medium text-blue-900">{title}</h3>
-          <p className="text-gray-600 text-sm">Category: {category}</p>
-          <div className="flex justify-between items-center mt-2 text-xs">
-            <span>{lessons} Lessons</span>
-            <span className="text-red-500">{duration}</span>
+      {/* Course Content */}
+      <div className="p-4 flex flex-col flex-grow">
+        <h3 className="font-bold text-lg mb-2 text-blue-900">{displayTitle}</h3>
+
+        {/* Course Meta */}
+        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+          <div className="flex items-center">
+            <Book className="w-4 h-4 mr-1" />
+            <span>{displayLessons} Lessons</span>
+          </div>
+          <div className="flex items-center">
+            <Clock className="w-4 h-4 mr-1" />
+            <span>{displayDuration}</span>
           </div>
         </div>
 
-        {/* Empty Space for Additional Content */}
-        <div className="bg-white h-20 border-t border-gray-200"></div>
-      </div>
+        {/* Topics */}
+        <div className="mb-4 flex-grow">
+          <p className="text-sm font-medium mb-2 text-gray-700">Topics:</p>
+          {topics && topics.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {topics.slice(0, 3).map((topic, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full"
+                >
+                  {topic.name || topic.title || `Topic ${index + 1}`}
+                </span>
+              ))}
+              {topics.length > 3 && (
+                <span className="text-xs text-blue-700">
+                  +{topics.length - 3} more
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 italic">No topics available</p>
+          )}
+        </div>
 
-      {/* Topics Dialog */}
-      <CourseTopicsDialog
-        courseId={id}
-        courseTitle={title}
-        topics={topics}
-        open={topicsDialogOpen}
-        onOpenChange={setTopicsDialogOpen}
-      />
-    </>
+        {/* Action Button */}
+        <Link to={`/admin/courses/${id}`}>
+          <Button className="w-full bg-blue-900 hover:bg-blue-800">
+            View Details
+          </Button>
+        </Link>
+      </div>
+    </div>
   );
 };
 

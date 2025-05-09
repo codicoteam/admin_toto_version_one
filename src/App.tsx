@@ -66,7 +66,7 @@ const App = () => (
             <Route path="/library" element={<Library />} />
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
             <Route path="/settingspage" element={<SettingsPage />} />
-            <Route path="/coursedetails" element={<CourseDetailPage />} />
+            <Route path="/admin/courses/:id" element={<CourseDetailPage />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminCourses />} />

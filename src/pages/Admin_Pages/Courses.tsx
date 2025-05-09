@@ -20,6 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CourseCard from "@/components/CourseCard";
+import CourseService from "@/services/Admin_Service/Course_service";
+import TopicInCourseService from "@/services/Admin_Service/Topic_InCourse_service";
+import { useToast } from "@/components/ui/use-toast";
 
 const AddCourseDialog = ({ open, onOpenChange, onCourseAdded }) => {
   const [courseData, setCourseData] = useState({
@@ -29,6 +32,8 @@ const AddCourseDialog = ({ open, onOpenChange, onCourseAdded }) => {
     duration: "",
     description: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -39,28 +44,86 @@ const AddCourseDialog = ({ open, onOpenChange, onCourseAdded }) => {
     setCourseData((prev) => ({ ...prev, category: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Create new course with unique ID
-    const newCourse = {
-      id: `course-${Date.now()}`,
-      ...courseData,
-      topics: [],
-    };
+    try {
+      // Validate form data
+      if (!courseData.title || !courseData.category) {
+        throw new Error("Course title and category are required");
+      }
 
-    // Pass to parent component
-    onCourseAdded(newCourse);
+      // Format data for API
+      const apiCourseData = {
+        name: courseData.title.trim(),
+        category: courseData.category,
+        numberOfLessons: parseInt(courseData.lessons) || 0,
+        duration: courseData.duration || "0h",
+        description: courseData.description || "",
+        // Properly format the enum values
+        subjectName: courseData.title.trim(), // Using title as subject name
+        Level: getCategoryLabel(courseData.category), // Map category to Level enum value
+        showSubject: true,
+        // Include any other required fields
+        imageUrl: "/default-course-image.jpg", // Default image path
+      };
 
-    // Reset form and close dialog
-    setCourseData({
-      title: "",
-      category: "",
-      lessons: "",
-      duration: "",
-      description: "",
-    });
-    onOpenChange(false);
+      console.log("Sending course data to API:", apiCourseData);
+
+      // Call API to create course
+      const result = await CourseService.createCourse(apiCourseData);
+      console.log("API response:", result);
+
+      // Notify parent component about the new course
+      onCourseAdded(result.data);
+
+      // Show success message
+      toast({
+        title: "Course created",
+        description: "The course has been created successfully.",
+      });
+
+      // Reset form and close dialog
+      setCourseData({
+        title: "",
+        category: "",
+        lessons: "",
+        duration: "",
+        description: "",
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to create course:", error);
+      // Improved error handling to extract more specific error messages
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to create course. Please try again.";
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to convert category to Level format
+  const getCategoryLabel = (category) => {
+    switch (category) {
+      case "o-level":
+        return "O Level";
+      case "a-level":
+        return "A Level";
+      case "tertiary":
+        return "Tertiary";
+      default:
+        return category;
+    }
   };
 
   return (
@@ -145,11 +208,16 @@ const AddCourseDialog = ({ open, onOpenChange, onCourseAdded }) => {
             onClick={() => onOpenChange(false)}
             variant="outline"
             className="w-full sm:w-auto"
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button type="submit" className="w-full sm:w-auto">
-            Create Course
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Course"}
           </Button>
         </div>
       </form>
@@ -162,120 +230,64 @@ const AdminCourses = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [courses, setCourses] = useState([
-    {
-      id: "1",
-      title: "Mathematics",
-      category: "o-level",
-      lessons: 10,
-      duration: "2h",
-      topics: [
-        {
-          id: "t1-1",
-          name: "Algebra",
-          description: "Basic algebraic expressions",
-          duration: "30",
-        },
-        {
-          id: "t1-2",
-          name: "Geometry",
-          description: "Angles and shapes",
-          duration: "45",
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Biology",
-      category: "o-level",
-      lessons: 12,
-      duration: "3h",
-      topics: [
-        {
-          id: "t2-1",
-          name: "Cell Structure",
-          description: "Understanding cell components",
-          duration: "40",
-        },
-        {
-          id: "t2-2",
-          name: "Photosynthesis",
-          description: "How plants make food",
-          duration: "35",
-        },
-      ],
-    },
-    {
-      id: "3",
-      title: "Physics",
-      category: "a-level",
-      lessons: 15,
-      duration: "4h",
-      topics: [
-        {
-          id: "t3-1",
-          name: "Mechanics",
-          description: "Forces and motion",
-          duration: "50",
-        },
-        {
-          id: "t3-2",
-          name: "Electricity",
-          description: "Current and voltage",
-          duration: "60",
-        },
-      ],
-    },
-    {
-      id: "4",
-      title: "Chemistry",
-      category: "a-level",
-      lessons: 14,
-      duration: "4h",
-      topics: [
-        {
-          id: "t4-1",
-          name: "Atomic Structure",
-          description: "Atoms and elements",
-          duration: "45",
-        },
-      ],
-    },
-    {
-      id: "5",
-      title: "Computer Science",
-      category: "tertiary",
-      lessons: 20,
-      duration: "5h",
-      topics: [
-        {
-          id: "t5-1",
-          name: "Programming Basics",
-          description: "Introduction to coding",
-          duration: "90",
-        },
-      ],
-    },
-    {
-      id: "6",
-      title: "Business Studies",
-      category: "tertiary",
-      lessons: 16,
-      duration: "3h",
-      topics: [
-        {
-          id: "t6-1",
-          name: "Marketing",
-          description: "Principles of marketing",
-          duration: "60",
-        },
-      ],
-    },
-  ]);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+
+  // Fetch topics for a specific course
+  const fetchTopicsForCourse = async (courseId) => {
+    try {
+      const result = await TopicInCourseService.getAllTopics(courseId);
+      return result.data || [];
+    } catch (err) {
+      console.error(`Failed to fetch topics for course ${courseId}:`, err);
+      return [];
+    }
+  };
+
+  // Fetch courses and their topics from API
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const result = await CourseService.getAllCourses();
+      const coursesData = result.data || [];
+
+      // For each course, fetch its topics
+      const coursesWithTopics = await Promise.all(
+        coursesData.map(async (course) => {
+          const topics = await fetchTopicsForCourse(course._id || course.id);
+          return { ...course, topics };
+        })
+      );
+
+      setCourses(coursesWithTopics);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch courses:", err);
+      setError("Failed to load courses. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load courses. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load of courses
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
   // Add course handler
-  const handleCourseAdded = (newCourse) => {
-    setCourses([...courses, newCourse]);
+  const handleCourseAdded = async (newCourse) => {
+    // Fetch topics for the newly added course
+    const topics = await fetchTopicsForCourse(newCourse._id || newCourse.id);
+    const courseWithTopics = { ...newCourse, topics };
+    setCourses([...courses, courseWithTopics]);
   };
 
   // Update screen size state and handle sidebar visibility
@@ -302,6 +314,11 @@ const AdminCourses = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   // Tabs based on the design with categories
   const tabs = [
     { id: "all", label: "All" },
@@ -311,13 +328,41 @@ const AdminCourses = () => {
     { id: "tertiary", label: "Tertiary" },
   ];
 
-  // Filter courses based on active tab
-  const filteredCourses =
-    activeTab === "all"
-      ? courses
-      : activeTab === "popular"
-      ? courses.slice(0, 3) // Just for demo, showing first 3 as "popular"
-      : courses.filter((course) => course.category === activeTab);
+  // Filter courses based on active tab and search query
+  const filteredCourses = courses.filter((course) => {
+    // First filter by tab category
+    const matchesTab =
+      activeTab === "all"
+        ? true
+        : activeTab === "popular"
+        ? course.isPopular
+        : course.category === activeTab;
+
+    // Then filter by search query if one exists
+    const matchesSearch = searchQuery
+      ? course.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.subjectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+
+    return matchesTab && matchesSearch;
+  });
+
+  // Map API course data to the format expected by the CourseCard component
+  const mapCourseToCardProps = (course) => {
+    return {
+      id: course._id || course.id,
+      title:
+        course.name || course.title || course.subjectName || "Untitled Course",
+      category: course.Level || course.category || "Unknown Category",
+      lessons: course.numberOfLessons || course.lessons || 0,
+      duration: course.duration || "0h",
+      topics: course.topics || [],
+      imageUrl: course.imageUrl || "/default-course-image.jpg",
+      showSubject: course.showSubject !== undefined ? course.showSubject : true,
+    };
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -369,10 +414,9 @@ const AdminCourses = () => {
                   type="text"
                   className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                 />
-                <button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-xl text-gray-400">+</span>
-                </button>
               </div>
 
               {/* Add Course Button */}
@@ -411,20 +455,53 @@ const AdminCourses = () => {
             </ul>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md my-4">
+              <p>{error}</p>
+              <Button variant="outline" className="mt-2" onClick={fetchCourses}>
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && filteredCourses.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">No courses found</p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-900 hover:bg-blue-800">
+                    <Plus className="h-4 w-4 mr-2" /> Add Your First Course
+                  </Button>
+                </DialogTrigger>
+                <AddCourseDialog
+                  open={dialogOpen}
+                  onOpenChange={setDialogOpen}
+                  onCourseAdded={handleCourseAdded}
+                />
+              </Dialog>
+            </div>
+          )}
+
           {/* Courses Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                id={course.id}
-                title={course.title}
-                category={course.category}
-                lessons={course.lessons}
-                duration={course.duration}
-                topics={course.topics}
-              />
-            ))}
-          </div>
+          {!loading && !error && filteredCourses.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course._id || course.id}
+                  {...mapCourseToCardProps(course)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
