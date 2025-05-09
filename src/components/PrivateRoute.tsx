@@ -1,7 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { log } from "console";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -10,6 +9,8 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
   console.log("PrivateRoute isAuthenticated:", isAuthenticated);
 
   return false ? <>{children}</> : <Navigate to="/admin_login" />;
+  // eslint-disable-next-line no-constant-condition
+  return true ? <>{children}</> : <Navigate to="/reserourceupload" />;
 };
 
 export default PrivateRoute;

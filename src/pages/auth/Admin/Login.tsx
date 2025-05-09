@@ -93,7 +93,7 @@ const Admin_login = () => {
           <div className="flex items-center justify-center mb-4">
             <img src={logo} alt="Company Logo" className="w-17 h-16" />
             <p className="text-3xl font-semibold text-blue-950 text-center">
-              Welcome Back
+              Welcome Back chris
             </p>
           </div>
 

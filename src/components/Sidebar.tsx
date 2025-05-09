@@ -1,6 +1,5 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
 import logo from "@/assets/logo2.png";
+import { NavLink } from "react-router-dom";
 
 const Sidebar = () => {
   const navItems = [
@@ -11,6 +10,10 @@ const Sidebar = () => {
     { label: "LIBRARY", path: "/library" },
     { label: "WALLET", path: "/coursedetails" },
     { label: "SETTINGS", path: "/settingspage" },
+    { label: "LIBRARY", path: "/reserourceupload" },
+    { label: "PAYMENTS", path: "/reserourcewalle" },
+    { label: "ANALYTICS", path: "/analytics" },
+    { label: "SETTINGS", path: "/settings" },
   ];
 
   return (

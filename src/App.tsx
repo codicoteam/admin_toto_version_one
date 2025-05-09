@@ -1,11 +1,11 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import PrivateRoute from "./components/PrivateRoute";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 // Pages
 import Login from "./pages/auth/user/Register";
@@ -16,12 +16,7 @@ import Lesson from "./pages/Lesson";
 import QA from "./pages/QA";
 import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
-import NotFound from "./pages/NotFound";
-import Forgot_password from "./pages/auth/user/Forgot_Password";
-import Sms_Password_Reset from "./pages/auth/user/Sms_Password_Reset";
-import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
 import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
-import Admin_Register from "./pages/auth/Admin/Register";
 import Admin_login from "./pages/auth/Admin/Login";
 import AdminCourses from "./pages/Admin_Pages/Courses";
 import Homepage from "./pages/User_Pages/Hompage";
@@ -34,6 +29,15 @@ import SettingsPage from "./pages/Admin_Pages/Settings";
 import CourseDetailPage from "./pages/Admin_Pages/Course_Details";
 
 import Navrbar from "./components/Navbar";
+import Admin_Register from "./pages/auth/Admin/Register";
+import Email_Password_Reset from "./pages/auth/user/Email_Password_Reset";
+import Forgot_password from "./pages/auth/user/Forgot_Password";
+
+import Sms_Password_Reset from "./pages/auth/user/Sms_Password_Reset";
+
+import NotFound from "./pages/NotFound";
+
+import ReserourceWalle from "./pages/Walle";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +64,9 @@ const App = () => (
               path="/email_password_reset"
               element={<Email_Password_Reset />}
             />
+
+            <Route path="/reserourceupload" element={<ReserourceUpload />} />
+            <Route path="/reserourcewalle" element={<ReserourceWalle />} />
             <Route path="/admin_dashboard" element={<Admin_Dashboard />} />
             <Route path="/students_dashboard" element={<StudentDashboard />} />
             <Route path="/chat" element={<ChatApp />} />
