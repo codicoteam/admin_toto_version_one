@@ -8,12 +8,12 @@ const Sidebar = () => {
     { label: "STUDENTS", path: "/students_dashboard" },
     { label: "CHAT", path: "/chat" },
     { label: "LIBRARY", path: "/library" },
-    { label: "WALLET", path: "/coursedetails" },
+    { label: "WALLET", path: "/reserourcewalle" },
     { label: "SETTINGS", path: "/settingspage" },
-    { label: "LIBRARY", path: "/reserourceupload" },
-    { label: "PAYMENTS", path: "/reserourcewalle" },
-    { label: "ANALYTICS", path: "/analytics" },
-    { label: "SETTINGS", path: "/settings" },
+    // { label: "LIBRARY", path: "/reserourceupload" },
+    // { label: "PAYMENTS", path: "/reserourcewalle" },
+    // { label: "ANALYTICS", path: "/analytics" },
+    // { label: "SETTINGS", path: "/settings" },
   ];
 
   return (

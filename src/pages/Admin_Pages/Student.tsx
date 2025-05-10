@@ -76,98 +76,102 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-blue-900 flex items-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
-              <User className="h-6 w-6 text-blue-900" />
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-6">
+          <DialogTitle className="text-2xl font-bold text-blue-900 flex items-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full mr-4 flex items-center justify-center">
+              <User className="h-8 w-8 text-blue-900" />
             </div>
             Student Profile
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-6">
           {/* Left Column - Personal Info */}
-          <div className="col-span-1">
-            <h3 className="font-medium text-gray-700 mb-2">Personal Info</h3>
-            <div className="space-y-3">
+          <div className="col-span-1 bg-gray-50 p-6 rounded-lg">
+            <h3 className="font-semibold text-lg text-gray-700 mb-4">
+              Personal Information
+            </h3>
+            <div className="space-y-5">
               <div className="flex items-start">
-                <User className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <User className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="font-semibold">
+                  <p className="font-semibold text-base">
                     {student.firstName} {student.lastName}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm text-gray-500">
                     ID: {student.studentId || "N/A"}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Mail className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Mail className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">{student.email || "N/A"}</p>
-                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="text-base">{student.email || "N/A"}</p>
+                  <p className="text-sm text-gray-500">Email</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Phone className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Phone className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">{student.phone_number || "N/A"}</p>
-                  <p className="text-xs text-gray-500">Phone</p>
+                  <p className="text-base">{student.phone_number || "N/A"}</p>
+                  <p className="text-sm text-gray-500">Phone</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Home className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Home className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">{student.address || "N/A"}</p>
-                  <p className="text-xs text-gray-500">Address</p>
+                  <p className="text-base">{student.address || "N/A"}</p>
+                  <p className="text-sm text-gray-500">Address</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Middle Column - Academic Info */}
-          <div className="col-span-1">
-            <h3 className="font-medium text-gray-700 mb-2">Academic Info</h3>
-            <div className="space-y-3">
+          <div className="col-span-1 bg-gray-50 p-6 rounded-lg">
+            <h3 className="font-semibold text-lg text-gray-700 mb-4">
+              Academic Information
+            </h3>
+            <div className="space-y-5">
               <div className="flex items-start">
-                <School className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <School className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">{student.school || "N/A"}</p>
-                  <p className="text-xs text-gray-500">School</p>
+                  <p className="text-base">{student.school || "N/A"}</p>
+                  <p className="text-sm text-gray-500">School</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Book className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Book className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">{student.level || "N/A"}</p>
-                  <p className="text-xs text-gray-500">Level</p>
+                  <p className="text-base">{student.level || "N/A"}</p>
+                  <p className="text-sm text-gray-500">Level</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Book className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Book className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <div className="text-sm">
+                  <div className="text-base">
                     {Array.isArray(student.subjects) &&
                     student.subjects.length > 0
                       ? student.subjects.join(", ")
                       : "No subjects listed"}
                   </div>
-                  <p className="text-xs text-gray-500">Subjects</p>
+                  <p className="text-sm text-gray-500">Subjects</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <AlertCircle className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <AlertCircle className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm font-medium">
+                  <p className="text-base font-medium">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs ${
+                      className={`px-3 py-1 rounded-full text-sm ${
                         student.subscription_status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
@@ -176,47 +180,49 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
                       {(student.subscription_status || "N/A").toUpperCase()}
                     </span>
                   </p>
-                  <p className="text-xs text-gray-500">Subscription Status</p>
+                  <p className="text-sm text-gray-500">Subscription Status</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Column - Performance & Next of Kin */}
-          <div className="col-span-1">
-            <h3 className="font-medium text-gray-700 mb-2">Additional Info</h3>
-            <div className="space-y-3">
+          <div className="col-span-1 bg-gray-50 p-6 rounded-lg">
+            <h3 className="font-semibold text-lg text-gray-700 mb-4">
+              Additional Information
+            </h3>
+            <div className="space-y-5">
               <div className="flex items-start">
-                <Users className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Users className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">
+                  <p className="text-base">
                     {student.next_of_kin_full_name || "N/A"}
                   </p>
-                  <p className="text-xs text-gray-500">Next of Kin</p>
+                  <p className="text-sm text-gray-500">Next of Kin</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <Phone className="h-4 w-4 text-blue-900 mt-1 mr-2" />
+                <Phone className="h-5 w-5 text-blue-900 mt-1 mr-3" />
                 <div>
-                  <p className="text-sm">
+                  <p className="text-base">
                     {student.next_of_kin_phone_number || "N/A"}
                   </p>
-                  <p className="text-xs text-gray-500">Next of Kin Phone</p>
+                  <p className="text-sm text-gray-500">Next of Kin Phone</p>
                 </div>
               </div>
 
               {student.overallMark !== undefined && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-500">Overall Mark</span>
-                    <span className="text-xs font-semibold">
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-700">Overall Mark</span>
+                    <span className="text-sm font-semibold">
                       {student.overallMark}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-blue-900 h-2 rounded-full"
+                      className="bg-blue-900 h-3 rounded-full"
                       style={{ width: `${student.overallMark}%` }}
                     ></div>
                   </div>
@@ -224,16 +230,16 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
               )}
 
               {student.attendance !== undefined && (
-                <div className="mt-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-500">Attendance</span>
-                    <span className="text-xs font-semibold">
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-700">Attendance</span>
+                    <span className="text-sm font-semibold">
                       {student.attendance}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-green-500 h-2 rounded-full"
+                      className="bg-green-500 h-3 rounded-full"
                       style={{ width: `${student.attendance}%` }}
                     ></div>
                   </div>
@@ -243,8 +249,11 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
           </div>
         </div>
 
-        <DialogFooter className="border-t pt-4">
-          <Button className="bg-blue-900 hover:bg-blue-800" onClick={onClose}>
+        <DialogFooter className="border-t pt-6">
+          <Button
+            className="bg-blue-900 hover:bg-blue-800 text-base px-6 py-2"
+            onClick={onClose}
+          >
             Close
           </Button>
         </DialogFooter>

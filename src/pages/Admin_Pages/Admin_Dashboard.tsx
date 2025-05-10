@@ -41,7 +41,6 @@ const Admin_Dashboard = () => {
     fetchStudents();
   }, []);
 
-  //fetch courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -49,12 +48,13 @@ const Admin_Dashboard = () => {
         setCourse(response.data || []);
         setLoading(false);
       } catch (err) {
-        setError(err.message || "Error fetcing courses");
+        setError(err.message || "Error fetching courses");
         setLoading(false);
       }
     };
-    fetchCourses;
-  });
+
+    fetchCourses(); // Added missing parentheses to execute the function
+  }, []); // Added dependency array
 
   // Update screen size state and handle sidebar visibility
   useEffect(() => {
