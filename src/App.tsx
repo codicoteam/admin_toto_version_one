@@ -27,6 +27,8 @@ import Contact from "./pages/welcome/Contact";
 import CoursesHome from "./pages/welcome/CoursesHome";
 import Pricing from "./pages/welcome/Pricing";
 import Course from "./pages/dashboard/Course";
+import Profile from "./pages/dashboard/user/Profile";
+import Settings from "./pages/dashboard/user/Settings";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,8 @@ const App = () => (
               <Route path="/courses/:id/topic/:topicID" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />
               <Route path="/wallet" element={<Wallet />} />
+              <Route path="/user/profile" element={<Profile />} />
+              <Route path="/user/settings" element={<Settings />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

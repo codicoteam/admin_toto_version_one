@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -86,8 +87,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           <DropdownMenu.Trigger asChild>
             <button className="outline-none">
               <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarImage src={user.profile} />
-                <AvatarFallback>{user.name.slice(0, 1)}</AvatarFallback>
+                <AvatarImage src={user?.profile_picture} />
+                <AvatarFallback>{user.firstName.slice(0, 1) + user.lastName.slice(0, 1)}</AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenu.Trigger>
@@ -95,26 +96,29 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           <DropdownMenu.Portal>
             <DropdownMenu.Content
               align="end"
-              sideOffset={8}
-              className="min-w-[220px] bg-white dark:bg-slate-900 rounded-md shadow-lg border border-gray-200 dark:border-slate-700 p-1 z-50"
+              sideOffset={18}
+              alignOffset={5}
+              className="min-w-[260px] bg-white dark:bg-slate-900 rounded-md shadow-lg border border-gray-200 dark:border-slate-700 p-1 z-50"
             >
-              <DropdownMenu.Label className="px-2 py-1.5 text-sm text-gray-500 dark:text-slate-400">
-                {user.email}
-              </DropdownMenu.Label>
+              <div className="flex items-center gap-3 px-2 py-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.profile_picture} />
+                  <AvatarFallback>{user.firstName.slice(0, 1) + user.lastName.slice(0, 1)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{user.email}</p>
+                </div>
+              </div>
               <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-slate-700 m-1" />
-
-              <DropdownMenu.Item className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
-                <User className="h-4 w-4" />
-                Profile
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Item className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
-                <Settings className="h-4 w-4" />
-                Settings
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-slate-700 m-1" />
-
+              <Link to="/user/profile">
+                <DropdownMenu.Item className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
+                  <User className="h-4 w-4" />
+                  Profile
+                </DropdownMenu.Item>
+              </Link>
               <DropdownMenu.Item
                 onClick={logout}
                 className="group text-sm rounded-sm px-2 py-1.5 outline-none flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -122,7 +126,6 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                 <LogOut className="h-4 w-4" />
                 Log out
               </DropdownMenu.Item>
-
               <DropdownMenu.Arrow className="fill-gray-200 dark:fill-slate-700" />
             </DropdownMenu.Content>
           </DropdownMenu.Portal>

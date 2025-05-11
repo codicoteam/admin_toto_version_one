@@ -118,7 +118,7 @@ const Dashboard = () => {
             <div className="bg-primary-foreground rounded-xl p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
+                  <h1 className="text-3xl font-bold">Welcome back, {user.firstName}!</h1>
                   <p className="text-muted-foreground mt-1">Here's what's happening with your learning today.</p>
                 </div>
                 <div className="sm:ml-auto">
@@ -145,11 +145,7 @@ const Dashboard = () => {
                 value="$125.00"
                 icon={<DollarSign className="h-5 w-5" />}
               />
-              <StatCard
-                title="Certificates"
-                value="3"
-                icon={<PieChart className="h-5 w-5" />}
-              />
+
             </div>
           </div>
 

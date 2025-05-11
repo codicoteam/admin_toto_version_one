@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, User, Phone, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, User, Phone, Mail, Lock, GraduationCap, School, MapPinHouse } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,13 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // Step state
   const [formData, setFormData] = useState({
-    firstName: "",
+    fullName: "", // Combine firstName and lastName into fullName
     phoneNumber: "",
     email: "",
-    password: "",
-    confirmPassword: "",
+    password: "", // Move password to the first step
+    address: "",
     educationLevel: "",
+    school: "",
   });
 
   const handleChange = (name, value) => {
@@ -33,7 +34,7 @@ const Register = () => {
 
   const handleNext = (e) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.phoneNumber || !formData.email) {
+    if (!formData.fullName || !formData.phoneNumber || !formData.email || !formData.password) {
       toast({
         title: "Please fill out all fields in this step.",
       });
@@ -46,50 +47,67 @@ const Register = () => {
     setCurrentStep(1);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const splitFullName = (fullName) => {
+    const [firstName, ...lastNameParts] = fullName.trim().split(" ");
+    return {
+      firstName: firstName || "",
+      lastName: lastNameParts.join(" ") || "",
+    };
+  };
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-      });
-      setIsLoading(false);
-      return;
-    }
+  interface FormData {
+    fullName: string;
+    phoneNumber: string;
+    email: string;
+    password: string;
+    address: string;
+    educationLevel: string;
+    school: string;
+  }
+
+  interface RegisterProps {
+    firstName: string;
+    lastName: string;
+    phone_number: string;
+    email: string;
+    level: string;
+    password: string;
+    school: string;
+    address: string;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
     try {
+      setIsLoading(true);
 
+      const { firstName, lastName } = splitFullName(formData.fullName);
 
-
-      setIsLoading(false);
-      const reg = await register({
-        name: formData.firstName,
-        phone: formData.phoneNumber,
+      const error = await register({
+        firstName,
+        lastName,
+        phone_number: formData.phoneNumber,
         email: formData.email,
         level: formData.educationLevel,
         password: formData.password,
-        role: "student",
-        profile: "default",
+        school: formData.school,
+        address: formData.address, // Include address in registration
+      } as RegisterProps);
 
-      });
-
-      if (!reg) {
+      if (error) {
         toast({
-          title: "Registration successful",
-        });
-        navigate("/");
-      } else {
-        toast({
-          title: "An error occurred while registering",
+          title: "Registration Error",
+          description: error,
+          variant: "destructive",
         });
       }
-
     } catch (error) {
       toast({
         title: "An error occurred while registering",
       });
-
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,16 +161,16 @@ const Register = () => {
                 <div>
                   <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
                     <User className="h-4" />
-                    First Name
+                    Full Name
                   </Label>
                   <Input
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={(e) =>
                       handleChange(e.target.name, e.target.value)
                     }
-                    placeholder="Enter First Name"
+                    placeholder="Enter Full Name"
                     required
                   />
                 </div>
@@ -188,38 +206,6 @@ const Register = () => {
                     required
                   />
                 </div>
-              </div>
-            )}
-            {currentStep === 2 && (
-              <div className="mb-4 w-full space-y-6">
-                <div>
-                  <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
-                    <User className="h-4" />
-                    Education Level
-                  </Label>
-                  <Select
-                    value={formData.educationLevel}
-                    onValueChange={(value) =>
-                      handleChange("educationLevel", value)
-                    }
-                  >
-                    <SelectTrigger className="bg-transparent border border-input p-2 rounded-md w-full">
-                      <SelectValue placeholder="Select Education Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="primary">Primary School</SelectItem>
-                      <SelectItem value="o_level">
-                        Ordinary Level (O-Level)
-                      </SelectItem>
-                      <SelectItem value="a_level">
-                        Advanced Level (A-Level)
-                      </SelectItem>
-                      <SelectItem value="tertiary">
-                        Tertiary Education
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div>
                   <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
                     <Lock className="h-4" />
@@ -245,57 +231,99 @@ const Register = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            )}
+            {currentStep === 2 && (
+              <div className="mb-4 w-full space-y-6">
                 <div>
                   <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
-                    <Lock className="h-4" />
-                    Confirm Password
+                    <School className="h-4" />
+                    School
                   </Label>
-                  <div className="relative border border-input rounded-md">
-                    <Input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        handleChange(e.target.name, e.target.value)
-                      }
-                      placeholder="Confirm Password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={20} />
-                      ) : (
-                        <Eye size={20} />
-                      )}
-                    </button>
-                  </div>
+                  <Input
+                    type="text"
+                    name="school"
+                    value={formData.school}
+                    onChange={(e) =>
+                      handleChange(e.target.name, e.target.value)
+                    }
+                    placeholder="Enter School Name"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
+                    <MapPinHouse className="h-4" />
+
+                    Address
+                  </Label>
+                  <Input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      handleChange(e.target.name, e.target.value)
+                    }
+                    placeholder="Enter Address"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
+                    <GraduationCap className="h-4" />
+                    Education Level
+                  </Label>
+                  <Select
+                    value={formData.educationLevel}
+                    onValueChange={(value) =>
+                      handleChange("educationLevel", value)
+                    }
+                  >
+                    <SelectTrigger className="bg-transparent border border-input p-2 rounded-md w-full">
+                      <SelectValue placeholder="Select Education Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {/* <SelectItem value="primary">Primary School</SelectItem> */}
+                      <SelectItem value="O Level">
+                        Ordinary Level (O-Level)
+                      </SelectItem>
+                      <SelectItem value="A Level">
+                        Advanced Level (A-Level)
+                      </SelectItem>
+                      {/* <SelectItem value="tertiary">
+                        Tertiary Education
+                      </SelectItem> */}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
-            <div className="flex justify-between">
-              {currentStep === 2 && (
-                <Button variant="ghost" type="button" onClick={handleBack}>
-                  BACK
+            <div className="min-h-12 items-center">
+              <div className="flex justify-between gap-24">
+                {currentStep === 2 && (
+                  <Button variant="ghost" type="button" onClick={handleBack}>
+                    BACK
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  type="submit"
+                  disabled={isLoading}
+                  className="ml-auto"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 dark:border-gray-200 border-toto-blue "></span>
+                      {currentStep === 1 ? "LOADING..." : "SIGNING UP..."}
+                    </div>
+                  ) : currentStep === 1 ? (
+                    "NEXT"
+                  ) : (
+                    "SIGN UP"
+                  )}
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                type="submit"
-                disabled={isLoading}
-                className="ml-auto"
-              >
-                {currentStep === 1
-                  ? "NEXT"
-                  : isLoading
-                    ? "SIGNING UP..."
-                    : "SIGN UP"}
-              </Button>
+              </div>
+
             </div>
             <p className="text-center text-xs font-semibold">
               Already have an account?

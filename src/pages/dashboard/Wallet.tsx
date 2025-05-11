@@ -151,7 +151,7 @@ const Wallet = () => {
           <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="transactions" className="bg-white rounded-lg p-6">
+        <TabsContent value="transactions" className="bg-white dark:bg-background border rounded-lg p-6">
           <div className="space-y-4">
             {walletData.transactions.map((transaction) => (
               <div key={transaction.id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">

@@ -19,7 +19,7 @@ const Login = () => {
 
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    phone: "",
+    email: "",
     password: "",
 
   });
@@ -37,17 +37,12 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
-
-    const attempt = await login(formData);
-    if (!attempt) {
+    const error = await login(formData);
+    if (error) {
       toast({
-        title: "Login successful",
-      });
-      navigate("/");
-    } else {
-      toast({
-        title: "Invalid phone number or password",
+        title: "Login Error",
+        description: error,
+        variant: "destructive",
       });
     }
     setIsLoading(false);
@@ -91,17 +86,17 @@ const Login = () => {
               <div>
 
                 <Label className="w-full mb-2 text-sm font-bold flex items-center gap-1">
-                  <Phone className="h-4" />
-                  Phone Number
+                  <Mail className="h-4" />
+                  Email
                 </Label>
                 <Input
                   className=""
                   type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter Phone number"
+                  placeholder="Enter Email"
 
                 />
               </div>
@@ -132,10 +127,18 @@ const Login = () => {
             </Link>
 
             <Button
-              variant='ghost'
+              variant="ghost"
               type="submit"
+              disabled={isLoading} // Disable button when loading
             >
-              LOGIN
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
+                  Loading...
+                </div>
+              ) : (
+                "LOGIN"
+              )}
             </Button>
 
             <p className="text-center text-xs font-semibold">
