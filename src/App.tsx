@@ -18,7 +18,7 @@ import Wallet from "./pages/Wallet";
 import Layout from "./components/Layout";
 import Admin_Dashboard from "./pages/Admin_Pages/Admin_Dashboard";
 import Admin_login from "./pages/auth/Admin/Login";
-import AdminCourses from "./pages/Admin_Pages/Courses";
+import AdminSubjects from "./pages/Admin_Pages/Subjects";
 import Homepage from "./pages/User_Pages/Hompage";
 import Aboutpage from "./pages/User_Pages/Aboutpage";
 import StudentDashboard from "./pages/Admin_Pages/Student";
@@ -76,7 +76,7 @@ const App = () => (
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-            <Route path="/courses" element={<AdminCourses />} />
+            <Route path="/courses" element={<AdminSubjects />} />
             <Route path="/homepage" element={<Homepage />} />
             <Route path="/aboutpage" element={<Aboutpage />} />
 

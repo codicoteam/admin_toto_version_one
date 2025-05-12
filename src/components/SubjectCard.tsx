@@ -18,7 +18,7 @@ interface Topic {
   description?: string;
 }
 
-interface CourseCardProps {
+interface SubjectCardProps {
   id: string;
   title?: string;
   category?: string;
@@ -27,9 +27,10 @@ interface CourseCardProps {
   topics?: Topic[];
   imageUrl?: string;
   showSubject?: boolean;
+  onClickView?: () => void;
 }
 
-const CourseCard: FC<CourseCardProps> = ({
+const SubjectCard: FC<SubjectCardProps> = ({
   id,
   title,
   category,
@@ -38,12 +39,11 @@ const CourseCard: FC<CourseCardProps> = ({
   topics = [],
   imageUrl = "/default-course-image.jpg",
   showSubject = true,
+  onClickView,
 }) => {
-  // State for the view topics dialog
   const [viewTopicsOpen, setViewTopicsOpen] = useState(false);
 
-  // Ensure we have valid data to display
-  const displayTitle = title || "Untitled Course";
+  const displayTitle = title || "Untitled Subject";
   const displayCategory = category || "Unknown Category";
   const displayLessons = lessons || 0;
   const displayDuration = duration || "0h";
@@ -55,14 +55,13 @@ const CourseCard: FC<CourseCardProps> = ({
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full border border-gray-200">
-        {/* Course Image */}
+        {/* Subject Image */}
         <div className="h-40 bg-gray-200 relative">
           <img
             src={imageUrl}
             alt={displayTitle}
             className="w-full h-full object-cover"
             onError={(e) => {
-              // Type assertion to tell TypeScript this is an HTMLImageElement
               const imgElement = e.target as HTMLImageElement;
               imgElement.src = "/default-course-image.jpg";
             }}
@@ -72,13 +71,13 @@ const CourseCard: FC<CourseCardProps> = ({
           </div>
         </div>
 
-        {/* Course Content */}
+        {/* Subject Content */}
         <div className="p-4 flex flex-col flex-grow">
           <h3 className="font-bold text-lg mb-2 text-blue-900">
             {displayTitle}
           </h3>
 
-          {/* Course Meta */}
+          {/* Subject Meta */}
           <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
             <div className="flex items-center">
               <Book className="w-4 h-4 mr-1" />
@@ -119,17 +118,15 @@ const CourseCard: FC<CourseCardProps> = ({
           {/* Action Buttons */}
           <div className="flex gap-2">
             <Button
-              onClick={() => setViewTopicsOpen(true)}
+              onClick={async () => {
+                if (onClickView) await onClickView(); // 🔁 fetch topics from backend
+                setViewTopicsOpen(true); // 👁 then open dialog
+              }}
               variant="outline"
               className="flex-1"
             >
               View Topics
             </Button>
-            {/* <Link to={`/admin/courses/${id}`} className="flex-1">
-              <Button className="w-full bg-blue-900 hover:bg-blue-800">
-                View Details
-              </Button>
-            </Link> */}
           </div>
         </div>
       </div>
@@ -144,7 +141,6 @@ const CourseCard: FC<CourseCardProps> = ({
             <Button
               onClick={() => {
                 setViewTopicsOpen(false);
-                // Assuming you have a function to open the add topic modal
                 setAddTopicOpen(true);
               }}
               className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -170,7 +166,7 @@ const CourseCard: FC<CourseCardProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium text-lg text-gray-800">
-                    Course Topics
+                    Subject Topics
                   </h3>
                   <span className="text-sm text-gray-500">
                     {topics.length} topics
@@ -216,13 +212,12 @@ const CourseCard: FC<CourseCardProps> = ({
               <div className="text-center py-12 bg-gray-50 rounded-md">
                 <Book className="mx-auto h-12 w-12 text-gray-400 mb-2" />
                 <p className="text-gray-500 mb-2">
-                  No topics available for this course
+                  No topics available for this subject
                 </p>
                 <div className="flex gap-3 justify-center mt-4">
                   <Button
                     onClick={() => {
                       setViewTopicsOpen(false);
-                      // Assuming you have a function to open the add topic modal
                       setAddTopicOpen(true);
                     }}
                     className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -230,9 +225,9 @@ const CourseCard: FC<CourseCardProps> = ({
                     <Plus className="h-4 w-4" />
                     Add First Topic
                   </Button>
-                  <Link to={`/admin/courses/${id}`}>
+                  <Link to={`/admin/subjects/${id}`}>
                     <Button className="bg-blue-900 hover:bg-blue-800" size="sm">
-                      Go to Course Details
+                      Go to Subject Details
                     </Button>
                   </Link>
                 </div>
@@ -254,4 +249,4 @@ const CourseCard: FC<CourseCardProps> = ({
   );
 };
 
-export default CourseCard;
+export default SubjectCard;

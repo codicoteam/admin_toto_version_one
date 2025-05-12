@@ -1,18 +1,18 @@
 import axios from "axios";
 
-// Base URL for the TopicInCourse API
+// Base URL for the TopicInSubject API
 const BASE_URL =
   "https://toto-academy-backend.onrender.com/api/v1/topic_in_subject";
 
 /**
- * Service for handling topic-related API requests within a course
+ * Service for handling topic-related API requests within a subject
  */
-const TopicInCourseService = {
+const TopicInSubjectService = {
   /**
    * Fetches all topics
    * @returns {Promise} Promise containing topic data
    */
-  getAllTopics: async (courseId: string) => {
+  getAllTopics: async (subjectId: string) => {
     try {
       const response = await axios.get(`${BASE_URL}/getall`, {
         headers: {
@@ -26,52 +26,34 @@ const TopicInCourseService = {
   },
 
   /**
-   * Fetches all topics for a specific subject/course
-   * @param {string} subjectId - The ID of the subject/course
+   * Fetches all topics for a specific subject
+   * @param {string} subjectId - The ID of the subject
    * @returns {Promise} Promise containing filtered topic data
    */
-  // Enhanced filtering with debug logging
-  getTopicsByCourseId: async (courseId: string) => {
+
+  // Updated getTopicsBySubjectId function for TopicInSubjectService
+  getTopicsBySubjectId: async (subjectId: string) => {
     try {
-      const response = await axios.get(`${BASE_URL}/getall`, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      });
-
-      // Get all topics from response
-      const allTopics = response.data.data || [];
-      console.log(`Total topics fetched: ${allTopics.length}`);
-
-      // Debug: Log the first few topics to see their structure
-      if (allTopics.length > 0) {
-        console.log("Example topic structure:", allTopics[0]);
-      }
-
-      // Filter topics by course ID with detailed logging
-      const filteredTopics = allTopics.filter((topic) => {
-        const matches =
-          topic.subject_id === courseId ||
-          topic.subjectId === courseId ||
-          topic.course_id === courseId ||
-          topic.courseId === courseId;
-
-        if (matches) {
-          console.log(`Found matching topic: ${topic.name || topic.title}`);
+      // Update API call to include the subject ID in the URL path
+      const response = await axios.get(
+        `${BASE_URL}/gettopicbysubjectid/${subjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
         }
-
-        return matches;
-      });
-
-      console.log(
-        `Filtered topics for course ${courseId}: ${filteredTopics.length}`
       );
+
+      // Get topics from response
+      const topics = response.data.data || [];
+      console.log(`Topics fetched for subject ${subjectId}: ${topics.length}`);
 
       return {
         message: "Topics retrieved successfully",
-        data: filteredTopics,
+        data: topics,
       };
     } catch (error) {
+      console.error(`Error fetching topics for subject ${subjectId}:`, error);
       throw error.response?.data || "Failed to retrieve topics";
     }
   },
@@ -163,4 +145,4 @@ const getAuthToken = () => {
   return localStorage.getItem("adminToken") || "";
 };
 
-export default TopicInCourseService;
+export default TopicInSubjectService;

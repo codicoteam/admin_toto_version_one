@@ -27,9 +27,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import CourseCard from "@/components/CourseCard";
-import CourseService from "@/services/Admin_Service/Course_service";
-import TopicInCourseService from "@/services/Admin_Service/Topic_InCourse_service";
+import SubjectCard from "@/components/SubjectCard";
+import SubjectService from "@/services/Admin_Service/Subject_service";
+import TopicInSubjectService from "@/services/Admin_Service/Topic_InSubject_service";
 import { useToast } from "@/components/ui/use-toast";
 
 // Define interfaces for your data types
@@ -39,12 +39,12 @@ interface Topic {
   name?: string;
   title?: string;
   description?: string;
-  courseId?: string;
+  subjectId?: string;
   subject_id?: string;
   order?: number;
 }
 
-interface Course {
+interface Subject {
   _id?: string;
   id?: string;
   name?: string;
@@ -62,10 +62,10 @@ interface Course {
   topics?: Topic[];
 }
 
-interface AddCourseDialogProps {
+interface AddSubjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCourseAdded: (course: Course) => void;
+  onSubjectAdded: (subject: Subject) => void;
 }
 
 // Topic Card Component
@@ -95,13 +95,13 @@ const TopicCard: React.FC<{ topic: Topic; index: number }> = ({
   );
 };
 
-// AddCourseDialog Component
-const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
+// AddSubjectDialog Component
+const AddSubjectDialog: React.FC<AddSubjectDialogProps> = ({
   open,
   onOpenChange,
-  onCourseAdded,
+  onSubjectAdded,
 }) => {
-  const [courseData, setCourseData] = useState({
+  const [subjectData, setSubjectData] = useState({
     title: "",
     category: "",
     lessons: "",
@@ -115,11 +115,11 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
-    setCourseData((prev) => ({ ...prev, [id]: value }));
+    setSubjectData((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleCategoryChange = (value: string) => {
-    setCourseData((prev) => ({ ...prev, category: value }));
+    setSubjectData((prev) => ({ ...prev, category: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,42 +128,42 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
 
     try {
       // Validate form data
-      if (!courseData.title || !courseData.category) {
-        throw new Error("Course title and category are required");
+      if (!subjectData.title || !subjectData.category) {
+        throw new Error("Subject title and category are required");
       }
 
       // Format data for API
-      const apiCourseData = {
-        name: courseData.title.trim(),
-        category: courseData.category,
-        numberOfLessons: parseInt(courseData.lessons) || 0,
-        duration: courseData.duration || "0h",
-        description: courseData.description || "",
+      const apiSubjectData = {
+        name: subjectData.title.trim(),
+        category: subjectData.category,
+        numberOfLessons: parseInt(subjectData.lessons) || 0,
+        duration: subjectData.duration || "0h",
+        description: subjectData.description || "",
         // Properly format the enum values
-        subjectName: courseData.title.trim(), // Using title as subject name
-        Level: getCategoryLabel(courseData.category), // Map category to Level enum value
+        subjectName: subjectData.title.trim(), // Using title as subject name
+        Level: getCategoryLabel(subjectData.category), // Map category to Level enum value
         showSubject: true,
         // Include any other required fields
         imageUrl: "", // Default image path
       };
 
-      console.log("Sending course data to API:", apiCourseData);
+      console.log("Sending subject data to API:", apiSubjectData);
 
-      // Call API to create course
-      const result = await CourseService.createCourse(apiCourseData);
+      // Call API to create subject
+      const result = await SubjectService.createSubject(apiSubjectData);
       console.log("API response:", result);
 
-      // Notify parent component about the new course
-      onCourseAdded(result.data);
+      // Notify parent component about the new subject
+      onSubjectAdded(result.data);
 
       // Show success message
       toast({
-        title: "Course created",
-        description: "The course has been created successfully.",
+        title: "Subject created",
+        description: "The subject has been created successfully.",
       });
 
       // Reset form and close dialog
-      setCourseData({
+      setSubjectData({
         title: "",
         category: "",
         lessons: "",
@@ -171,14 +171,14 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
         description: "",
       });
       onOpenChange(false);
-    } catch (error: any) {
-      console.error("Failed to create course:", error);
+    } catch (error) {
+      console.error("Failed to create subject:", error);
       // Improved error handling to extract more specific error messages
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
         error.message ||
-        "Failed to create course. Please try again.";
+        "Failed to create subject. Please try again.";
 
       toast({
         variant: "destructive",
@@ -207,17 +207,17 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
   return (
     <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
       <DialogHeader>
-        <DialogTitle>Add New Course</DialogTitle>
+        <DialogTitle>Add New Subject</DialogTitle>
       </DialogHeader>
 
       <form onSubmit={handleSubmit} className="grid gap-4 py-4">
         <div className="grid gap-2">
-          <Label htmlFor="title">Course Title</Label>
+          <Label htmlFor="title">Subject Title</Label>
           <Input
             id="title"
-            value={courseData.title}
+            value={subjectData.title}
             onChange={handleChange}
-            placeholder="Enter course title"
+            placeholder="Enter subject title"
             required
           />
         </div>
@@ -226,7 +226,7 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
           <Label htmlFor="category">Category</Label>
           <Select
             onValueChange={handleCategoryChange}
-            value={courseData.category}
+            value={subjectData.category}
             required
           >
             <SelectTrigger id="category">
@@ -246,7 +246,7 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
             <Input
               id="lessons"
               type="number"
-              value={courseData.lessons}
+              value={subjectData.lessons}
               onChange={handleChange}
               placeholder="10"
               required
@@ -256,7 +256,7 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
             <Label htmlFor="duration">Duration (hours)</Label>
             <Input
               id="duration"
-              value={courseData.duration}
+              value={subjectData.duration}
               onChange={handleChange}
               placeholder="5h"
               required
@@ -268,15 +268,15 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
           <Label htmlFor="description">Description</Label>
           <Textarea
             id="description"
-            value={courseData.description}
+            value={subjectData.description}
             onChange={handleChange}
-            placeholder="Course description..."
+            placeholder="Subject description..."
             required
           />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="thumbnail">Course Thumbnail</Label>
+          <Label htmlFor="thumbnail">Subject Thumbnail</Label>
           <Input id="thumbnail" type="file" />
         </div>
 
@@ -295,7 +295,7 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
             className="w-full sm:w-auto"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating..." : "Create Course"}
+            {isSubmitting ? "Creating..." : "Create Subject"}
           </Button>
         </div>
       </form>
@@ -307,9 +307,9 @@ const AddCourseDialog: React.FC<AddCourseDialogProps> = ({
 const AddTopicDialog: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  courseId: string;
+  subjectId: string;
   onTopicAdded: () => void;
-}> = ({ open, onOpenChange, courseId, onTopicAdded }) => {
+}> = ({ open, onOpenChange, subjectId, onTopicAdded }) => {
   const [topicData, setTopicData] = useState({
     title: "",
     description: "",
@@ -339,14 +339,14 @@ const AddTopicDialog: React.FC<{
         title: topicData.title.trim(),
         description: topicData.description || "",
         order: parseInt(topicData.order.toString()) || 0,
-        subject_id: courseId, // Using courseId as subject_id
+        subject_id: subjectId, // Using subjectId as subject_id
       };
 
-      const result = await TopicInCourseService.createTopic(apiTopicData);
+      const result = await TopicInSubjectService.createTopic(apiTopicData);
 
       toast({
         title: "Topic created",
-        description: "The topic has been added to this course.",
+        description: "The topic has been added to this subject.",
       });
 
       setTopicData({
@@ -356,7 +356,7 @@ const AddTopicDialog: React.FC<{
       });
       onOpenChange(false);
       onTopicAdded();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create topic:", error);
       const errorMessage =
         error.response?.data?.message ||
@@ -413,7 +413,7 @@ const AddTopicDialog: React.FC<{
             placeholder="1"
           />
           <p className="text-xs text-gray-500">
-            The order in which this topic appears in the course
+            The order in which this topic appears in the subject
           </p>
         </div>
 
@@ -440,36 +440,38 @@ const AddTopicDialog: React.FC<{
   );
 };
 
-const AdminCourses: React.FC = () => {
+const AdminSubjects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [topicDialogOpen, setTopicDialogOpen] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [isLargeScreen, setIsLargeScreen] = useState<boolean>(false);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { toast } = useToast();
 
-  // State for viewing a specific course's topics
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  // State for viewing a specific subject's topics
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [loadingTopics, setLoadingTopics] = useState<boolean>(false);
 
-  // Fetch topics for a specific course
-  const fetchTopicsForCourse = async (courseId: string): Promise<Topic[]> => {
+  // Fetch topics for a specific subject
+  const fetchTopicsForSubject = async (subjectId: string): Promise<Topic[]> => {
     try {
       setLoadingTopics(true);
-      // Use getTopicsBySubjectId instead of getAllTopics to filter topics by course ID
-      const result = await TopicInCourseService.getTopicsByCourseId(courseId);
-      console.log(`Topics for course ${courseId}:`, result);
+      // Use getTopicsBySubjectId to filter topics by subject ID
+      const result = await TopicInSubjectService.getTopicsBySubjectId(
+        subjectId
+      );
+      console.log(`Topics for subject ${subjectId}:`, result);
       return result.data || [];
     } catch (err) {
-      console.error(`Failed to fetch topics for course ${courseId}:`, err);
+      console.error(`Failed to fetch topics for subject ${subjectId}:`, err);
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to load topics for this course. Please try again.`,
+        description: `Failed to load topics for this subject. Please try again.`,
       });
       return [];
     } finally {
@@ -477,82 +479,82 @@ const AdminCourses: React.FC = () => {
     }
   };
 
-  // Function to view a specific course's topics
-  const viewCourseTopics = async (course: Course) => {
-    const courseId = course._id || course.id;
-    if (!courseId) return;
+  // Function to view a specific subject's topics
+  const viewSubjectTopics = async (subject: Subject) => {
+    const subjectId = subject._id || subject.id;
+    if (!subjectId) return;
 
     try {
-      setSelectedCourse(course);
+      setSelectedSubject(subject);
       // If topics are already fetched, no need to fetch again
-      if (!course.topics || course.topics.length === 0) {
-        const topics = await fetchTopicsForCourse(courseId);
-        // Update the course in state with fetched topics
-        setCourses((prev) =>
-          prev.map((c) =>
-            c._id === courseId || c.id === courseId ? { ...c, topics } : c
+      if (!subject.topics || subject.topics.length === 0) {
+        const topics = await fetchTopicsForSubject(subjectId);
+        // Update the subject in state with fetched topics
+        setSubjects((prev) =>
+          prev.map((s) =>
+            s._id === subjectId || s.id === subjectId ? { ...s, topics } : s
           )
         );
-        // Also update the selected course
-        setSelectedCourse((prev) => (prev ? { ...prev, topics } : null));
+        // Also update the selected subject
+        setSelectedSubject((prev) => (prev ? { ...prev, topics } : null));
       }
     } catch (err) {
-      console.error("Error viewing course topics:", err);
+      console.error("Error viewing subject topics:", err);
     }
   };
 
-  // Fetch courses and their topics from API
-  const fetchCourses = async (): Promise<void> => {
+  // Fetch subjects and their topics from API
+  const fetchSubjects = async (): Promise<void> => {
     try {
       setLoading(true);
-      const result = await CourseService.getAllCourses();
-      const coursesData = result.data || [];
+      const result = await SubjectService.getAllSubjects();
+      const subjectsData = result.data || [];
 
-      // Initially we don't fetch topics for all courses to improve performance
-      // Topics will be fetched when a user clicks on a specific course
-      setCourses(coursesData);
+      // Initially we don't fetch topics for all subjects to improve performance
+      // Topics will be fetched when a user clicks on a specific subject
+      setSubjects(subjectsData);
       setError(null);
     } catch (err) {
-      console.error("Failed to fetch courses:", err);
-      setError("Failed to load courses. Please try again.");
+      console.error("Failed to fetch subjects:", err);
+      setError("Failed to load subjects. Please try again.");
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load courses. Please try again.",
+        description: "Failed to load subjects. Please try again.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial load of courses
+  // Initial load of subjects
   useEffect(() => {
-    fetchCourses();
+    fetchSubjects();
   }, []);
 
-  // Add course handler
-  const handleCourseAdded = async (newCourse: Course): Promise<void> => {
-    setCourses([...courses, newCourse]);
+  // Add subject handler
+  const handleSubjectAdded = async (newSubject: Subject): Promise<void> => {
+    setSubjects([...subjects, newSubject]);
   };
 
   // Handle topic added
   const handleTopicAdded = async () => {
-    if (selectedCourse) {
-      const courseId = selectedCourse._id || selectedCourse.id;
-      if (!courseId) return;
+    if (selectedSubject) {
+      const subjectId = selectedSubject._id || selectedSubject.id;
+      if (!subjectId) return;
 
-      // Refresh topics for the selected course
-      const topics = await fetchTopicsForCourse(courseId);
+      // Refresh topics for the selected subject
+      const topics = await fetchTopicsForSubject(subjectId);
 
-      // Update course in state
-      setCourses((prev) =>
-        prev.map((c) =>
-          c._id === courseId || c.id === courseId ? { ...c, topics } : c
+      // Update subject in state
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s._id === subjectId || s.id === subjectId ? { ...s, topics } : s
         )
       );
 
-      // Update selected course
-      setSelectedCourse((prev) => (prev ? { ...prev, topics } : null));
+      // Update selected subject
+      setSelectedSubject((prev) => (prev ? { ...prev, topics } : null));
     }
   };
 
@@ -585,54 +587,60 @@ const AdminCourses: React.FC = () => {
     setSearchQuery(e.target.value);
   };
 
-  // Back to courses list
-  const backToCourses = () => {
-    setSelectedCourse(null);
+  // Back to subjects list
+  const backToSubjects = () => {
+    setSelectedSubject(null);
   };
 
   // Tabs based on the design with categories
   const tabs = [
     { id: "all", label: "All" },
-    { id: "popular", label: "Popular Courses" },
+    { id: "popular", label: "Popular Subjects" },
     { id: "o-level", label: "O' Level" },
     { id: "a-level", label: "A' Level" },
     { id: "tertiary", label: "Tertiary" },
   ];
 
-  // Filter courses based on active tab and search query
-  const filteredCourses = courses.filter((course) => {
+  // Filter subjects based on active tab and search query
+  const filteredSubjects = subjects.filter((subject) => {
     // First filter by tab category
     const matchesTab =
       activeTab === "all"
         ? true
         : activeTab === "popular"
-        ? course.isPopular
-        : course.category === activeTab;
+        ? subject.isPopular
+        : subject.category === activeTab;
 
     // Then filter by search query if one exists
     const matchesSearch = searchQuery
-      ? course.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.subjectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      ? subject.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        subject.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        subject.subjectName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        subject.description?.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
 
     return matchesTab && matchesSearch;
   });
 
-  // Map API course data to the format expected by the CourseCard component
-  const mapCourseToCardProps = (course: Course) => {
+  // Map API subject data to the format expected by the SubjectCard component
+  const mapSubjectToCardProps = (subject: Subject) => {
     return {
-      id: course._id || course.id || "",
+      id: subject._id || subject.id || "",
       title:
-        course.name || course.title || course.subjectName || "Untitled Course",
-      category: course.Level || course.category || "Unknown Category",
-      lessons: course.numberOfLessons || course.lessons || 0,
-      duration: course.duration || "0h",
-      topics: course.topics || [],
-      imageUrl: course.imageUrl || "/default-course-image.jpg",
-      showSubject: course.showSubject !== undefined ? course.showSubject : true,
-      onClickView: () => viewCourseTopics(course),
+        subject.name ||
+        subject.title ||
+        subject.subjectName ||
+        "Untitled Subject",
+      category: subject.Level || subject.category || "Unknown Category",
+      lessons: subject.numberOfLessons || subject.lessons || 0,
+      duration: subject.duration || "0h",
+      topics: subject.topics || [],
+      imageUrl: subject.imageUrl || "/default-subject-image.jpg",
+      showSubject:
+        subject.showSubject !== undefined ? subject.showSubject : true,
+      onClickView: () => viewSubjectTopics(subject),
     };
   };
 
@@ -672,22 +680,22 @@ const AdminCourses: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 w-full">
         <div className="p-4 md:p-6">
-          {selectedCourse ? (
-            // Topic View for selected course
+          {selectedSubject ? (
+            // Topic View for selected subject
             <>
               {/* Header with back button */}
               <div className="flex items-center mb-6 mt-10 md:mt-0">
                 <Button
                   variant="ghost"
                   className="mr-2 p-2"
-                  onClick={backToCourses}
+                  onClick={backToSubjects}
                 >
                   <ChevronLeft size={20} />
                 </Button>
                 <h1 className="text-2xl font-bold text-blue-900">
-                  {selectedCourse.name ||
-                    selectedCourse.title ||
-                    selectedCourse.subjectName ||
+                  {selectedSubject.name ||
+                    selectedSubject.title ||
+                    selectedSubject.subjectName ||
                     "Topics"}
                 </h1>
               </div>
@@ -706,7 +714,7 @@ const AdminCourses: React.FC = () => {
                   <AddTopicDialog
                     open={topicDialogOpen}
                     onOpenChange={setTopicDialogOpen}
-                    courseId={selectedCourse._id || selectedCourse.id || ""}
+                    subjectId={selectedSubject._id || selectedSubject.id || ""}
                     onTopicAdded={handleTopicAdded}
                   />
                 </Dialog>
@@ -721,10 +729,10 @@ const AdminCourses: React.FC = () => {
 
               {/* Topics List */}
               {!loadingTopics &&
-              selectedCourse.topics &&
-              selectedCourse.topics.length > 0 ? (
+              selectedSubject.topics &&
+              selectedSubject.topics.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {selectedCourse.topics.map((topic, index) => (
+                  {selectedSubject.topics.map((topic, index) => (
                     <TopicCard
                       key={topic._id || topic.id || index}
                       topic={topic}
@@ -735,14 +743,14 @@ const AdminCourses: React.FC = () => {
               ) : !loadingTopics ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 mb-4">
-                    No topics found for this course. Add a new topic to get
+                    No topics found for this subject. Add a new topic to get
                     started.
                   </p>
                 </div>
               ) : null}
             </>
           ) : (
-            // Courses View
+            // Subjects View
             <>
               {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 mt-10 md:mt-0">
@@ -763,17 +771,17 @@ const AdminCourses: React.FC = () => {
                     />
                   </div>
 
-                  {/* Add Course Button */}
+                  {/* Add Subject Button */}
                   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
-                        <Plus className="h-4 w-4 mr-2" /> Add Course
+                        <Plus className="h-4 w-4 mr-2" /> Add Subject
                       </Button>
                     </DialogTrigger>
-                    <AddCourseDialog
+                    <AddSubjectDialog
                       open={dialogOpen}
                       onOpenChange={setDialogOpen}
-                      onCourseAdded={handleCourseAdded}
+                      onSubjectAdded={handleSubjectAdded}
                     />
                   </Dialog>
                 </div>
@@ -813,7 +821,7 @@ const AdminCourses: React.FC = () => {
                   <Button
                     variant="outline"
                     className="mt-2"
-                    onClick={fetchCourses}
+                    onClick={fetchSubjects}
                   >
                     Retry
                   </Button>
@@ -821,34 +829,34 @@ const AdminCourses: React.FC = () => {
               )}
 
               {/* Empty State */}
-              {!loading && !error && filteredCourses.length === 0 && (
+              {!loading && !error && filteredSubjects.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 mb-4">
-                    No courses found. Please try a different filter or add a new
-                    course.
+                    No subjects found. Please try a different filter or add a
+                    new subject.
                   </p>
                   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-blue-900 hover:bg-blue-800">
-                        <Plus className="h-4 w-4 mr-2" /> Add New Course
+                        <Plus className="h-4 w-4 mr-2" /> Add New Subject
                       </Button>
                     </DialogTrigger>
-                    <AddCourseDialog
+                    <AddSubjectDialog
                       open={dialogOpen}
                       onOpenChange={setDialogOpen}
-                      onCourseAdded={handleCourseAdded}
+                      onSubjectAdded={handleSubjectAdded}
                     />
                   </Dialog>
                 </div>
               )}
 
-              {/* Course Grid */}
-              {!loading && !error && filteredCourses.length > 0 && (
+              {/* Subject Grid */}
+              {!loading && !error && filteredSubjects.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCourses.map((course) => (
-                    <CourseCard
-                      key={course._id || course.id}
-                      {...mapCourseToCardProps(course)}
+                  {filteredSubjects.map((subject) => (
+                    <SubjectCard
+                      key={subject._id || subject.id}
+                      {...mapSubjectToCardProps(subject)}
                     />
                   ))}
                 </div>
@@ -861,4 +869,4 @@ const AdminCourses: React.FC = () => {
   );
 };
 
-export default AdminCourses;
+export default AdminSubjects;

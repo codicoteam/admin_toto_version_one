@@ -27,8 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import CourseService from "@/services/Admin_Service/Course_service";
-import TopicInCourseService from "@/services/Admin_Service/Topic_InCourse_service";
+import CourseService from "@/services/Admin_Service/Subject_service";
+import TopicInCourseService from "@/services/Admin_Service/Topic_InSubject_service";
 
 // Topic Dialog Component
 const AddTopicDialog = ({ courseId, onTopicAdded, open, onOpenChange }) => {
