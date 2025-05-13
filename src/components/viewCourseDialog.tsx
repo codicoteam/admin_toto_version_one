@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TopicInCourseService from "@/services/Admin_Service/Topic_InCourse_service";
+import TopicInCourseService from "@/services/Admin_Service/Topic_InSubject_service";
 import { useToast } from "@/components/ui/use-toast";
 
 const ViewCourseDialog = ({ open, onOpenChange, course }) => {

@@ -3,14 +3,14 @@ import axios from "axios";
 const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/subject";
 
 /**
- * Service for handling course-related API requests
+ * Service for handling subject-related API requests
  */
-const CourseService = {
+const SubjectService = {
   /**
-   * Fetches all courses from the backend
-   * @returns {Promise} Promise containing course data
+   * Fetches all subjects from the backend
+   * @returns {Promise} Promise containing subject data
    */
-  getAllCourses: async () => {
+  getAllSubjects: async () => {
     try {
       const response = await axios.get(`${BASE_URL}/getall`, {
         headers: {
@@ -19,16 +19,16 @@ const CourseService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to retrieve courses";
+      throw error.response?.data || "Failed to retrieve subjects";
     }
   },
 
   /**
-   * Get a specific course by ID
-   * @param {string} id - Course ID
-   * @returns {Promise} Promise with course data
+   * Get a specific subject by ID
+   * @param {string} id - Subject ID
+   * @returns {Promise} Promise with subject data
    */
-  getCourseById: async (id) => {
+  getSubjectById: async (id) => {
     try {
       const response = await axios.get(`${BASE_URL}/getcourse/${id}`, {
         headers: {
@@ -37,18 +37,18 @@ const CourseService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to retrieve course";
+      throw error.response?.data || "Failed to retrieve subject";
     }
   },
 
   /**
-   * Create a new course
-   * @param {Object} courseData - Course data to create
-   * @returns {Promise} Promise with created course data
+   * Create a new subject
+   * @param {Object} subjectData - Subject data to create
+   * @returns {Promise} Promise with created subject data
    */
-  createCourse: async (courseData) => {
+  createSubject: async (subjectData) => {
     try {
-      const response = await axios.post(`${BASE_URL}/create`, courseData, {
+      const response = await axios.post(`${BASE_URL}/create`, subjectData, {
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
           "Content-Type": "application/json",
@@ -56,21 +56,21 @@ const CourseService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to create course";
+      throw error.response?.data || "Failed to create subject";
     }
   },
 
   /**
-   * Update an existing course
-   * @param {string} id - Course ID to update
-   * @param {Object} courseData - Updated course data
-   * @returns {Promise} Promise with updated course data
+   * Update an existing subject
+   * @param {string} id - Subject ID to update
+   * @param {Object} subjectData - Updated subject data
+   * @returns {Promise} Promise with updated subject data
    */
-  updateCourse: async (id, courseData) => {
+  updateSubject: async (id, subjectData) => {
     try {
       const response = await axios.put(
         `${BASE_URL}/updatecourse/${id}`,
-        courseData,
+        subjectData,
         {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
@@ -80,16 +80,16 @@ const CourseService = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to update course";
+      throw error.response?.data || "Failed to update subject";
     }
   },
 
   /**
-   * Delete a course
-   * @param {string} id - Course ID to delete
+   * Delete a subject
+   * @param {string} id - Subject ID to delete
    * @returns {Promise} Promise with deletion result
    */
-  deleteCourse: async (id) => {
+  deleteSubject: async (id) => {
     try {
       const response = await axios.delete(`${BASE_URL}/deletecourse/${id}`, {
         headers: {
@@ -98,7 +98,7 @@ const CourseService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to delete course";
+      throw error.response?.data || "Failed to delete subject";
     }
   },
 };
@@ -112,4 +112,4 @@ const getAuthToken = () => {
   return localStorage.getItem("adminToken");
 };
 
-export default CourseService;
+export default SubjectService;

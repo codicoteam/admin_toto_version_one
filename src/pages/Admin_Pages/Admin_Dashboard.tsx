@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import student from "@/assets/home1.png";
 import StudentService from "../../services/Admin_Service/Student_service"; // Import the StudentService
-import CourseService from "@/services/Admin_Service/Course_service";
+import CourseService from "@/services/Admin_Service/Subject_service";
+import SubjectService from "@/services/Admin_Service/Subject_service";
 
 const Admin_Dashboard = () => {
   // Set initial sidebar state based on screen size
@@ -42,9 +43,9 @@ const Admin_Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchSubjects = async () => {
       try {
-        const response = await CourseService.getAllCourses();
+        const response = await SubjectService.getAllSubjects();
         setCourse(response.data || []);
         setLoading(false);
       } catch (err) {
@@ -53,7 +54,7 @@ const Admin_Dashboard = () => {
       }
     };
 
-    fetchCourses(); // Added missing parentheses to execute the function
+    fetchSubjects(); // Added missing parentheses to execute the function
   }, []); // Added dependency array
 
   // Update screen size state and handle sidebar visibility
