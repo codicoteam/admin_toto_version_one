@@ -1,11 +1,26 @@
 import Sidebar from "@/components/Sidebar";
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import WalleService from "../services/Walle_service";
 
 function Resourcewalle() {
-  const fileInputRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  
+  // State for wallet dashboard data
+  const [dashboardData, setDashboardData] = useState({
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    totalTransactions: 0,
+    walletCount: 0,
+    latestWallets: []
+  });
+  
+  // State for loading
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // State for error messages
+  const [error, setError] = useState(null);
 
   // Toggle sidebar function
   const toggleSidebar = () => {
@@ -19,19 +34,39 @@ function Resourcewalle() {
       setIsLargeScreen(isLarge);
       setSidebarOpen(isLarge);
     };
-
+    
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  const handleBrowseClick = () => {
-    fileInputRef.current.click();
-  };
+  // Fetch wallet dashboard data when component mounts
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await WalleService.getDashboardData();
+        setDashboardData(response.data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching wallet data:", err);
+        setError("Failed to load wallet data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleFileInput = (e) => {
-    console.log(Array.from(e.target.files));
+    fetchDashboardData();
+  }, []);
+
+  // Format currency for display
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
   };
 
   return (
@@ -64,86 +99,92 @@ function Resourcewalle() {
       <div className="bg-white w-full font-sans">
         {/* Header */}
         <div className="py-2 px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-900">WALLET</h1>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setSidebarOpen(true)} 
-              className="p-2 rounded-full hover:bg-gray-100"
-            ></button>
+          <h1 className="text-2xl font-bold text-slate-900">WALLET DASHBOARD</h1>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+          {/* Total Deposits Card */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm">Total Deposits</h3>
+            <p className="text-2xl font-bold text-green-500">
+              {isLoading ? "Loading..." : formatCurrency(dashboardData.totalDeposits)}
+            </p>
+          </div>
+
+          {/* Total Withdrawals Card */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm">Total Withdrawals</h3>
+            <p className="text-2xl font-bold text-red-500">
+              {isLoading ? "Loading..." : formatCurrency(dashboardData.totalWithdrawals)}
+            </p>
+          </div>
+
+          {/* Total Transactions Card */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm">Total Transactions</h3>
+            <p className="text-2xl font-bold text-blue-500">
+              {isLoading ? "Loading..." : dashboardData.totalTransactions}
+            </p>
+          </div>
+
+          {/* Wallet Count Card */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm">Wallet Count</h3>
+            <p className="text-2xl font-bold text-purple-500">
+              {isLoading ? "Loading..." : dashboardData.walletCount}
+            </p>
           </div>
         </div>
 
-        {/* Balance Cards Row */}
-        <div className="flex w-full mb-2 px-2">
-          {/* Balance Card */}
-          <div className="flex items-center p-2 mx-1 flex-1">
-            <div className="bg-gray-800 p-2 rounded-md mr-2 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path>
-                <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
-                <path d="M18 12a2 2 0 0 0 0 4h2v-4h-2z"></path>
-              </svg>
+        {/* Latest Wallets Section */}
+        <div className="p-4">
+          <h2 className="text-xl font-bold mb-4">Latest Wallets</h2>
+          {error ? (
+            <div className="text-red-500 p-4">{error}</div>
+          ) : isLoading ? (
+            <div className="text-center p-4">Loading wallets...</div>
+          ) : dashboardData.latestWallets.length === 0 ? (
+            <div className="text-center p-4 text-gray-500">No wallets found</div>
+          ) : (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {dashboardData.latestWallets.map((wallet) => (
+                    <tr key={wallet._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {wallet.student.firstName} {wallet.student.lastName}
+                            </div>
+                            <div className="text-sm text-gray-500">{wallet.student.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{formatCurrency(wallet.balance)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{wallet.currency}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(wallet.lastUpdated).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div>
-              <p className="text-green-500 font-bold text-lg">$30000</p>
-              <p className="text-sm text-gray-700">Balance</p>
-            </div>
-          </div>
-
-          {/* Outstanding Card */}
-          <div className="flex items-center p-2 mx-1 flex-1">
-            <div className="bg-gray-200 p-2 rounded-md mr-2 w-10 h-10"></div>
-            <div>
-              <p className="text-red-600 font-bold text-lg">$1500</p>
-              <p className="text-sm text-gray-700">Outstanding</p>
-            </div>
-          </div>
-
-          {/* Deposit Card (Clickable) */}
-          <div 
-            className="flex items-center p-2 mx-1 flex-1 cursor-pointer hover:bg-gray-100 rounded-md transition" 
-            onClick={() => alert("Deposit card clicked!")}
->
-            <div className="bg-gray-200 p-2 rounded-md mr-2 w-10 h-10 flex items-center justify-center">
-              <span className="text-lg">🗺️</span>
-            </div>
-            <div>
-              <p className="text-slate-900 font-bold text-lg">$10000<sup className="text-green-500 text-xs"></sup></p>
-              <p className="text-sm text-gray-700">Deposit</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex px-4 gap-4 mb-4">
-          <div className="bg-gray-100 rounded-md h-16 w-1/3"></div>
-          <div className="bg-gray-100 rounded-md h-16 w-1/3"></div>
-          <div className="bg-gray-100 rounded-md h-16 w-1/3"></div>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="flex flex-row px-4 gap-4">
-          {/* Latest Transactions */}
-          <div className="bg-gray-100 p-4 rounded-md w-7/12">
-            <h2 className="text-base font-semibold text-slate-900 mb-4">Latest Transactions</h2>
-            <div className="mb-16">
-              <p className="text-sm text-slate-700">Wed 30 Apr 2025</p>
-              <div className="h-20"></div>
-            </div>
-            <div>
-              <p className="text-sm text-slate-700">Tue 29 Apr 2025</p>
-              <div className="h-20"></div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="w-5/12 flex flex-col gap-4">
-            <div className="bg-gray-100 rounded-md h-44"></div>
-            <div className="bg-gray-100 p-4 rounded-md">
-              <h2 className="text-base font-semibold text-slate-900">Weekly Transaction Summary</h2>
-              <div className="h-24"></div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -12,9 +12,10 @@ import {
   Info,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import ChatService from "@/services/chat_service"; // Import the ChatService
 
 const ChatApp = () => {
-  const [activeGroup, setActiveGroup] = useState("Mathematics Group");
+  const [activeGroup, setActiveGroup] = useState("");
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi", time: "10:00", sender: "other" },
     { id: 2, text: "How are you", time: "10:00", sender: "other" },
@@ -33,14 +34,41 @@ const ChatApp = () => {
   const [infoSidebarOpen, setInfoSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
+  const [communities, setCommunities] = useState([]); // State for storing communities data
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
   const messagesEndRef = useRef(null);
 
-  const groups = [
-    "Mathematics Group",
-    "Computer Scie Group",
-    "Combined Scie Group",
-  ];
+  // Fetch communities data on component mount
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        setLoading(true);
+        const response = await ChatService.getAllChatGroups();
+        
+        // Process the API response
+        if (response && response.data) {
+          setCommunities(response.data);
+          
+          // Set the first community as active if communities exist
+          if (response.data.length > 0) {
+            setActiveGroup(response.data[0].name);
+          }
+        } else {
+          setError("No communities found");
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load chat groups");
+        setLoading(false);
+        console.error("Error fetching communities:", err);
+      }
+    };
+
+    fetchCommunities();
+  }, []);
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
@@ -188,26 +216,34 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Group List */}
+          {/* Group List - Now using data from API */}
           <div className="p-3 space-y-2 flex-grow overflow-y-auto">
-            {groups.map((group) => (
-              <button
-                key={group}
-                className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
-                  activeGroup === group
-                    ? "bg-blue-900 text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-                onClick={() => {
-                  setActiveGroup(group);
-                  if (!isMediumScreen) {
-                    setGroupsListOpen(false);
-                  }
-                }}
-              >
-                {group}
-              </button>
-            ))}
+            {loading ? (
+              <div className="text-center py-4 text-gray-500">Loading groups...</div>
+            ) : error ? (
+              <div className="text-center py-4 text-red-500">{error}</div>
+            ) : communities.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">No groups available</div>
+            ) : (
+              communities.map((community) => (
+                <button
+                  key={community._id}
+                  className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
+                    activeGroup === community.name
+                      ? "bg-blue-900 text-white"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                  onClick={() => {
+                    setActiveGroup(community.name);
+                    if (!isMediumScreen) {
+                      setGroupsListOpen(false);
+                    }
+                  }}
+                >
+                  {community.name}
+                </button>
+              ))
+            )}
           </div>
         </div>
 
@@ -232,7 +268,7 @@ const ChatApp = () => {
           `}
         >
           <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
-            {activeGroup}
+            {activeGroup || "Select a group"}
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto">
@@ -436,19 +472,33 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Members List */}
+          {/* Members List - Display members from active community */}
           <div className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <div className="font-medium">30 members</div>
-              <X className="h-4 w-4 cursor-pointer" />
-            </div>
+            {loading ? (
+              <div className="text-center">Loading...</div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="font-medium">
+                    {activeGroup && communities.length > 0
+                      ? `${communities.find(c => c.name === activeGroup)?.students?.length || 0} members`
+                      : "0 members"}
+                  </div>
+                  <X className="h-4 w-4 cursor-pointer" />
+                </div>
 
-            <div className="bg-white p-2 rounded border">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-                <span className="text-sm">Member Name</span>
-              </div>
-            </div>
+                <div className="space-y-2">
+                  {activeGroup && communities.length > 0 && communities.find(c => c.name === activeGroup)?.students?.map(student => (
+                    <div key={student._id} className="bg-white p-2 rounded border">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                        <span className="text-sm">{`${student.firstName} ${student.lastName}`}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Action Buttons */}

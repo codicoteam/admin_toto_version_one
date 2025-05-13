@@ -234,6 +234,7 @@ const Wallet = () => {
 };
 
 // Mock Badge component that should be imported from shadcn
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Badge = ({ variant, className, children }: any) => {
   return <span className={className}>{children}</span>;
 };
