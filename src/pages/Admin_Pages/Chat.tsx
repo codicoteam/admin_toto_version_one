@@ -15,7 +15,7 @@ import Sidebar from "@/components/Sidebar";
 import ChatService from "@/services/chat_service"; // Import the ChatService
 
 const ChatApp = () => {
-  const [activeGroup, setActiveGroup] = useState("");
+  const [activeGroup, setActiveGroup] = useState(null);
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi", time: "10:00", sender: "other" },
     { id: 2, text: "How are you", time: "10:00", sender: "other" },
@@ -53,7 +53,7 @@ const ChatApp = () => {
           
           // Set the first community as active if communities exist
           if (response.data.length > 0) {
-            setActiveGroup(response.data[0].name);
+            setActiveGroup(response.data[0]);
           }
         } else {
           setError("No communities found");
@@ -161,7 +161,7 @@ const ChatApp = () => {
           <Menu size={20} />
         </button>
         <div className="flex-1 text-center font-semibold">
-          {!groupsListOpen && activeGroup}
+          {!groupsListOpen && activeGroup?.name}
         </div>
         <div className="flex">
           <button
@@ -229,12 +229,12 @@ const ChatApp = () => {
                 <button
                   key={community._id}
                   className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
-                    activeGroup === community.name
+                    activeGroup?._id === community._id
                       ? "bg-blue-900 text-white"
                       : "bg-gray-100 text-gray-700"
                   }`}
                   onClick={() => {
-                    setActiveGroup(community.name);
+                    setActiveGroup(community);
                     if (!isMediumScreen) {
                       setGroupsListOpen(false);
                     }
@@ -268,7 +268,7 @@ const ChatApp = () => {
           `}
         >
           <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
-            {activeGroup || "Select a group"}
+            {activeGroup?.name || "Select a group"}
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto">
@@ -354,6 +354,21 @@ const ChatApp = () => {
               <X className="h-4 w-4 cursor-pointer" />
             </button>
           </div>
+
+          {/* Display Subject Information */}
+          {activeGroup && (
+            <div className="p-4 border-b">
+              <h3 className="font-medium mb-1">Subject</h3>
+              <div className="bg-blue-50 p-2 rounded">
+                <p className="text-sm">{activeGroup.subject?.subjectName || "No subject information"}</p>
+                <p className="text-xs text-gray-500">{activeGroup.subject?.Level || ""}</p>
+              </div>
+              <div className="mt-2">
+                <p className="text-sm font-medium">Level</p>
+                <p className="text-sm">{activeGroup.Level || "Not specified"}</p>
+              </div>
+            </div>
+          )}
 
           {/* Group Info Sections */}
           <div className="p-2 flex-1 overflow-y-auto">
@@ -480,15 +495,15 @@ const ChatApp = () => {
               <>
                 <div className="flex justify-between items-center mb-2">
                   <div className="font-medium">
-                    {activeGroup && communities.length > 0
-                      ? `${communities.find(c => c.name === activeGroup)?.students?.length || 0} members`
+                    {activeGroup
+                      ? `${activeGroup.students?.length || 0} members`
                       : "0 members"}
                   </div>
                   <X className="h-4 w-4 cursor-pointer" />
                 </div>
 
                 <div className="space-y-2">
-                  {activeGroup && communities.length > 0 && communities.find(c => c.name === activeGroup)?.students?.map(student => (
+                  {activeGroup && activeGroup.students?.map(student => (
                     <div key={student._id} className="bg-white p-2 rounded border">
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
