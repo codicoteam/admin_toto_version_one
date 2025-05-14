@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import student from "@/assets/home1.png";
-import StudentService from "../../services/Admin_Service/Student_service"; // Import the StudentService
+import StudentService from "../../services/Admin_Service/Student_service";
 import CourseService from "@/services/Admin_Service/Subject_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 
@@ -54,8 +54,8 @@ const Admin_Dashboard = () => {
       }
     };
 
-    fetchSubjects(); // Added missing parentheses to execute the function
-  }, []); // Added dependency array
+    fetchSubjects();
+  }, []);
 
   // Update screen size state and handle sidebar visibility
   useEffect(() => {
@@ -80,10 +80,37 @@ const Admin_Dashboard = () => {
   const topPerformingStudents = students.slice(0, 5); // Get top 5 students
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 relative">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="100%"
+          height="100%"
+          className="absolute top-0 left-0"
+        >
+          <defs>
+            <pattern
+              id="pattern"
+              width="100"
+              height="100"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M0 0 L25 25 M25 25 L50 0 M50 0 L75 25 M75 25 L100 0"
+                strokeWidth="1"
+                stroke="rgba(59, 130, 246, 0.1)"
+                fill="transparent"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#pattern)" />
+        </svg>
+      </div>
+
       {/* Mobile Menu Toggle */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-md"
+        className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-full shadow-lg hover:bg-blue-800 transition-colors"
         onClick={toggleSidebar}
       >
         {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
@@ -113,11 +140,13 @@ const Admin_Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full relative z-10">
         <div className="w-full min-h-screen p-4 md:p-6">
           {/* Header Section */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 space-y-4 md:space-y-0 mt-10 md:mt-0">
-            <h1 className="text-2xl font-bold text-blue-900">DASHBOARD</h1>
+            <h1 className="text-3xl font-bold text-blue-900 drop-shadow-sm">
+              DASHBOARD
+            </h1>
 
             {/* Search Bar */}
             <div className="relative w-full md:w-1/3">
@@ -126,7 +155,7 @@ const Admin_Dashboard = () => {
               </div>
               <input
                 type="text"
-                className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all duration-300 hover:shadow-md"
                 placeholder="Search..."
               />
               <button className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -135,7 +164,7 @@ const Admin_Dashboard = () => {
             </div>
 
             {/* Admin Profile */}
-            <div className="bg-blue-900 text-white rounded-md py-2 px-4 flex items-center">
+            <div className="bg-blue-900 text-white rounded-lg py-2 px-4 flex items-center shadow-md hover:shadow-lg transition-shadow">
               <User className="h-5 w-5 mr-2" />
               <span className="font-medium">admin name</span>
             </div>
@@ -144,14 +173,14 @@ const Admin_Dashboard = () => {
           {/* Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {/* Students Stat */}
-            <Card className="bg-white shadow-sm overflow-hidden">
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden border-b-4 border-blue-500">
               <CardContent className="p-0">
                 <div className="flex items-stretch">
-                  <div className="bg-gray-200 p-4 flex items-center justify-center w-1/3">
+                  <div className="bg-blue-50 p-4 flex items-center justify-center w-1/3">
                     <img
                       src={student}
                       alt="Students"
-                      className="h-16 w-16 md:h-20 md:w-20 object-cover"
+                      className="h-16 w-16 md:h-20 md:w-20 object-cover rounded-md"
                     />
                   </div>
                   <div className="p-4 flex flex-col justify-center">
@@ -167,14 +196,14 @@ const Admin_Dashboard = () => {
             </Card>
 
             {/* Courses Stat */}
-            <Card className="bg-white shadow-sm overflow-hidden">
+            <Card className="bg-white shadow-md hover:shadow-lg transition-shadow overflow-hidden border-b-4 border-green-500">
               <CardContent className="p-0">
                 <div className="flex items-stretch">
-                  <div className="bg-gray-200 p-4 flex items-center justify-center w-1/3">
+                  <div className="bg-green-50 p-4 flex items-center justify-center w-1/3">
                     <img
                       src={student}
                       alt="Courses"
-                      className="h-16 w-16 md:h-20 md:w-20 object-cover"
+                      className="h-16 w-16 md:h-20 md:w-20 object-cover rounded-md"
                     />
                   </div>
                   <div className="p-4 flex flex-col justify-center">
@@ -190,10 +219,10 @@ const Admin_Dashboard = () => {
             </Card>
 
             {/* Empty Cards - Hide on mobile to save space */}
-            <Card className="hidden sm:block bg-white shadow-sm">
+            <Card className="hidden sm:block bg-white shadow-md hover:shadow-lg transition-shadow border-b-4 border-purple-500">
               <CardContent className="p-4"></CardContent>
             </Card>
-            <Card className="hidden sm:block bg-white shadow-sm">
+            <Card className="hidden sm:block bg-white shadow-md hover:shadow-lg transition-shadow border-b-4 border-pink-500">
               <CardContent className="p-4"></CardContent>
             </Card>
           </div>
@@ -202,12 +231,15 @@ const Admin_Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Column - Top Performing Students */}
             <div className="col-span-1">
-              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-medium text-blue-900">
                     Top Performing Students
                   </h2>
-                  <a href="#" className="text-xs text-gray-500">
+                  <a
+                    href="#"
+                    className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                  >
                     All Students
                   </a>
                 </div>
@@ -224,7 +256,7 @@ const Admin_Dashboard = () => {
                     topPerformingStudents.map((student) => (
                       <div
                         key={student._id}
-                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2"
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2 hover:bg-blue-800 transition-colors"
                       >
                         <div className="flex items-center mb-2 sm:mb-0">
                           <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
@@ -251,11 +283,11 @@ const Admin_Dashboard = () => {
 
             {/* Middle Column - Overall Pass Rate */}
             <div className="col-span-1">
-              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <h2 className="text-xl font-bold text-blue-900 mb-4">
                   Overall Pass Rate
                 </h2>
-                <div className="min-h-32 bg-gray-100 rounded-md flex items-center justify-center">
+                <div className="min-h-32 bg-gray-50 rounded-md flex items-center justify-center border border-gray-100">
                   {/* This would be a chart in the real implementation */}
                   <div className="text-center text-gray-500 py-8">
                     Chart Placeholder
@@ -264,13 +296,16 @@ const Admin_Dashboard = () => {
               </div>
 
               {/* Schedule Section */}
-              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <h2 className="text-xl font-bold text-blue-900 mb-4">
                   Schedule
                 </h2>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {[...Array(10)].map((_, index) => (
-                    <div key={index} className="flex">
+                    <div
+                      key={index}
+                      className="flex border-b border-gray-100 pb-2 last:border-b-0"
+                    >
                       <div className="font-medium text-blue-900">Date:</div>
                       <div className="ml-2 text-blue-900">Program</div>
                     </div>
@@ -281,12 +316,15 @@ const Admin_Dashboard = () => {
 
             {/* Right Column - Popular Courses */}
             <div className="col-span-1">
-              <div className="bg-white p-4 rounded-md shadow-sm mb-4">
+              <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-medium text-blue-900">
                     Popular Courses
                   </h2>
-                  <a href="#" className="text-xs text-gray-500">
+                  <a
+                    href="#"
+                    className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                  >
                     All Courses
                   </a>
                 </div>
@@ -302,10 +340,10 @@ const Admin_Dashboard = () => {
                   ].map((course, index) => (
                     <div
                       key={index}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md p-2 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center mb-2 sm:mb-0">
-                        <div className="h-10 w-10 bg-gray-200 rounded-md mr-3"></div>
+                        <div className="h-10 w-10 bg-blue-100 rounded-md mr-3"></div>
                         <div>
                           <div className="font-medium text-blue-900">
                             {course.name}
@@ -327,14 +365,16 @@ const Admin_Dashboard = () => {
               </div>
 
               {/* Calendar Widget */}
-              <div className="bg-white p-4 rounded-md shadow-sm">
+              <div className="bg-white p-4 rounded-lg shadow-md">
                 <h2 className="text-sm font-medium text-gray-700 mb-2">
                   Select date:
                 </h2>
-                <div className="font-medium mb-2">Mon, Aug 17</div>
+                <div className="font-medium mb-2 text-blue-900">
+                  Mon, Aug 17
+                </div>
 
                 <div className="border-t border-b py-2 mb-2">
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500">
                     <div>S</div>
                     <div>M</div>
                     <div>T</div>
@@ -350,7 +390,11 @@ const Admin_Dashboard = () => {
                       <div
                         key={i}
                         className={`h-6 w-6 flex items-center justify-center rounded-full mx-auto
-                        ${i === 16 ? "bg-blue-900 text-white" : ""}`}
+                        ${
+                          i === 16
+                            ? "bg-blue-900 text-white font-bold"
+                            : "hover:bg-blue-50 hover:text-blue-900 cursor-pointer"
+                        }`}
                       >
                         {i + 1}
                       </div>
@@ -358,9 +402,13 @@ const Admin_Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <button className="text-xs text-gray-500 mr-2">Cancel</button>
-                  <button className="text-xs text-gray-500">OK</button>
+                <div className="flex justify-end space-x-2">
+                  <button className="text-xs text-gray-500 hover:text-blue-900 transition-colors px-2 py-1 rounded">
+                    Cancel
+                  </button>
+                  <button className="text-xs text-blue-900 hover:bg-blue-50 transition-colors px-2 py-1 rounded font-medium">
+                    OK
+                  </button>
                 </div>
               </div>
             </div>

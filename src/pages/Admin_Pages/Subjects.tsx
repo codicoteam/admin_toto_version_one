@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Menu, X, ChevronLeft, BookOpen } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Menu,
+  X,
+  ChevronLeft,
+  BookOpen,
+  Download,
+  Eye,
+} from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -30,70 +40,23 @@ import {
 import SubjectCard from "@/components/SubjectCard";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 import TopicInSubjectService from "@/services/Admin_Service/Topic_InSubject_service";
+import TopicContentService from "@/services/Admin_Service/Topic_Content_service";
 import { useToast } from "@/components/ui/use-toast";
-
-// Define interfaces for your data types
-interface Topic {
-  _id?: string;
-  id?: string;
-  name?: string;
-  title?: string;
-  description?: string;
-  subjectId?: string;
-  subject_id?: string;
-  order?: number;
-}
-
-interface Subject {
-  _id?: string;
-  id?: string;
-  name?: string;
-  title?: string;
-  subjectName?: string;
-  category?: string;
-  Level?: string;
-  numberOfLessons?: number;
-  lessons?: number;
-  duration?: string;
-  description?: string;
-  imageUrl?: string;
-  isPopular?: boolean;
-  showSubject?: boolean;
-  topics?: Topic[];
-}
+import { Badge } from "@/components/ui/badge";
+import Topic from "@/components/Interfaces/Topic_Interface";
+import Subject from "@/components/Interfaces/Subject_Interface";
+import ViewTopicContentDialog from "@/components/Dialogs/View_Content";
+import TopicCard from "@/components/TopicCard";
+import ViewTopicDialog from "@/components/Dialogs/View_topic";
+import EditTopicDialog from "@/components/Dialogs/Edit_topic";
+import DeleteTopicDialog from "@/components/Dialogs/Delet_topic";
+import AddTopicDialog from "@/components/Dialogs/Add_topic";
 
 interface AddSubjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubjectAdded: (subject: Subject) => void;
 }
-
-// Topic Card Component
-const TopicCard: React.FC<{ topic: Topic; index: number }> = ({
-  topic,
-  index,
-}) => {
-  return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <div className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-900 flex items-center justify-center mr-3">
-            <BookOpen size={16} />
-          </div>
-          <CardTitle className="text-lg">{topic.title || topic.name}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-sm line-clamp-2">
-          {topic.description || "No description available"}
-        </CardDescription>
-      </CardContent>
-      <CardFooter className="pt-0 text-xs text-gray-500">
-        Topic {index + 1}
-      </CardFooter>
-    </Card>
-  );
-};
 
 // AddSubjectDialog Component
 const AddSubjectDialog: React.FC<AddSubjectDialogProps> = ({
@@ -144,7 +107,8 @@ const AddSubjectDialog: React.FC<AddSubjectDialogProps> = ({
         Level: getCategoryLabel(subjectData.category), // Map category to Level enum value
         showSubject: true,
         // Include any other required fields
-        imageUrl: "", // Default image path
+        imageUrl:
+          "https://media.istockphoto.com/id/1500285927/photo/young-woman-a-university-student-studying-online.jpg?s=612x612&w=0&k=20&c=yvFDnYMNEJ6WEDYrAaOOLXv-Jhtv6ViBRXSzJhL9S_k=", // Default image path
       };
 
       console.log("Sending subject data to API:", apiSubjectData);
@@ -304,141 +268,225 @@ const AddSubjectDialog: React.FC<AddSubjectDialogProps> = ({
 };
 
 // Add Topic Dialog Component
-const AddTopicDialog: React.FC<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  subjectId: string;
-  onTopicAdded: () => void;
-}> = ({ open, onOpenChange, subjectId, onTopicAdded }) => {
-  const [topicData, setTopicData] = useState({
-    title: "",
-    description: "",
-    order: 0,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+// Add Topic Dialog Component
+// const AddTopicDialog: React.FC<{
+//   open: boolean;
+//   onOpenChange: (open: boolean) => void;
+//   subjectId: string;
+//   onTopicAdded: () => void;
+// }> = ({ open, onOpenChange, subjectId, onTopicAdded }) => {
+//   const [topicData, setTopicData] = useState({
+//     title: "",
+//     description: "",
+//     price: 0,
+//     regularPrice: 0,
+//     subscriptionPeriod: "monthly",
+//     order: 0,
+//   });
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const { toast } = useToast();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    setTopicData((prev) => ({ ...prev, [id]: value }));
-  };
+//   const handleChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+//   ) => {
+//     const { id, value } = e.target;
+//     setTopicData((prev) => ({ ...prev, [id]: value }));
+//   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+//   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const { id, value } = e.target;
+//     setTopicData((prev) => ({
+//       ...prev,
+//       [id]: value === "" ? 0 : Number(value),
+//     }));
+//   };
 
-    try {
-      if (!topicData.title) {
-        throw new Error("Topic title is required");
-      }
+//   const handleSubscriptionPeriodChange = (value: string) => {
+//     setTopicData((prev) => ({ ...prev, subscriptionPeriod: value }));
+//   };
 
-      const apiTopicData = {
-        name: topicData.title.trim(),
-        title: topicData.title.trim(),
-        description: topicData.description || "",
-        order: parseInt(topicData.order.toString()) || 0,
-        subject_id: subjectId, // Using subjectId as subject_id
-      };
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setIsSubmitting(true);
 
-      const result = await TopicInSubjectService.createTopic(apiTopicData);
+//     try {
+//       if (!topicData.title) {
+//         throw new Error("Topic title is required");
+//       }
 
-      toast({
-        title: "Topic created",
-        description: "The topic has been added to this subject.",
-      });
+//       // Format data for API according to the enum structure
+//       const apiTopicData = {
+//         title: topicData.title.trim(),
+//         description: topicData.description || "",
+//         subject: subjectId, // Using subjectId as subject field
+//         subjectName: subjectId, // This will be filled by the backend
+//         showTopic: true,
+//         price: topicData.price,
+//         regularPrice: topicData.regularPrice,
+//         subscriptionPeriod: topicData.subscriptionPeriod,
+//         order: parseInt(topicData.order.toString()) || 0,
+//       };
 
-      setTopicData({
-        title: "",
-        description: "",
-        order: 0,
-      });
-      onOpenChange(false);
-      onTopicAdded();
-    } catch (error) {
-      console.error("Failed to create topic:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to create topic. Please try again.";
+//       console.log("Sending topic data to API:", apiTopicData);
 
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+//       const result = await TopicInSubjectService.createTopic(apiTopicData);
+//       console.log("API response:", result);
 
-  return (
-    <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
-      <DialogHeader>
-        <DialogTitle>Add New Topic</DialogTitle>
-      </DialogHeader>
+//       toast({
+//         title: "Topic created",
+//         description: "The topic has been added to this subject.",
+//       });
 
-      <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-        <div className="grid gap-2">
-          <Label htmlFor="title">Topic Title</Label>
-          <Input
-            id="title"
-            value={topicData.title}
-            onChange={handleChange}
-            placeholder="Enter topic title"
-            required
-          />
-        </div>
+//       setTopicData({
+//         title: "",
+//         description: "",
+//         price: 0,
+//         regularPrice: 0,
+//         subscriptionPeriod: "monthly",
+//         order: 0,
+//       });
+//       onOpenChange(false);
+//       onTopicAdded();
+//     } catch (error) {
+//       console.error("Failed to create topic:", error);
+//       const errorMessage =
+//         error.response?.data?.message ||
+//         error.response?.data?.error ||
+//         error.message ||
+//         "Failed to create topic. Please try again.";
 
-        <div className="grid gap-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={topicData.description}
-            onChange={handleChange}
-            placeholder="Topic description..."
-            required
-          />
-        </div>
+//       toast({
+//         variant: "destructive",
+//         title: "Error",
+//         description: errorMessage,
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
 
-        <div className="grid gap-2">
-          <Label htmlFor="order">Order</Label>
-          <Input
-            id="order"
-            type="number"
-            value={topicData.order}
-            onChange={handleChange}
-            placeholder="1"
-          />
-          <p className="text-xs text-gray-500">
-            The order in which this topic appears in the subject
-          </p>
-        </div>
+//   return (
+//     <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
+//       <DialogHeader>
+//         <DialogTitle>Add New Topic</DialogTitle>
+//       </DialogHeader>
 
-        <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-          <Button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            variant="outline"
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Add Topic"}
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  );
-};
+//       <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+//         <div className="grid gap-2">
+//           <Label htmlFor="title">Topic Title</Label>
+//           <Input
+//             id="title"
+//             value={topicData.title}
+//             onChange={handleChange}
+//             placeholder="Enter topic title"
+//             required
+//           />
+//         </div>
+
+//         <div className="grid gap-2">
+//           <Label htmlFor="description">Subject Name</Label>
+//           <Textarea
+//             id="description"
+//             value={topicData.description}
+//             onChange={handleChange}
+//             placeholder="Topic description..."
+//             required
+//           />
+//         </div>
+
+//         <div className="grid gap-2">
+//           <Label htmlFor="description">Description</Label>
+//           <Textarea
+//             id="description"
+//             value={topicData.description}
+//             onChange={handleChange}
+//             placeholder="Topic description..."
+//             required
+//           />
+//         </div>
+
+//         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//           <div className="grid gap-2">
+//             <Label htmlFor="price">Price</Label>
+//             <Input
+//               id="price"
+//               type="number"
+//               min="0"
+//               step="0.01"
+//               value={topicData.price}
+//               onChange={handleNumberChange}
+//               placeholder="0.00"
+//             />
+//           </div>
+//           <div className="grid gap-2">
+//             <Label htmlFor="regularPrice">Regular Price</Label>
+//             <Input
+//               id="regularPrice"
+//               type="number"
+//               min="0"
+//               step="0.01"
+//               value={topicData.regularPrice}
+//               onChange={handleNumberChange}
+//               placeholder="0.00"
+//             />
+//           </div>
+//         </div>
+
+//         <div className="grid gap-2">
+//           <Label htmlFor="subscriptionPeriod">Subscription Period</Label>
+//           <Select
+//             onValueChange={handleSubscriptionPeriodChange}
+//             value={topicData.subscriptionPeriod}
+//           >
+//             <SelectTrigger id="subscriptionPeriod">
+//               <SelectValue placeholder="Select period" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectItem value="monthly">Monthly</SelectItem>
+//               <SelectItem value="quarterly">Quarterly</SelectItem>
+//               <SelectItem value="yearly">Yearly</SelectItem>
+//               <SelectItem value="onetime">One-time</SelectItem>
+//             </SelectContent>
+//           </Select>
+//         </div>
+
+//         <div className="grid gap-2">
+//           <Label htmlFor="order">Order</Label>
+//           <Input
+//             id="order"
+//             type="number"
+//             min="0"
+//             value={topicData.order}
+//             onChange={handleNumberChange}
+//             placeholder="1"
+//           />
+//           <p className="text-xs text-gray-500">
+//             The order in which this topic appears in the subject
+//           </p>
+//         </div>
+
+//         <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
+//           <Button
+//             type="button"
+//             onClick={() => onOpenChange(false)}
+//             variant="outline"
+//             className="w-full sm:w-auto"
+//             disabled={isSubmitting}
+//           >
+//             Cancel
+//           </Button>
+//           <Button
+//             type="submit"
+//             className="w-full sm:w-auto"
+//             disabled={isSubmitting}
+//           >
+//             {isSubmitting ? "Creating..." : "Add Topic"}
+//           </Button>
+//         </div>
+//       </form>
+//     </DialogContent>
+//   );
+// };
 
 const AdminSubjects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -451,6 +499,83 @@ const AdminSubjects: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { toast } = useToast();
+  const [viewingTopic, setViewingTopic] = useState<Topic | null>(null);
+  const [viewTopicDialogOpen, setViewTopicDialogOpen] =
+    useState<boolean>(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [editTopicDialogOpen, setEditTopicDialogOpen] =
+    useState<boolean>(false);
+  const [deletingTopicId, setDeletingTopicId] = useState<string | null>(null);
+  const [deletingTopicTitle, setDeletingTopicTitle] = useState<string>("");
+  const [deleteTopicDialogOpen, setDeleteTopicDialogOpen] =
+    useState<boolean>(false);
+  const [viewingContentTopic, setViewingContentTopic] = useState<Topic | null>(
+    null
+  );
+  const [viewContentDialogOpen, setViewContentDialogOpen] =
+    useState<boolean>(false);
+  // const [open, setOpen] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Handler for viewing a topic's content
+  const handleViewContent = (topic: Topic) => {
+    setViewingContentTopic(topic);
+    setViewContentDialogOpen(true);
+  };
+
+  // Handler for viewing a topic's details
+  const handleViewTopic = (topic: Topic) => {
+    setViewingTopic(topic);
+    setViewTopicDialogOpen(true);
+  };
+
+  // Handler for editing a topic
+  const handleEditTopic = (topic: Topic) => {
+    setEditingTopic(topic);
+    setEditTopicDialogOpen(true);
+  };
+
+  // Handler for deleting a topic
+  const handleDeleteTopic = (topicId: string) => {
+    // Find topic by ID to get the title
+    const topic = selectedSubject?.topics?.find(
+      (t) => t._id === topicId || t.id === topicId
+    );
+
+    if (topic) {
+      setDeletingTopicId(topicId);
+      setDeletingTopicTitle(topic.title || topic.name || "this topic");
+      setDeleteTopicDialogOpen(true);
+    }
+  };
+
+  // Handler for when a topic is updated
+  const handleTopicUpdated = async () => {
+    if (selectedSubject) {
+      const subjectId = selectedSubject._id || selectedSubject.id;
+      if (!subjectId) return;
+
+      // Refresh topics for the selected subject
+      const topics = await fetchTopicsForSubject(subjectId);
+
+      // Update subjects in state
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s._id === subjectId || s.id === subjectId ? { ...s, topics } : s
+        )
+      );
+
+      // Update selected subject
+      setSelectedSubject((prev) => (prev ? { ...prev, topics } : null));
+    }
+  };
+
+  // Handler for when a topic is deleted
+  const handleTopicDeleted = async () => {
+    // Reuse the same function as for topic updates
+    await handleTopicUpdated();
+  };
 
   // State for viewing a specific subject's topics
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -637,12 +762,18 @@ const AdminSubjects: React.FC = () => {
       lessons: subject.numberOfLessons || subject.lessons || 0,
       duration: subject.duration || "0h",
       topics: subject.topics || [],
-      imageUrl: subject.imageUrl || "/default-subject-image.jpg",
+      imageUrl:
+        subject.imageUrl ||
+        "https://media.istockphoto.com/id/1500285927/photo/young-woman-a-university-student-studying-online.jpg?s=612x612&w=0&k=20&c=yvFDnYMNEJ6WEDYrAaOOLXv-Jhtv6ViBRXSzJhL9S_k=",
       showSubject:
         subject.showSubject !== undefined ? subject.showSubject : true,
       onClickView: () => viewSubjectTopics(subject),
     };
   };
+
+  function setOpen(open: boolean): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -728,6 +859,7 @@ const AdminSubjects: React.FC = () => {
               )}
 
               {/* Topics List */}
+              {/* Topics List - Update this section in your AdminSubjects component */}
               {!loadingTopics &&
               selectedSubject.topics &&
               selectedSubject.topics.length > 0 ? (
@@ -737,6 +869,10 @@ const AdminSubjects: React.FC = () => {
                       key={topic._id || topic.id || index}
                       topic={topic}
                       index={index}
+                      onViewTopic={handleViewTopic}
+                      onEditTopic={handleEditTopic}
+                      onDeleteTopic={handleDeleteTopic}
+                      onViewContent={handleViewContent} // Add this line
                     />
                   ))}
                 </div>
@@ -748,6 +884,55 @@ const AdminSubjects: React.FC = () => {
                   </p>
                 </div>
               ) : null}
+
+              {/* View Topic Dialog */}
+              <Dialog
+                open={viewTopicDialogOpen}
+                onOpenChange={setViewTopicDialogOpen}
+              >
+                <ViewTopicDialog
+                  open={viewTopicDialogOpen}
+                  onOpenChange={setViewTopicDialogOpen}
+                  topic={viewingTopic}
+                />
+              </Dialog>
+
+              {/* Edit Topic Dialog */}
+              <Dialog
+                open={editTopicDialogOpen}
+                onOpenChange={setEditTopicDialogOpen}
+              >
+                <EditTopicDialog
+                  open={editTopicDialogOpen}
+                  onOpenChange={setEditTopicDialogOpen}
+                  topic={editingTopic}
+                  onTopicUpdated={handleTopicUpdated}
+                />
+              </Dialog>
+              {/* Delete Topic Confirmation Dialog */}
+              <Dialog
+                open={deleteTopicDialogOpen}
+                onOpenChange={setDeleteTopicDialogOpen}
+              >
+                <DeleteTopicDialog
+                  open={deleteTopicDialogOpen}
+                  onOpenChange={setDeleteTopicDialogOpen}
+                  topicId={deletingTopicId}
+                  topicTitle={deletingTopicTitle}
+                  onTopicDeleted={handleTopicDeleted}
+                />
+              </Dialog>
+              {/* View Topic Content Dialog */}
+              <Dialog
+                open={viewContentDialogOpen}
+                onOpenChange={setViewContentDialogOpen}
+              >
+                <ViewTopicContentDialog
+                  open={isDialogOpen}
+                  onOpenChange={setIsDialogOpen}
+                  topic={selectedTopic}
+                />
+              </Dialog>
             </>
           ) : (
             // Subjects View
