@@ -18,7 +18,7 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
-    { icon: BookOpen, label: "Courses", path: "/courses" },
+    { icon: BookOpen, label: "Subjects", path: "/courses" },
     // { icon: MessageSquare, label: "Q&A Forum", path: "/qa" },
     { icon: Wallet, label: "Wallet", path: "/wallet" },
     { icon: Settings, label: "Settings", path: "/settings" },

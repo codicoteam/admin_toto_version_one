@@ -16,7 +16,7 @@ export interface CourseCardProps {
   thumbnailUrl: string;
   category: string;
   lessonsCount: number;
-  duration: string;
+  duration?: string;
   enrolled?: boolean;
   progress?: number;
 }
@@ -27,7 +27,6 @@ const CourseCard = ({
   thumbnailUrl,
   category,
   lessonsCount,
-  duration,
   enrolled = false,
   progress
 }: CourseCardProps) => {
@@ -57,10 +56,10 @@ const CourseCard = ({
             <BookOpen className="h-4 w-4" />
             <span>{lessonsCount} lessons</span>
           </div>
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>{duration}</span>
-          </div>
+          </div> */}
         </div>
 
         {enrolled && progress !== undefined && (
@@ -84,7 +83,7 @@ const CourseCard = ({
           variant={enrolled ? "outline" : "default"}
           className={`w-full ${enrolled ? "" : "bg-primary hover:bg-primary/90"}`}
         >
-          <Link to={'/courses/244'}>
+          <Link to={`/courses/${id}`} className="w-full flex items-center justify-center">
             {enrolled ? "Continue Learning" : "View Course"}
           </Link>
         </Button>

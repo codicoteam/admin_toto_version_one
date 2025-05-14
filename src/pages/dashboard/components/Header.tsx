@@ -88,7 +88,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             <button className="outline-none">
               <Avatar className="h-8 w-8 cursor-pointer">
                 <AvatarImage src={user?.profile_picture} />
-                <AvatarFallback>{user.firstName.slice(0, 1) + user.lastName.slice(0, 1)}</AvatarFallback>
+                <AvatarFallback>{user?.firstName.slice(0, 1) + user?.lastName.slice(0, 1)}</AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenu.Trigger>
@@ -103,13 +103,13 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               <div className="flex items-center gap-3 px-2 py-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={user?.profile_picture} />
-                  <AvatarFallback>{user.firstName.slice(0, 1) + user.lastName.slice(0, 1)}</AvatarFallback>
+                  <AvatarFallback>{user?.firstName.slice(0, 1) + user?.lastName.slice(0, 1)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-slate-300">
-                    {user.firstName} {user.lastName}
+                    {user?.firstName} {user?.lastName}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">{user.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{user?.email}</p>
                 </div>
               </div>
               <DropdownMenu.Separator className="h-px bg-gray-200 dark:bg-slate-700 m-1" />

@@ -1,96 +1,102 @@
-
 import { useEffect, useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import CourseCard from "@/components/CourseCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, TriangleAlert } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 
 const Courses = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { token } = useAuth();
 
-  // Mock course data
-  const courses = [
-    {
-      id: "0",
-      title: "Physics",
-      thumbnailUrl: "/physics.png",
-      category: "Advanced Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "1",
-      title: "English Language",
-      thumbnailUrl: "/english.png",
-      category: "Ordinary Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "2",
-      title: "Maths",
-      thumbnailUrl: "/maths.png",
-      category: "Advanced Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "3",
-      title: "Accounts",
-      thumbnailUrl: "/accounts.png",
-      category: "Ordinary Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "4",
-      title: "Religious Studies",
-      thumbnailUrl: "/religious.png",
-      category: "Primary School",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "5",
-      title: "Chemistry",
-      thumbnailUrl: "/chemistry.png",
-      category: "Ordinary Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "6",
-      title: "Biology",
-      thumbnailUrl: "/biology.png",
-      category: "Ordinary Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-    {
-      id: "7",
-      title: "Shona Language",
-      thumbnailUrl: "/shona.png",
-      category: "Ordinary Level",
-      lessonsCount: 12,
-      duration: "6 hours",
-    },
-  ];
-
-  const [filteredCourses, setFilteredCourses] = useState([])
   useEffect(() => {
-    const filterd = activeTab === "all"
-      ? courses
-      : courses.filter(course => course.category.toLowerCase() === activeTab);
-    setFilteredCourses(filterd);
-  }, [activeTab])
+    const fetchCourses = async () => {
+      try {
+        const config = {
+          method: 'get',
+          url: 'https://toto-academy-backend.onrender.com/api/v1/subject/getall',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        };
 
+        const response = await axios.request(config);
+        setCourses(response.data.data); // Assuming the response has a data property with the courses array
+        setFilteredCourses(response.data.data);
+      } catch (err) {
+        setError(err.message || "Failed to fetch courses");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const [filteredCourses, setFilteredCourses] = useState([]);
+
+  useEffect(() => {
+    if (courses.length > 0) {
+      const filtered = activeTab === "all"
+        ? courses
+        : courses.filter(course => {
+          // Map API levels to our tab values
+          const levelMap = {
+            "A Level": "advanced level",
+            "O Level": "ordinary level",
+            "Primary": "primary school",
+            "Tertiary": "tertiary education"
+          };
+          const normalizedLevel = levelMap[course.Level] || course.Level.toLowerCase();
+          return normalizedLevel === activeTab;
+        });
+      setFilteredCourses(filtered);
+    }
+  }, [activeTab, courses]);
+
+  if (loading) {
+    return <div className="justify-center items-center py-[10vh] text-center gap-11">
+      <div className="flex justify-center items-center">
+        <div className="loader">
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+        </div>
+      </div>
+      <div className="pt-10">
+
+        Loading courses...
+      </div>
+    </div>;
+  }
+
+  if (error) {
+    return <div className="min-h-[70vh] flex items-center justify-center ">
+      <div className="text-center">
+        <TriangleAlert className="h-32 w-32  mx-auto" />
+        <h1 className="text-4xl font-bold mb-4">Error Loading Subjects</h1>
+        <p className="text-xl text-gray-600 mb-4">{error}</p>
+        <a href="/courses" className="text-blue-500 hover:text-blue-700 underline">
+          reload
+        </a>
+      </div>
+    </div>
+  }
 
   return (
     <div className="md:py-6 py-4">
       <SectionTitle
-        title="Course Catalog"
+        title="Subjects Catalog"
         description="Explore our extensive collection of courses"
       >
         <div className="flex flex-col sm:flex-row gap-2">
@@ -104,7 +110,7 @@ const Courses = () => {
         </div>
       </SectionTitle>
 
-      {/* <Tabs defaultValue="all" className=" sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
+      {/* <Tabs defaultValue="all" className="sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">All Categories</TabsTrigger>
           <TabsTrigger value="primary school">Primary School</TabsTrigger>
@@ -116,7 +122,14 @@ const Courses = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filteredCourses.map(course => (
-          <CourseCard key={course.id} {...course} />
+          <CourseCard
+            key={course._id}
+            id={course._id}
+            title={course.subjectName}
+            thumbnailUrl={course.imageUrl || "/default-course.png"}
+            category={course.Level || "Unknown Level"}
+            lessonsCount={12} // Default value or you can add this to your API
+          />
         ))}
       </div>
     </div>

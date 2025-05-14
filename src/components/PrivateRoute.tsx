@@ -7,7 +7,8 @@ const PrivateRoute: React.FC<{ children: React.ReactNode; redirectTo?: string }>
   children,
   redirectTo = "/login",
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { checkLogin } = useAuth();
+  const isAuthenticated = checkLogin()
   console.log("PrivateRoute isAuthenticated:", isAuthenticated);
 
   return isAuthenticated ? <>{children}</> : <Navigate to={redirectTo} />;

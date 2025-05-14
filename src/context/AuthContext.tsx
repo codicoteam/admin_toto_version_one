@@ -46,6 +46,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     login: (userData: loginCreds) => Promise<null | string>;
     logout: () => void;
+    checkLogin: () => boolean;
     register: (userData: registerCreds) => Promise<null | string>;
     user: User | null;
     loading: boolean;
@@ -77,6 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setIsAuthenticated(true);
                     const currentPath = window.location.pathname;
                     if (currentPath === "/login" || currentPath === "/register") {
+                        console.log(currentPath);
+
                         navigate("/");
                     }
                 } else {
@@ -117,6 +120,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         initializeAuth();
     }, []);
+
+    const checkLogin = () => {
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("token");
+
+        if (storedUser && storedToken)
+            return true
+        else
+            return false
+    }
+
 
     const login = async (credentials: loginCreds): Promise<null | string> => {
         try {
@@ -218,7 +232,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             register,
             user,
             loading,
-            token
+            token,
+            checkLogin
         }}>
             {children}
         </AuthContext.Provider>
