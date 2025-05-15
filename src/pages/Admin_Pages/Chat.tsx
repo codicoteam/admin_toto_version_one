@@ -10,13 +10,35 @@ import {
   Send,
   Users,
   Info,
+  Paperclip,
+  File,
+  Image,
+  Film,
+  FileAudio,
+  FileText,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import ChatService from "@/services/chat_service"; // Import the ChatService
 
+// Define interface for message object
+interface MessageFile {
+  name: string;
+  type: string;
+  size: number;
+  url?: string;
+}
+
+interface Message {
+  id: number;
+  text: string;
+  time: string;
+  sender: string;
+  file?: MessageFile; // Add optional file property
+}
+
 const ChatApp = () => {
-  const [activeGroup, setActiveGroup] = useState(null);
-  const [messages, setMessages] = useState([
+  const [activeGroup, setActiveGroup] = useState<any>(null);
+  const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: "Hi", time: "10:00", sender: "other" },
     { id: 2, text: "How are you", time: "10:00", sender: "other" },
   ]);
@@ -34,11 +56,15 @@ const ChatApp = () => {
   const [infoSidebarOpen, setInfoSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
-  const [communities, setCommunities] = useState([]); // State for storing communities data
+  const [communities, setCommunities] = useState<any[]>([]); // State for storing communities data
   const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [error, setError] = useState<string | null>(null); // Error state
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false); // State for attachment menu
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State for selected file
+  const [filePreview, setFilePreview] = useState<string | null>(null); // State for file preview
 
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch communities data on component mount
   useEffect(() => {
@@ -46,11 +72,11 @@ const ChatApp = () => {
       try {
         setLoading(true);
         const response = await ChatService.getAllChatGroups();
-        
+
         // Process the API response
         if (response && response.data) {
           setCommunities(response.data);
-          
+
           // Set the first community as active if communities exist
           if (response.data.length > 0) {
             setActiveGroup(response.data[0]);
@@ -58,7 +84,7 @@ const ChatApp = () => {
         } else {
           setError("No communities found");
         }
-        
+
         setLoading(false);
       } catch (err) {
         setError("Failed to load chat groups");
@@ -71,17 +97,28 @@ const ChatApp = () => {
   }, []);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          text: newMessage,
-          time: getCurrentTime(),
-          sender: "user",
-        },
-      ]);
+    if (newMessage.trim() || selectedFile) {
+      const messageObj: Message = {
+        id: messages.length + 1,
+        text: newMessage.trim(),
+        time: getCurrentTime(),
+        sender: "user",
+      };
+
+      // Add file information if a file is selected
+      if (selectedFile) {
+        messageObj.file = {
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size,
+          url: filePreview || undefined,
+        };
+      }
+
+      setMessages([...messages, messageObj]);
       setNewMessage("");
+      setSelectedFile(null);
+      setFilePreview(null);
     }
   };
 
@@ -93,11 +130,85 @@ const ChatApp = () => {
       .padStart(2, "0")}`;
   };
 
-  const toggleSection = (section) => {
+  const toggleSection = (section: string) => {
     setExpandedSections({
       ...expandedSections,
       [section]: !expandedSections[section],
     });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+
+      // Create file preview URL
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      setShowAttachmentMenu(false);
+    }
+  };
+
+  const handleAttachmentClick = (type: string) => {
+    // Set accepted file types based on user selection
+    let acceptedTypes = "";
+    switch (type) {
+      case "image":
+        acceptedTypes = "image/*";
+        break;
+      case "video":
+        acceptedTypes = "video/*";
+        break;
+      case "audio":
+        acceptedTypes = "audio/*";
+        break;
+      case "document":
+        acceptedTypes = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt";
+        break;
+      default:
+        acceptedTypes = "*/*";
+    }
+
+    // Set the file input's accept attribute and trigger click
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = acceptedTypes;
+      fileInputRef.current.click();
+    }
+    setShowAttachmentMenu(false);
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  };
+
+  // File type icon mapping
+  const getFileIcon = (fileType?: string) => {
+    if (fileType?.startsWith("image/")) return <Image className="h-4 w-4" />;
+    if (fileType?.startsWith("video/")) return <Film className="h-4 w-4" />;
+    if (fileType?.startsWith("audio/"))
+      return <FileAudio className="h-4 w-4" />;
+    if (
+      fileType?.includes("pdf") ||
+      fileType?.includes("doc") ||
+      fileType?.includes("ppt") ||
+      fileType?.includes("xls")
+    )
+      return <FileText className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    else return (bytes / 1048576).toFixed(1) + " MB";
   };
 
   // Scroll to bottom of messages when new message is added
@@ -138,6 +249,23 @@ const ChatApp = () => {
     // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  // Close attachment menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showAttachmentMenu &&
+        !(event.target as Element).closest(".attachment-menu-container")
+      ) {
+        setShowAttachmentMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAttachmentMenu]);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100 overflow-hidden">
@@ -219,11 +347,15 @@ const ChatApp = () => {
           {/* Group List - Now using data from API */}
           <div className="p-3 space-y-2 flex-grow overflow-y-auto">
             {loading ? (
-              <div className="text-center py-4 text-gray-500">Loading groups...</div>
+              <div className="text-center py-4 text-gray-500">
+                Loading groups...
+              </div>
             ) : error ? (
               <div className="text-center py-4 text-red-500">{error}</div>
             ) : communities.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">No groups available</div>
+              <div className="text-center py-4 text-gray-500">
+                No groups available
+              </div>
             ) : (
               communities.map((community) => (
                 <button
@@ -294,7 +426,46 @@ const ChatApp = () => {
                         : "bg-blue-200 text-blue-900"
                     }`}
                   >
-                    <div className="mb-1">{message.text}</div>
+                    {message.file && (
+                      <div className="mb-2">
+                        {message.file.type.startsWith("image/") ? (
+                          <div className="mb-2">
+                            <img
+                              src={message.file.url}
+                              alt={message.file.name}
+                              className="rounded-md max-w-full max-h-40 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className={`flex items-center p-2 rounded-md mb-2 ${
+                              message.sender === "user"
+                                ? "bg-blue-600"
+                                : "bg-blue-300"
+                            }`}
+                          >
+                            <div className="mr-2">
+                              {getFileIcon(message.file.type)}
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                              <div className="text-sm truncate">
+                                {message.file.name}
+                              </div>
+                              <div
+                                className={`text-xs ${
+                                  message.sender === "user"
+                                    ? "text-blue-200"
+                                    : "text-blue-700"
+                                }`}
+                              >
+                                {formatFileSize(message.file.size)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {message.text && <div className="mb-1">{message.text}</div>}
                     <div
                       className={`text-xs ${
                         message.sender === "user"
@@ -311,9 +482,89 @@ const ChatApp = () => {
             </div>
           </div>
 
+          {/* File Preview Area */}
+          {selectedFile && (
+            <div className="px-3 pt-3 bg-white border-t">
+              <div className="flex items-center bg-blue-50 p-2 rounded-md">
+                <div className="mr-2">{getFileIcon(selectedFile.type)}</div>
+                <div className="flex-1 truncate">
+                  <div className="text-sm truncate">{selectedFile.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {formatFileSize(selectedFile.size)}
+                  </div>
+                </div>
+                <button
+                  onClick={removeSelectedFile}
+                  className="ml-2 text-gray-500 hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Message Input */}
           <div className="p-3 bg-white border-t">
             <div className="relative flex items-center">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+
+              {/* Attachment button */}
+              <div className="attachment-menu-container relative">
+                <button
+                  className="text-blue-500 p-2"
+                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </button>
+
+                {/* Attachment menu */}
+                {showAttachmentMenu && (
+                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-md shadow-lg p-2 z-10">
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => handleAttachmentClick("image")}
+                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                      >
+                        <Image className="h-4 w-4 mr-2 text-blue-500" /> Images
+                      </button>
+                      <button
+                        onClick={() => handleAttachmentClick("video")}
+                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                      >
+                        <Film className="h-4 w-4 mr-2 text-blue-500" /> Videos
+                      </button>
+                      <button
+                        onClick={() => handleAttachmentClick("audio")}
+                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                      >
+                        <FileAudio className="h-4 w-4 mr-2 text-blue-500" />{" "}
+                        Audio
+                      </button>
+                      <button
+                        onClick={() => handleAttachmentClick("document")}
+                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                      >
+                        <FileText className="h-4 w-4 mr-2 text-blue-500" />{" "}
+                        Documents
+                      </button>
+                      <button
+                        onClick={() => handleAttachmentClick("all")}
+                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                      >
+                        <File className="h-4 w-4 mr-2 text-blue-500" /> All
+                        Files
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <input
                 type="text"
                 value={newMessage}
@@ -360,12 +611,18 @@ const ChatApp = () => {
             <div className="p-4 border-b">
               <h3 className="font-medium mb-1">Subject</h3>
               <div className="bg-blue-50 p-2 rounded">
-                <p className="text-sm">{activeGroup.subject?.subjectName || "No subject information"}</p>
-                <p className="text-xs text-gray-500">{activeGroup.subject?.Level || ""}</p>
+                <p className="text-sm">
+                  {activeGroup.subject?.subjectName || "No subject information"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {activeGroup.subject?.Level || ""}
+                </p>
               </div>
               <div className="mt-2">
                 <p className="text-sm font-medium">Level</p>
-                <p className="text-sm">{activeGroup.Level || "Not specified"}</p>
+                <p className="text-sm">
+                  {activeGroup.Level || "Not specified"}
+                </p>
               </div>
             </div>
           )}
@@ -503,14 +760,18 @@ const ChatApp = () => {
                 </div>
 
                 <div className="space-y-2">
-                  {activeGroup && activeGroup.students?.map(student => (
-                    <div key={student._id} className="bg-white p-2 rounded border">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-                        <span className="text-sm">{`${student.firstName} ${student.lastName}`}</span>
+                  {activeGroup &&
+                    activeGroup.students?.map((student: any) => (
+                      <div
+                        key={student._id}
+                        className="bg-white p-2 rounded border"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                          <span className="text-sm">{`${student.firstName} ${student.lastName}`}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </>
             )}

@@ -15,6 +15,8 @@ import {
   Edit,
   Trash2,
   AlertCircle,
+  Upload,
+  File,
 } from "lucide-react";
 import {
   Card,
@@ -61,6 +63,13 @@ interface ViewTopicContentDialogProps {
   topic: Topic | null;
 }
 
+// Define file type extensions mapping
+const fileTypeExtensions = {
+  video: [".mp4", ".avi", ".mov", ".wmv", ".mkv", ".webm"],
+  audio: [".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"],
+  document: [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt"],
+};
+
 const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   open,
   onOpenChange,
@@ -76,18 +85,26 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   const [newContent, setNewContent] = useState<ContentFormData>({
     title: "",
     description: "",
-    file_path: [""],
+    file_path: [],
     file_type: "document",
     Topic: "",
   });
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // Update dialog state
   const [updateDialogOpen, setUpdateDialogOpen] = useState<boolean>(false);
   const [contentToUpdate, setContentToUpdate] = useState<any>(null);
+  const [uploadedFilesForUpdate, setUploadedFilesForUpdate] = useState<File[]>(
+    []
+  );
 
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [contentToDelete, setContentToDelete] = useState<string | null>(null);
+
+  // File input refs
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const updateFileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -133,6 +150,77 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     }
   }, [topic]);
 
+  // Reset file inputs when file type changes
+  useEffect(() => {
+    setUploadedFiles([]);
+  }, [newContent.file_type]);
+
+  useEffect(() => {
+    if (contentToUpdate) {
+      setUploadedFilesForUpdate([]);
+    }
+  }, [contentToUpdate?.file_type]);
+
+  // File upload handlers
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isUpdate = false
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const files = Array.from(e.target.files);
+
+    if (isUpdate) {
+      setUploadedFilesForUpdate((prev) => [...prev, ...files]);
+
+      // Store file paths
+      const newFilePaths = files.map((file) => URL.createObjectURL(file));
+      setContentToUpdate((prev) => ({
+        ...prev,
+        file_path: [...prev.file_path, ...newFilePaths],
+      }));
+    } else {
+      setUploadedFiles((prev) => [...prev, ...files]);
+
+      // Store file paths
+      const newFilePaths = files.map((file) => URL.createObjectURL(file));
+      setNewContent((prev) => ({
+        ...prev,
+        file_path: [...prev.file_path, ...newFilePaths],
+      }));
+    }
+  };
+
+  const removeFile = (index: number, isUpdate = false) => {
+    if (isUpdate) {
+      setUploadedFilesForUpdate((prev) => prev.filter((_, i) => i !== index));
+      setContentToUpdate((prev) => ({
+        ...prev,
+        file_path: prev.file_path.filter((_, i) => i !== index),
+      }));
+    } else {
+      setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+      setNewContent((prev) => ({
+        ...prev,
+        file_path: prev.file_path.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  const getAcceptedFileTypes = (fileType: string) => {
+    return fileTypeExtensions[fileType as keyof typeof fileTypeExtensions].join(
+      ","
+    );
+  };
+
+  const triggerFileInput = (isUpdate = false) => {
+    if (isUpdate) {
+      updateFileInputRef.current?.click();
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
   const handleCreateContent = async () => {
     try {
       setIsSubmitting(true);
@@ -146,28 +234,16 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         toast({
           variant: "destructive",
           title: "Validation Error",
-          description: "Please fill all required fields",
+          description:
+            "Please fill all required fields and upload at least one file",
         });
         return;
       }
 
-      // Filter out empty file paths
-      const filteredFilePaths = newContent.file_path.filter(
-        (path) => path.trim() !== ""
-      );
-
-      if (filteredFilePaths.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Validation Error",
-          description: "At least one file path is required",
-        });
-        return;
-      }
-
+      // In a real implementation, you would upload files to a server here
+      // For now, we'll just use the file paths (object URLs) as placeholders
       const contentToCreate = {
         ...newContent,
-        file_path: filteredFilePaths,
       };
 
       await TopicContentService.createTopicContent(contentToCreate);
@@ -190,10 +266,11 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       setNewContent({
         title: "",
         description: "",
-        file_path: [""],
+        file_path: [],
         file_type: "document",
         Topic: topic ? topic._id || topic.id : "",
       });
+      setUploadedFiles([]);
       setCreateDialogOpen(false);
     } catch (error) {
       console.error("Failed to create content:", error);
@@ -222,28 +299,15 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         toast({
           variant: "destructive",
           title: "Validation Error",
-          description: "Please fill all required fields",
+          description:
+            "Please fill all required fields and upload at least one file",
         });
         return;
       }
 
-      // Filter out empty file paths
-      const filteredFilePaths = contentToUpdate.file_path.filter(
-        (path) => path.trim() !== ""
-      );
-
-      if (filteredFilePaths.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Validation Error",
-          description: "At least one file path is required",
-        });
-        return;
-      }
-
+      // In a real implementation, you would upload files to a server here
       const contentToSave = {
         ...contentToUpdate,
-        file_path: filteredFilePaths,
       };
 
       await TopicContentService.updateTopicContent(
@@ -266,6 +330,7 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       });
 
       setUpdateDialogOpen(false);
+      setUploadedFilesForUpdate([]);
     } catch (error) {
       console.error("Failed to update content:", error);
       toast({
@@ -319,52 +384,10 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     setDeleteDialogOpen(true);
   };
 
-  const addFilePathField = (isUpdate = false) => {
-    if (isUpdate) {
-      setContentToUpdate((prev) => ({
-        ...prev,
-        file_path: [...prev.file_path, ""],
-      }));
-    } else {
-      setNewContent((prev) => ({
-        ...prev,
-        file_path: [...prev.file_path, ""],
-      }));
-    }
-  };
-
-  const removeFilePathField = (index: number, isUpdate = false) => {
-    if (isUpdate) {
-      setContentToUpdate((prev) => ({
-        ...prev,
-        file_path: prev.file_path.filter((_, i) => i !== index),
-      }));
-    } else {
-      setNewContent((prev) => ({
-        ...prev,
-        file_path: prev.file_path.filter((_, i) => i !== index),
-      }));
-    }
-  };
-
-  const handleFilePathChange = (
-    value: string,
-    index: number,
-    isUpdate = false
-  ) => {
-    if (isUpdate) {
-      setContentToUpdate((prev) => {
-        const newFilePaths = [...prev.file_path];
-        newFilePaths[index] = value;
-        return { ...prev, file_path: newFilePaths };
-      });
-    } else {
-      setNewContent((prev) => {
-        const newFilePaths = [...prev.file_path];
-        newFilePaths[index] = value;
-        return { ...prev, file_path: newFilePaths };
-      });
-    }
+  // Function to get filename from path
+  const getFilenameFromPath = (path: string) => {
+    // For URLs created with URL.createObjectURL or actual file paths
+    return path.split("/").pop() || path;
   };
 
   if (!topic) return null;
@@ -509,12 +532,12 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                               <CardDescription className="text-xs mt-1 flex items-center">
                                 <span
                                   className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                                    fileType === "pdf"
-                                      ? "bg-red-400"
+                                    fileType === "document"
+                                      ? "bg-green-400"
                                       : fileType === "video"
                                       ? "bg-blue-400"
-                                      : fileType === "document"
-                                      ? "bg-green-400"
+                                      : fileType === "audio"
+                                      ? "bg-purple-400"
                                       : "bg-gray-400"
                                   }`}
                                 />
@@ -539,8 +562,9 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                                         key={i}
                                         className="flex justify-between items-center text-xs text-blue-600"
                                       >
-                                        <span className="truncate">
-                                          {file.split("/").pop()}
+                                        <span className="truncate flex items-center">
+                                          <File size={12} className="mr-1" />
+                                          {getFilenameFromPath(file)}
                                         </span>
                                         <Button
                                           size="icon"
@@ -677,9 +701,14 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
               </label>
               <Select
                 value={newContent.file_type}
-                onValueChange={(value) =>
-                  setNewContent({ ...newContent, file_type: value as any })
-                }
+                onValueChange={(value) => {
+                  setNewContent({
+                    ...newContent,
+                    file_type: value as any,
+                    file_path: [],
+                  });
+                  setUploadedFiles([]);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select content type" />
@@ -690,45 +719,77 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                   <SelectItem value="audio">Audio</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {newContent.file_type === "document" &&
+                  "Allowed file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT"}
+                {newContent.file_type === "video" &&
+                  "Allowed file types: MP4, AVI, MOV, WMV, MKV, WebM"}
+                {newContent.file_type === "audio" &&
+                  "Allowed file types: MP3, WAV, OGG, M4A, FLAC, AAC"}
+              </p>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  File Paths *
+                  Upload Files *
                 </label>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => addFilePathField()}
+                  onClick={() => triggerFileInput()}
                   type="button"
+                  className="bg-blue-50 text-blue-600 hover:bg-blue-100"
                 >
-                  <Plus size={14} className="mr-1" /> Add File
+                  <Upload size={14} className="mr-1" /> Select Files
                 </Button>
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  multiple
+                  accept={getAcceptedFileTypes(newContent.file_type)}
+                  onChange={(e) => handleFileSelect(e)}
+                />
               </div>
 
-              <div className="max-h-60 overflow-y-auto pr-2">
-                {newContent.file_path.map((path, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
-                    <Input
-                      placeholder="Enter file path"
-                      value={path}
-                      onChange={(e) =>
-                        handleFilePathChange(e.target.value, index)
-                      }
-                    />
-                    {newContent.file_path.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFilePathField(index)}
-                        type="button"
+              <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+                {uploadedFiles.length > 0 ? (
+                  <ul className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
                       >
-                        <X size={16} />
-                      </Button>
-                    )}
+                        <div className="flex items-center text-sm">
+                          <File className="h-4 w-4 mr-2 text-blue-500" />
+                          <span className="truncate max-w-sm">{file.name}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            ({(file.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X size={16} />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                    <Upload size={32} className="mb-2 text-gray-300" />
+                    <p className="text-sm">No files selected</p>
+                    <p className="text-xs mt-1">
+                      Click "Select Files" to upload {newContent.file_type}{" "}
+                      files
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -736,14 +797,24 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setCreateDialogOpen(false)}
+              onClick={() => {
+                setCreateDialogOpen(false);
+                setUploadedFiles([]);
+                setNewContent({
+                  title: "",
+                  description: "",
+                  file_path: [],
+                  file_type: "document",
+                  Topic: topic ? topic._id || topic.id : "",
+                });
+              }}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateContent}
-              disabled={isSubmitting}
+              disabled={isSubmitting || uploadedFiles.length === 0}
               className="bg-green-700 hover:bg-green-800 text-white"
             >
               {isSubmitting ? "Creating..." : "Create Content"}
@@ -811,9 +882,15 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                 </label>
                 <Select
                   value={contentToUpdate.file_type}
-                  onValueChange={(value) =>
-                    setContentToUpdate({ ...contentToUpdate, file_type: value })
-                  }
+                  onValueChange={(value) => {
+                    // Clear file paths when changing file type
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      file_type: value as any,
+                      file_path: [],
+                    });
+                    setUploadedFilesForUpdate([]);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select content type" />
@@ -824,49 +901,107 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                     <SelectItem value="audio">Audio</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {contentToUpdate.file_type === "document" &&
+                    "Allowed file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT"}
+                  {contentToUpdate.file_type === "video" &&
+                    "Allowed file types: MP4, AVI, MOV, WMV, MKV, WebM"}
+                  {contentToUpdate.file_type === "audio" &&
+                    "Allowed file types: MP3, WAV, OGG, M4A, FLAC, AAC"}
+                </p>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    File Paths *
+                    Files *
                   </label>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => addFilePathField(true)}
+                    onClick={() => triggerFileInput(true)}
                     type="button"
+                    className="bg-blue-50 text-blue-600 hover:bg-blue-100"
                   >
-                    <Plus size={14} className="mr-1" /> Add File
+                    <Upload size={14} className="mr-1" /> Add More Files
                   </Button>
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={updateFileInputRef}
+                    className="hidden"
+                    multiple
+                    accept={getAcceptedFileTypes(contentToUpdate.file_type)}
+                    onChange={(e) => handleFileSelect(e, true)}
+                  />
                 </div>
 
-                <div className="max-h-60 overflow-y-auto pr-2">
-                  {contentToUpdate.file_path.map(
-                    (path: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 mb-2"
-                      >
-                        <Input
-                          placeholder="Enter file path"
-                          value={path}
-                          onChange={(e) =>
-                            handleFilePathChange(e.target.value, index, true)
-                          }
-                        />
-                        {contentToUpdate.file_path.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeFilePathField(index, true)}
-                            type="button"
-                          >
-                            <X size={16} />
-                          </Button>
-                        )}
-                      </div>
-                    )
+                <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+                  {contentToUpdate.file_path.length > 0 ? (
+                    <ul className="space-y-2">
+                      {contentToUpdate.file_path.map(
+                        (filePath: string, index: number) => {
+                          const isNewFile =
+                            index >=
+                            contentToUpdate.file_path.length -
+                              uploadedFilesForUpdate.length;
+                          const fileName = isNewFile
+                            ? uploadedFilesForUpdate[
+                                index -
+                                  (contentToUpdate.file_path.length -
+                                    uploadedFilesForUpdate.length)
+                              ].name
+                            : getFilenameFromPath(filePath);
+
+                          return (
+                            <li
+                              key={index}
+                              className={`flex items-center justify-between p-2 rounded-md ${
+                                isNewFile ? "bg-green-50" : "bg-gray-50"
+                              }`}
+                            >
+                              <div className="flex items-center text-sm">
+                                <File
+                                  className={`h-4 w-4 mr-2 ${
+                                    isNewFile
+                                      ? "text-green-500"
+                                      : "text-blue-500"
+                                  }`}
+                                />
+                                <span className="truncate max-w-sm">
+                                  {fileName}
+                                </span>
+                                {isNewFile && (
+                                  <Badge
+                                    variant="outline"
+                                    className="ml-2 text-xs bg-green-100 text-green-800"
+                                  >
+                                    New
+                                  </Badge>
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeFile(index, true)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <X size={16} />
+                              </Button>
+                            </li>
+                          );
+                        }
+                      )}
+                    </ul>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                      <Upload size={32} className="mb-2 text-gray-300" />
+                      <p className="text-sm">No files selected</p>
+                      <p className="text-xs mt-1">
+                        Click "Add More Files" to upload{" "}
+                        {contentToUpdate.file_type} files
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -875,15 +1010,21 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setUpdateDialogOpen(false)}
+                onClick={() => {
+                  setUpdateDialogOpen(false);
+                  setContentToUpdate(null);
+                  setUploadedFilesForUpdate([]);
+                }}
                 disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdateContent}
-                disabled={isSubmitting}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
+                disabled={
+                  isSubmitting || contentToUpdate.file_path.length === 0
+                }
+                className="bg-blue-700 hover:bg-blue-800 text-white"
               >
                 {isSubmitting ? "Updating..." : "Update Content"}
               </Button>
@@ -896,9 +1037,8 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center">
-              <AlertCircle className="text-red-500 mr-2" size={20} />
-              Confirm Deletion
+            <AlertDialogTitle className="flex items-center text-red-600">
+              <AlertCircle className="h-5 w-5 mr-2" /> Confirm Deletion
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this content? This action cannot
@@ -906,7 +1046,13 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setContentToDelete(null);
+              }}
+              disabled={isSubmitting}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
