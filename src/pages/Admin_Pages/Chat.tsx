@@ -71,11 +71,23 @@ const ChatApp = () => {
     const fetchCommunities = async () => {
       try {
         setLoading(true);
+        setError(null); // Clear previous errors
+
+        // Check if user is logged in by verifying token exists
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setError("You must be logged in to view communities");
+          setLoading(false);
+          return;
+        }
+
         const response = await ChatService.getAllChatGroups();
 
         // Process the API response
         if (response && response.data) {
           setCommunities(response.data);
+
+          console.log("Communities loaded:", response.data);
 
           // Set the first community as active if communities exist
           if (response.data.length > 0) {
@@ -87,7 +99,7 @@ const ChatApp = () => {
 
         setLoading(false);
       } catch (err) {
-        setError("Failed to load chat groups");
+        setError(err.message || "Failed to load chat groups");
         setLoading(false);
         console.error("Error fetching communities:", err);
       }
