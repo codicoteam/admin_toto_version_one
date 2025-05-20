@@ -17,7 +17,7 @@ import {
   FileAudio,
   FileText,
   CornerUpLeft,
-  MoreVertical,
+  MessageSquare,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import ChatService from "@/services/chat_service"; // Import the ChatService
@@ -36,7 +36,7 @@ interface Message {
   time: string;
   sender: string;
   file?: MessageFile; // Add optional file property
-  replyTo?: number; // Reference to the message being replied to
+  replyTo?: number; // Add optional replyTo property to reference another message
 }
 
 const ChatApp = () => {
@@ -44,8 +44,16 @@ const ChatApp = () => {
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: "Hi", time: "10:00", sender: "other" },
     { id: 2, text: "How are you", time: "10:00", sender: "other" },
+    {
+      id: 3,
+      text: "I'm doing well, thanks for asking!",
+      time: "10:01",
+      sender: "user",
+      replyTo: 2, // Example of a reply to message with id 2
+    },
   ]);
   const [newMessage, setNewMessage] = useState("");
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [expandedSections, setExpandedSections] = useState({
     files: true,
     photos: true,
@@ -65,7 +73,6 @@ const ChatApp = () => {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false); // State for attachment menu
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // State for selected file
   const [filePreview, setFilePreview] = useState<string | null>(null); // State for file preview
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null); // New state for replying to a message
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -122,11 +129,6 @@ const ChatApp = () => {
         sender: "user",
       };
 
-      // Add reply information if replying to a message
-      if (replyingTo) {
-        messageObj.replyTo = replyingTo.id;
-      }
-
       // Add file information if a file is selected
       if (selectedFile) {
         messageObj.file = {
@@ -137,12 +139,29 @@ const ChatApp = () => {
         };
       }
 
+      // Add replyTo information if replying to a message
+      if (replyingTo) {
+        messageObj.replyTo = replyingTo.id;
+      }
+
       setMessages([...messages, messageObj]);
       setNewMessage("");
       setSelectedFile(null);
       setFilePreview(null);
       setReplyingTo(null); // Clear reply state after sending
     }
+  };
+
+  const handleReplyToMessage = (message: Message) => {
+    setReplyingTo(message);
+    // Focus on input field after selecting a message to reply to
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
   };
 
   const getCurrentTime = () => {
@@ -211,25 +230,9 @@ const ChatApp = () => {
     setFilePreview(null);
   };
 
-  // Function to handle replying to a message
-  const handleReplyToMessage = (message: Message) => {
-    setReplyingTo(message);
-
-    // Focus on the message input after selecting a message to reply to
-    if (messageInputRef.current) {
-      messageInputRef.current.focus();
-    }
-  };
-
-  // Cancel replying to a message
-  const cancelReply = () => {
-    setReplyingTo(null);
-  };
-
-  // Get the message being replied to
-  const getReplyMessage = (replyId: number | undefined) => {
-    if (!replyId) return null;
-    return messages.find((msg) => msg.id === replyId);
+  // Find a message by its ID
+  const findMessageById = (id: number) => {
+    return messages.find((message) => message.id === id);
   };
 
   // File type icon mapping
@@ -255,8 +258,8 @@ const ChatApp = () => {
     else return (bytes / 1048576).toFixed(1) + " MB";
   };
 
-  // Get a short preview of the message text for the reply context
-  const getMessagePreview = (text: string, maxLength = 30) => {
+  // Helper function to truncate text
+  const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
   };
@@ -316,36 +319,6 @@ const ChatApp = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showAttachmentMenu]);
-
-  // Message context menu for reply option
-  const MessageContextMenu = ({ message }: { message: Message }) => {
-    const [showMenu, setShowMenu] = useState(false);
-
-    return (
-      <div className="relative">
-        <button
-          className="p-1 text-gray-500 rounded-full hover:bg-gray-200 focus:outline-none"
-          onClick={() => setShowMenu(!showMenu)}
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
-
-        {showMenu && (
-          <div className="absolute z-50 right-0 bottom-full mb-1 bg-white shadow-lg rounded-md py-1 w-32">
-            <button
-              className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
-              onClick={() => {
-                handleReplyToMessage(message);
-                setShowMenu(false);
-              }}
-            >
-              <CornerUpLeft className="h-4 w-4 mr-2" /> Reply
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100 overflow-hidden">
@@ -499,112 +472,105 @@ const ChatApp = () => {
                       </div>
                     </div>
                   )}
-
-                  <div className="relative">
-                    <div
-                      className={`max-w-xs rounded-lg px-4 py-2 ${
-                        message.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-blue-200 text-blue-900"
-                      }`}
-                    >
-                      {/* Reply context section */}
-                      {message.replyTo && (
-                        <div
-                          className={`rounded-md px-2 py-1 mb-2 text-xs flex items-center ${
-                            message.sender === "user"
-                              ? "bg-blue-600"
-                              : "bg-blue-300"
-                          }`}
-                        >
-                          <CornerUpLeft className="h-3 w-3 mr-1 inline-block" />
-                          <div className="flex-1 overflow-hidden">
-                            <div className="font-medium">
-                              {getReplyMessage(message.replyTo)?.sender ===
-                              "user"
-                                ? "You"
-                                : "Them"}
-                            </div>
-                            <div className="truncate">
-                              {getReplyMessage(message.replyTo)?.file &&
-                                "[Media] "}
-                              {getReplyMessage(message.replyTo)?.text
-                                ? getMessagePreview(
-                                    getReplyMessage(message.replyTo)?.text || ""
-                                  )
-                                : getReplyMessage(message.replyTo)?.file
-                                ? "File"
-                                : "Message"}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {message.file && (
-                        <div className="mb-2">
-                          {message.file.type.startsWith("image/") ? (
-                            <div className="mb-2">
-                              <img
-                                src={message.file.url}
-                                alt={message.file.name}
-                                className="rounded-md max-w-full max-h-40 object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              className={`flex items-center p-2 rounded-md mb-2 ${
-                                message.sender === "user"
-                                  ? "bg-blue-600"
-                                  : "bg-blue-300"
-                              }`}
-                            >
-                              <div className="mr-2">
-                                {getFileIcon(message.file.type)}
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <div className="text-sm truncate">
-                                  {message.file.name}
-                                </div>
-                                <div
-                                  className={`text-xs ${
-                                    message.sender === "user"
-                                      ? "text-blue-200"
-                                      : "text-blue-700"
-                                  }`}
-                                >
-                                  {formatFileSize(message.file.size)}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {message.text && (
-                        <div className="mb-1">{message.text}</div>
-                      )}
+                  <div
+                    className={`max-w-xs rounded-lg px-4 pt-2 pb-2 relative group ${
+                      message.sender === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-blue-200 text-blue-900"
+                    }`}
+                  >
+                    {/* Reply message indicator - if this message is a reply to another message */}
+                    {message.replyTo && (
                       <div
-                        className={`text-xs ${
+                        className={`mb-1 p-1 text-xs rounded ${
                           message.sender === "user"
-                            ? "text-blue-100"
-                            : "text-blue-700"
+                            ? "bg-blue-600"
+                            : "bg-blue-300"
                         }`}
                       >
-                        {message.time}
+                        <div className="flex items-center">
+                          <CornerUpLeft className="h-3 w-3 mr-1" />
+                          <span className="font-medium">
+                            {message.sender === "user" ? "You" : "Other"}{" "}
+                            replied to
+                          </span>
+                        </div>
+                        <div className="pl-4 border-l-2 mt-1 line-clamp-1">
+                          {truncateText(
+                            findMessageById(message.replyTo)?.text ||
+                              "Deleted message",
+                            30
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Message actions - reply button */}
+                    {message.file && (
+                      <div className="mb-2">
+                        {message.file.type.startsWith("image/") ? (
+                          <div className="mb-2">
+                            <img
+                              src={message.file.url}
+                              alt={message.file.name}
+                              className="rounded-md max-w-full max-h-40 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className={`flex items-center p-2 rounded-md mb-2 ${
+                              message.sender === "user"
+                                ? "bg-blue-600"
+                                : "bg-blue-300"
+                            }`}
+                          >
+                            <div className="mr-2">
+                              {getFileIcon(message.file.type)}
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                              <div className="text-sm truncate">
+                                {message.file.name}
+                              </div>
+                              <div
+                                className={`text-xs ${
+                                  message.sender === "user"
+                                    ? "text-blue-200"
+                                    : "text-blue-700"
+                                }`}
+                              >
+                                {formatFileSize(message.file.size)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {message.text && <div className="mb-1">{message.text}</div>}
                     <div
-                      className={`absolute ${
-                        message.sender === "user" ? "left-0" : "right-0"
-                      } top-1/2 transform ${
+                      className={`text-xs ${
                         message.sender === "user"
-                          ? "-translate-x-full"
-                          : "translate-x-full"
+                          ? "text-blue-100"
+                          : "text-blue-700"
                       }`}
                     >
-                      <MessageContextMenu message={message} />
+                      {message.time}
+                    </div>
+
+                    {/* Reply button that appears on hover */}
+                    <div
+                      className={`absolute opacity-0 group-hover:opacity-100 transition-opacity ${
+                        message.sender === "user"
+                          ? "left-0 -translate-x-full"
+                          : "right-0 translate-x-full"
+                      } top-1/2 -translate-y-1/2`}
+                    >
+                      <button
+                        onClick={() => handleReplyToMessage(message)}
+                        className="bg-gray-200 rounded-full p-1 shadow hover:bg-gray-300"
+                        title="Reply"
+                      >
+                        <MessageSquare className="h-4 w-4 text-gray-700" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -613,27 +579,23 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Reply Indicator */}
+          {/* Reply indicator */}
           {replyingTo && (
             <div className="px-3 pt-3 bg-white border-t">
-              <div className="flex items-center justify-between bg-blue-50 p-2 rounded-t-md">
-                <div className="flex items-center">
-                  <CornerUpLeft className="h-4 w-4 mr-2 text-blue-500" />
-                  <div>
-                    <div className="text-xs font-medium">
-                      Replying to{" "}
-                      {replyingTo.sender === "user" ? "yourself" : "them"}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      {replyingTo.text
-                        ? getMessagePreview(replyingTo.text)
-                        : "Media"}
-                    </div>
+              <div className="flex items-center justify-between bg-blue-50 p-2 rounded-t-md border-l-4 border-blue-500">
+                <div className="flex-1">
+                  <div className="text-xs text-blue-700 font-medium flex items-center">
+                    <CornerUpLeft className="h-3 w-3 mr-1" />
+                    Replying to{" "}
+                    {replyingTo.sender === "user" ? "yourself" : "other"}
+                  </div>
+                  <div className="text-sm truncate">
+                    {truncateText(replyingTo.text, 50)}
                   </div>
                 </div>
                 <button
                   onClick={cancelReply}
-                  className="text-gray-500 hover:text-red-500"
+                  className="ml-2 text-gray-500 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -822,12 +784,7 @@ const ChatApp = () => {
               </button>
               {expandedSections.photos && (
                 <div className="p-2 bg-white">
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* This would be populated with photos from the chat */}
-                    <p className="text-sm text-gray-500 col-span-3">
-                      No photos shared
-                    </p>
-                  </div>
+                  <p className="text-sm text-gray-500">No photos shared</p>
                 </div>
               )}
             </div>
@@ -909,31 +866,18 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Members Section */}
-          <div className="p-4 border-t">
-            <h3 className="font-medium mb-2">Members</h3>
-            <div className="space-y-2">
-              {activeGroup?.members?.map((member) => (
-                <div key={member._id} className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
-                    <UserCircle2 className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {member.name || "Unknown user"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {member.role || "Member"}
-                    </p>
-                  </div>
-                </div>
-              )) || (
-                <p className="text-sm text-gray-500">
-                  No members information available
-                </p>
-              )}
+          {/* Member Count */}
+          {activeGroup && (
+            <div className="p-4 border-t">
+              <h3 className="font-medium mb-1">Members</h3>
+              <div className="flex items-center">
+                <Users className="h-4 w-4 mr-2 text-blue-500" />
+                <span className="text-sm">
+                  {activeGroup.members?.length || 0} members
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Backdrop for Mobile Info Sidebar */}

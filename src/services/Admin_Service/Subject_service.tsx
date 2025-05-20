@@ -91,7 +91,7 @@ const SubjectService = {
    */
   deleteSubject: async (id) => {
     try {
-      const response = await axios.delete(`${BASE_URL}/deletecourse/${id}`, {
+      const response = await axios.delete(`${BASE_URL}/delete/${id}`, {
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
         },

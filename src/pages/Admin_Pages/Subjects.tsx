@@ -8,6 +8,7 @@ import {
   BookOpen,
   Download,
   Eye,
+  Trash2,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -51,442 +52,9 @@ import ViewTopicDialog from "@/components/Dialogs/View_topic";
 import EditTopicDialog from "@/components/Dialogs/Edit_topic";
 import DeleteTopicDialog from "@/components/Dialogs/Delet_topic";
 import AddTopicDialog from "@/components/Dialogs/Add_topic";
-
-interface AddSubjectDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubjectAdded: (subject: Subject) => void;
-}
-
-// AddSubjectDialog Component
-const AddSubjectDialog: React.FC<AddSubjectDialogProps> = ({
-  open,
-  onOpenChange,
-  onSubjectAdded,
-}) => {
-  const [subjectData, setSubjectData] = useState({
-    title: "",
-    category: "",
-    lessons: "",
-    duration: "",
-    description: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    setSubjectData((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setSubjectData((prev) => ({ ...prev, category: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Validate form data
-      if (!subjectData.title || !subjectData.category) {
-        throw new Error("Subject title and category are required");
-      }
-
-      // Format data for API
-      const apiSubjectData = {
-        name: subjectData.title.trim(),
-        category: subjectData.category,
-        numberOfLessons: parseInt(subjectData.lessons) || 0,
-        duration: subjectData.duration || "0h",
-        description: subjectData.description || "",
-        // Properly format the enum values
-        subjectName: subjectData.title.trim(), // Using title as subject name
-        Level: getCategoryLabel(subjectData.category), // Map category to Level enum value
-        showSubject: true,
-        // Include any other required fields
-        imageUrl:
-          "https://media.istockphoto.com/id/1500285927/photo/young-woman-a-university-student-studying-online.jpg?s=612x612&w=0&k=20&c=yvFDnYMNEJ6WEDYrAaOOLXv-Jhtv6ViBRXSzJhL9S_k=", // Default image path
-      };
-
-      console.log("Sending subject data to API:", apiSubjectData);
-
-      // Call API to create subject
-      const result = await SubjectService.createSubject(apiSubjectData);
-      console.log("API response:", result);
-
-      // Notify parent component about the new subject
-      onSubjectAdded(result.data);
-
-      // Show success message
-      toast({
-        title: "Subject created",
-        description: "The subject has been created successfully.",
-      });
-
-      // Reset form and close dialog
-      setSubjectData({
-        title: "",
-        category: "",
-        lessons: "",
-        duration: "",
-        description: "",
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to create subject:", error);
-      // Improved error handling to extract more specific error messages
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to create subject. Please try again.";
-
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Helper function to convert category to Level format
-  const getCategoryLabel = (category: string): string => {
-    switch (category) {
-      case "o-level":
-        return "O Level";
-      case "a-level":
-        return "A Level";
-      case "tertiary":
-        return "Tertiary";
-      default:
-        return category;
-    }
-  };
-
-  return (
-    <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
-      <DialogHeader>
-        <DialogTitle>Add New Subject</DialogTitle>
-      </DialogHeader>
-
-      <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-        <div className="grid gap-2">
-          <Label htmlFor="title">Subject Title</Label>
-          <Input
-            id="title"
-            value={subjectData.title}
-            onChange={handleChange}
-            placeholder="Enter subject title"
-            required
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="category">Category</Label>
-          <Select
-            onValueChange={handleCategoryChange}
-            value={subjectData.category}
-            required
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="o-level">O' Level</SelectItem>
-              <SelectItem value="a-level">A' Level</SelectItem>
-              <SelectItem value="tertiary">Tertiary</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="lessons">Number of Lessons</Label>
-            <Input
-              id="lessons"
-              type="number"
-              value={subjectData.lessons}
-              onChange={handleChange}
-              placeholder="10"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="duration">Duration (hours)</Label>
-            <Input
-              id="duration"
-              value={subjectData.duration}
-              onChange={handleChange}
-              placeholder="5h"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={subjectData.description}
-            onChange={handleChange}
-            placeholder="Subject description..."
-            required
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="thumbnail">Subject Thumbnail</Label>
-          <Input id="thumbnail" type="file" />
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-          <Button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            variant="outline"
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="w-full sm:w-auto"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create Subject"}
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  );
-};
-
-// Add Topic Dialog Component
-// Add Topic Dialog Component
-// const AddTopicDialog: React.FC<{
-//   open: boolean;
-//   onOpenChange: (open: boolean) => void;
-//   subjectId: string;
-//   onTopicAdded: () => void;
-// }> = ({ open, onOpenChange, subjectId, onTopicAdded }) => {
-//   const [topicData, setTopicData] = useState({
-//     title: "",
-//     description: "",
-//     price: 0,
-//     regularPrice: 0,
-//     subscriptionPeriod: "monthly",
-//     order: 0,
-//   });
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const { toast } = useToast();
-
-//   const handleChange = (
-//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-//   ) => {
-//     const { id, value } = e.target;
-//     setTopicData((prev) => ({ ...prev, [id]: value }));
-//   };
-
-//   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const { id, value } = e.target;
-//     setTopicData((prev) => ({
-//       ...prev,
-//       [id]: value === "" ? 0 : Number(value),
-//     }));
-//   };
-
-//   const handleSubscriptionPeriodChange = (value: string) => {
-//     setTopicData((prev) => ({ ...prev, subscriptionPeriod: value }));
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-
-//     try {
-//       if (!topicData.title) {
-//         throw new Error("Topic title is required");
-//       }
-
-//       // Format data for API according to the enum structure
-//       const apiTopicData = {
-//         title: topicData.title.trim(),
-//         description: topicData.description || "",
-//         subject: subjectId, // Using subjectId as subject field
-//         subjectName: subjectId, // This will be filled by the backend
-//         showTopic: true,
-//         price: topicData.price,
-//         regularPrice: topicData.regularPrice,
-//         subscriptionPeriod: topicData.subscriptionPeriod,
-//         order: parseInt(topicData.order.toString()) || 0,
-//       };
-
-//       console.log("Sending topic data to API:", apiTopicData);
-
-//       const result = await TopicInSubjectService.createTopic(apiTopicData);
-//       console.log("API response:", result);
-
-//       toast({
-//         title: "Topic created",
-//         description: "The topic has been added to this subject.",
-//       });
-
-//       setTopicData({
-//         title: "",
-//         description: "",
-//         price: 0,
-//         regularPrice: 0,
-//         subscriptionPeriod: "monthly",
-//         order: 0,
-//       });
-//       onOpenChange(false);
-//       onTopicAdded();
-//     } catch (error) {
-//       console.error("Failed to create topic:", error);
-//       const errorMessage =
-//         error.response?.data?.message ||
-//         error.response?.data?.error ||
-//         error.message ||
-//         "Failed to create topic. Please try again.";
-
-//       toast({
-//         variant: "destructive",
-//         title: "Error",
-//         description: errorMessage,
-//       });
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <DialogContent className="sm:max-w-[500px] mx-4 max-w-full">
-//       <DialogHeader>
-//         <DialogTitle>Add New Topic</DialogTitle>
-//       </DialogHeader>
-
-//       <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-//         <div className="grid gap-2">
-//           <Label htmlFor="title">Topic Title</Label>
-//           <Input
-//             id="title"
-//             value={topicData.title}
-//             onChange={handleChange}
-//             placeholder="Enter topic title"
-//             required
-//           />
-//         </div>
-
-//         <div className="grid gap-2">
-//           <Label htmlFor="description">Subject Name</Label>
-//           <Textarea
-//             id="description"
-//             value={topicData.description}
-//             onChange={handleChange}
-//             placeholder="Topic description..."
-//             required
-//           />
-//         </div>
-
-//         <div className="grid gap-2">
-//           <Label htmlFor="description">Description</Label>
-//           <Textarea
-//             id="description"
-//             value={topicData.description}
-//             onChange={handleChange}
-//             placeholder="Topic description..."
-//             required
-//           />
-//         </div>
-
-//         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//           <div className="grid gap-2">
-//             <Label htmlFor="price">Price</Label>
-//             <Input
-//               id="price"
-//               type="number"
-//               min="0"
-//               step="0.01"
-//               value={topicData.price}
-//               onChange={handleNumberChange}
-//               placeholder="0.00"
-//             />
-//           </div>
-//           <div className="grid gap-2">
-//             <Label htmlFor="regularPrice">Regular Price</Label>
-//             <Input
-//               id="regularPrice"
-//               type="number"
-//               min="0"
-//               step="0.01"
-//               value={topicData.regularPrice}
-//               onChange={handleNumberChange}
-//               placeholder="0.00"
-//             />
-//           </div>
-//         </div>
-
-//         <div className="grid gap-2">
-//           <Label htmlFor="subscriptionPeriod">Subscription Period</Label>
-//           <Select
-//             onValueChange={handleSubscriptionPeriodChange}
-//             value={topicData.subscriptionPeriod}
-//           >
-//             <SelectTrigger id="subscriptionPeriod">
-//               <SelectValue placeholder="Select period" />
-//             </SelectTrigger>
-//             <SelectContent>
-//               <SelectItem value="monthly">Monthly</SelectItem>
-//               <SelectItem value="quarterly">Quarterly</SelectItem>
-//               <SelectItem value="yearly">Yearly</SelectItem>
-//               <SelectItem value="onetime">One-time</SelectItem>
-//             </SelectContent>
-//           </Select>
-//         </div>
-
-//         <div className="grid gap-2">
-//           <Label htmlFor="order">Order</Label>
-//           <Input
-//             id="order"
-//             type="number"
-//             min="0"
-//             value={topicData.order}
-//             onChange={handleNumberChange}
-//             placeholder="1"
-//           />
-//           <p className="text-xs text-gray-500">
-//             The order in which this topic appears in the subject
-//           </p>
-//         </div>
-
-//         <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-//           <Button
-//             type="button"
-//             onClick={() => onOpenChange(false)}
-//             variant="outline"
-//             className="w-full sm:w-auto"
-//             disabled={isSubmitting}
-//           >
-//             Cancel
-//           </Button>
-//           <Button
-//             type="submit"
-//             className="w-full sm:w-auto"
-//             disabled={isSubmitting}
-//           >
-//             {isSubmitting ? "Creating..." : "Add Topic"}
-//           </Button>
-//         </div>
-//       </form>
-//     </DialogContent>
-//   );
-// };
+import { supabase } from "@/helper/SupabaseClient";
+import AddSubjectDialog from "@/components/Dialogs/Add__Subject";
+import DeleteSubjectDialog from "@/components/Dialogs/Delete_Subject";
 
 const AdminSubjects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -514,9 +82,16 @@ const AdminSubjects: React.FC = () => {
   );
   const [viewContentDialogOpen, setViewContentDialogOpen] =
     useState<boolean>(false);
-  // const [open, setOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // State for subject deletion
+  const [deletingSubjectId, setDeletingSubjectId] = useState<string | null>(
+    null
+  );
+  const [deletingSubjectTitle, setDeletingSubjectTitle] = useState<string>("");
+  const [deleteSubjectDialogOpen, setDeleteSubjectDialogOpen] =
+    useState<boolean>(false);
 
   // Handler for viewing a topic's content
   const handleViewContent = (topic: Topic) => {
@@ -548,6 +123,28 @@ const AdminSubjects: React.FC = () => {
       setDeletingTopicTitle(topic.title || topic.name || "this topic");
       setDeleteTopicDialogOpen(true);
     }
+  };
+
+  // Handler for deleting a subject
+  const handleDeleteSubject = (subjectId: string) => {
+    // Find subject by ID to get the title
+    const subject = subjects.find(
+      (s) => s._id === subjectId || s.id === subjectId
+    );
+
+    if (subject) {
+      setDeletingSubjectId(subjectId);
+      setDeletingSubjectTitle(
+        subject.name || subject.title || subject.subjectName || "this subject"
+      );
+      setDeleteSubjectDialogOpen(true);
+    }
+  };
+
+  // Handler for when a subject is deleted
+  const handleSubjectDeleted = async () => {
+    // Refresh the subjects list
+    await fetchSubjects();
   };
 
   // Handler for when a topic is updated
@@ -751,8 +348,10 @@ const AdminSubjects: React.FC = () => {
 
   // Map API subject data to the format expected by the SubjectCard component
   const mapSubjectToCardProps = (subject: Subject) => {
+    const subjectId = subject._id || subject.id || "";
+
     return {
-      id: subject._id || subject.id || "",
+      id: subjectId,
       title:
         subject.name ||
         subject.title ||
@@ -768,12 +367,9 @@ const AdminSubjects: React.FC = () => {
       showSubject:
         subject.showSubject !== undefined ? subject.showSubject : true,
       onClickView: () => viewSubjectTopics(subject),
+      onClickDelete: () => handleDeleteSubject(subjectId), // Add delete handler
     };
   };
-
-  function setOpen(open: boolean): void {
-    throw new Error("Function not implemented.");
-  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -859,7 +455,6 @@ const AdminSubjects: React.FC = () => {
               )}
 
               {/* Topics List */}
-              {/* Topics List - Update this section in your AdminSubjects component */}
               {!loadingTopics &&
               selectedSubject.topics &&
               selectedSubject.topics.length > 0 ? (
@@ -872,7 +467,7 @@ const AdminSubjects: React.FC = () => {
                       onViewTopic={handleViewTopic}
                       onEditTopic={handleEditTopic}
                       onDeleteTopic={handleDeleteTopic}
-                      onViewContent={handleViewContent} // Add this line
+                      onViewContent={handleViewContent}
                     />
                   ))}
                 </div>
@@ -1050,6 +645,20 @@ const AdminSubjects: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Subject Dialog */}
+      <Dialog
+        open={deleteSubjectDialogOpen}
+        onOpenChange={setDeleteSubjectDialogOpen}
+      >
+        <DeleteSubjectDialog
+          open={deleteSubjectDialogOpen}
+          onOpenChange={setDeleteSubjectDialogOpen}
+          subjectId={deletingSubjectId}
+          subjectTitle={deletingSubjectTitle}
+          onSubjectDeleted={handleSubjectDeleted}
+        />
+      </Dialog>
     </div>
   );
 };

@@ -32,35 +32,33 @@ interface SubjectCardProps {
   id: string;
   title?: string;
   category?: string;
-  lessons?: number;
-  duration?: string;
   topics?: Topic[];
   imageUrl?: string;
   showSubject?: boolean;
   onClickView?: () => void;
-  onDelete?: () => void;
+  onClickDelete?: () => void;
   onUpdate?: () => void;
 }
 
-const ModernSubjectCard: FC<SubjectCardProps> = ({
+const SubjectCard: FC<SubjectCardProps> = ({
   id,
   title,
   category,
-  lessons,
-  duration,
   topics = [],
-  imageUrl = "https://media.istockphoto.com/id/1500285927/photo/young-woman-a-university-student-studying-online.jpg?s=612x612&w=0&k=20&c=yvFDnYMNEJ6WEDYrAaOOLXv-Jhtv6ViBRXSzJhL9S_k=",
-  showSubject = true,
+  imageUrl = "",
   onClickView,
-  onDelete,
+  onClickDelete,
   onUpdate,
 }) => {
   const [viewTopicsOpen, setViewTopicsOpen] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const displayTitle = title || "Untitled Subject";
   const displayCategory = category || "Unknown Category";
-  const displayLessons = lessons || 0;
-  const displayDuration = duration || "0h";
+
+  // Use a default image if imageUrl is not provided
+  const imageSource =
+    imageUrl && imageUrl.trim() !== "" ? imageUrl : "/default-course-image.jpg";
 
   function setAddTopicOpen(arg0: boolean) {
     throw new Error("Function not implemented.");
@@ -72,23 +70,38 @@ const ModernSubjectCard: FC<SubjectCardProps> = ({
         {/* Gradient accent line */}
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-500"></div>
 
-        {/* Subject Image with gradient overlay */}
-        <div className="h-48 relative overflow-hidden">
+        {/* Subject Image with adjustable height and proper aspect ratio */}
+        <div
+          className="relative overflow-hidden"
+          style={{ minHeight: "200px" }}
+        >
           <img
-            src={imageUrl}
+            src={imageSource}
             alt={displayTitle}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full object-cover h-52 transition-all duration-500 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            onLoad={() => setImageLoaded(true)}
             onError={(e) => {
               const imgElement = e.target as HTMLImageElement;
               imgElement.src = "/default-course-image.jpg";
+              setImageLoaded(true);
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
+
+          {/* Loading skeleton */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-gray-100 animate-pulse"></div>
+          )}
+
+          {/* Semi-transparent overlay for better text visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
+
           <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-medium flex items-center">
             {displayCategory}
           </div>
 
-          {/* Title positioned at the bottom of image for better visibility */}
+          {/* Title positioned at the bottom of image */}
           <h3 className="absolute bottom-4 left-4 right-4 font-bold text-lg text-white drop-shadow-md line-clamp-2">
             {displayTitle}
           </h3>
@@ -97,20 +110,7 @@ const ModernSubjectCard: FC<SubjectCardProps> = ({
         {/* Subject Content */}
         <div className="p-5 flex flex-col flex-grow">
           {/* Subject Meta */}
-          <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4 pt-1">
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mr-2">
-                <Book className="w-4 h-4 text-blue-600" />
-              </div>
-              <span className="font-medium">{displayLessons} Lessons</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center mr-2">
-                <Clock className="w-4 h-4 text-indigo-600" />
-              </div>
-              <span className="font-medium">{displayDuration}</span>
-            </div>
-          </div>
+          <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4 pt-1"></div>
 
           {/* Topics */}
           <div className="mb-6 flex-grow">
@@ -171,7 +171,7 @@ const ModernSubjectCard: FC<SubjectCardProps> = ({
             </Button>
 
             <Button
-              onClick={onDelete}
+              onClick={onClickDelete}
               variant="outline"
               className="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-700 border-0 py-2 rounded-lg"
             >
@@ -207,16 +207,7 @@ const ModernSubjectCard: FC<SubjectCardProps> = ({
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1 text-sm rounded-full font-medium">
                   {displayCategory}
                 </span>
-                <div className="ml-4 flex items-center space-x-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Book className="w-4 h-4 mr-1.5 text-indigo-500" />
-                    <span>{displayLessons} Lessons</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1.5 text-indigo-500" />
-                    <span>{displayDuration}</span>
-                  </div>
-                </div>
+                <div className="ml-4 flex items-center space-x-4 text-sm text-gray-600"></div>
               </div>
             </div>
 
@@ -319,4 +310,4 @@ const ModernSubjectCard: FC<SubjectCardProps> = ({
   );
 };
 
-export default ModernSubjectCard;
+export default SubjectCard;
