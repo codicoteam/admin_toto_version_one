@@ -5,7 +5,8 @@ import {
   MessageSquare,
   Wallet,
   Settings,
-  X
+  X,
+  MessageCircleMore
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { icon: BookOpen, label: "Subjects", path: "/courses" },
     // { icon: MessageSquare, label: "Q&A Forum", path: "/qa" },
     { icon: Wallet, label: "Wallet", path: "/wallet" },
+    { icon: MessageCircleMore, label: "Chat", path: "/chat" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 

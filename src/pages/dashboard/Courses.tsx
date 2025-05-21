@@ -128,7 +128,6 @@ const Courses = () => {
             title={course.subjectName}
             thumbnailUrl={course.imageUrl || "/default-course.png"}
             category={course.Level || "Unknown Level"}
-            lessonsCount={12} // Default value or you can add this to your API
           />
         ))}
       </div>

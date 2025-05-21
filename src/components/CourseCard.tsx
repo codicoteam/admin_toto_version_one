@@ -15,7 +15,6 @@ export interface CourseCardProps {
   // };
   thumbnailUrl: string;
   category: string;
-  lessonsCount: number;
   duration?: string;
   enrolled?: boolean;
   progress?: number;
@@ -26,7 +25,6 @@ const CourseCard = ({
   title,
   thumbnailUrl,
   category,
-  lessonsCount,
   enrolled = false,
   progress
 }: CourseCardProps) => {
@@ -51,16 +49,16 @@ const CourseCard = ({
           </Avatar>
           <span className="text-sm text-muted-foreground">{instructor.name}</span>
         </div> */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        {/* <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
             <span>{lessonsCount} lessons</span>
           </div>
-          {/* <div className="flex items-center gap-1">
+           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>{duration}</span>
-          </div> */}
-        </div>
+          </div> 
+        </div> */}
 
         {enrolled && progress !== undefined && (
           <div className="mt-3">

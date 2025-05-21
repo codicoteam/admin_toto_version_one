@@ -29,6 +29,8 @@ import Pricing from "./pages/welcome/Pricing";
 import Course from "./pages/dashboard/Course";
 import Profile from "./pages/dashboard/user/Profile";
 import Settings from "./pages/dashboard/user/Settings";
+import Chat from "./pages/dashboard/Chat";
+import Community from "./pages/dashboard/Community";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +74,8 @@ const App = () => (
             >
               <Route path="/" index element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/chat/:id" element={<Community />} />
               <Route path="/courses/:id" element={<Course />} />
               <Route path="/courses/:id/topic/:topicID" element={<Lesson />} />
               <Route path="/qa" element={<QA />} />

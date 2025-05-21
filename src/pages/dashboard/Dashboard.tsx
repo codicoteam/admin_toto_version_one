@@ -172,8 +172,8 @@ const Dashboard = () => {
                 <SectionTitle
                   title="Popular Subjects"
                 />
-                {courses.map((course) => (
-                  <Card className="flex flex-col justify-center items-center p-2 border-dotted hover:shadow-lg transition">
+                {courses.map((course, id) => (
+                  <Card key={id} className="flex flex-col justify-center items-center p-2 border-dotted hover:shadow-lg transition">
 
                     <div className="grid grid-cols-5 text-left">
                       <div>
