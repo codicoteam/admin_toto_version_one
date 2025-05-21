@@ -3,7 +3,7 @@ import { log } from "console";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-type User = {
+export type User = {
     _id: string;
     firstName: string;
     lastName: string;
@@ -51,6 +51,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     token: string | null;
+    updateStudent: (data: Partial<User>) => Promise<null | string>; // Add updateStudent
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -177,8 +178,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 next_of_kin_phone_number: 'None',
             });
 
-            if (response.data?.data?.token && response.data?.data?.data) {
-                const { token, data: userData } = response.data.data;
+            if (response.data?.token && response.data?.data) {
+                console.log("Registration response:", response.data);
+
+                const { token, data: userData } = response.data;
 
                 // Store user data and token
                 localStorage.setItem("user", JSON.stringify(userData));
@@ -224,6 +227,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const updateStudent = async (data: Partial<User>): Promise<null | string> => {
+        if (!token || !user?._id) return "Not authenticated";
+        try {
+            setLoading(true);
+            const response = await axios.put(
+                `${API_BASE_URL}/updatestudent/${user._id}`,
+                data,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            if (response.data?.data) {
+                const updatedUser = response.data.data;
+                setUser(updatedUser);
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                return null;
+            } else {
+                return response.data?.message || "Update failed";
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                return error.response?.data?.message || "Update failed. Please try again.";
+            }
+            return "An unexpected error occurred during update.";
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
@@ -233,7 +267,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user,
             loading,
             token,
-            checkLogin
+            checkLogin,
+            updateStudent // Provide updateStudent
         }}>
             {children}
         </AuthContext.Provider>

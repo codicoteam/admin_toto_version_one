@@ -84,6 +84,15 @@ const Register = () => {
 
       const { firstName, lastName } = splitFullName(formData.fullName);
 
+      if (!lastName) {
+        toast({
+          title: "Please enter both your first and last name.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const error = await register({
         firstName,
         lastName,
@@ -92,7 +101,7 @@ const Register = () => {
         level: formData.educationLevel,
         password: formData.password,
         school: formData.school,
-        address: formData.address, // Include address in registration
+        address: formData.address,
       } as RegisterProps);
 
       if (error) {
@@ -101,6 +110,12 @@ const Register = () => {
           description: error,
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Registration success",
+          // description: error,
+          variant: "default",
+        })
       }
     } catch (error) {
       toast({

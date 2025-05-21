@@ -44,7 +44,13 @@ const Login = () => {
         description: error,
         variant: "destructive",
       });
-    }
+    } else (
+      toast({
+        title: "Login success",
+        // description: error,
+        variant: "default",
+      })
+    )
     setIsLoading(false);
   };
 

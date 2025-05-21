@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, User } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Pencil, User as UserIcon, Mail, Phone, Home, School, Book, Shield, Users } from "lucide-react";
@@ -9,25 +9,80 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
-    const { user } = useAuth();
-    const [isEditDialogOpen, setEditDialogOpen] = useState(false); // State for dialog
+    const { user, updateStudent } = useAuth();
+    const { toast } = useToast();
+    const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [editFormData, setEditFormData] = useState({
         fullName: `${user?.firstName || ""} ${user?.lastName || ""}`,
         email: user?.email || "",
-        phoneNumber: user?.phone_number || "",
+        phone_number: user?.phone_number || "",
         address: user?.address || "",
+        school: user?.school || "",
+        level: user?.level || "",
+        subscription_status: user?.subscription_status || "",
+        profile_picture: user?.profile_picture || "",
+        next_of_kin_full_name: user?.next_of_kin_full_name || "",
+        next_of_kin_phone_number: user?.next_of_kin_phone_number || "",
+        subjects: user?.subjects?.join(", ") || "",
     });
 
     const handleEditChange = (name, value) => {
         setEditFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSaveChanges = () => {
-        console.log("Saving changes:", editFormData);
-        setEditDialogOpen(false);
-        // Add logic to save changes
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        // Split fullName into firstName and lastName
+        const [firstName, ...lastNameParts] = editFormData.fullName.trim().split(" ");
+        const lastName = lastNameParts.join(" ");
+        // Convert subjects string to array
+        const subjectsArr = editFormData.subjects
+            ? editFormData.subjects.split(",").map((s) => s.trim()).filter(Boolean)
+            : [];
+        try {
+            const req = await updateStudent({
+                firstName,
+                lastName,
+                email: editFormData.email,
+                phone_number: editFormData.phone_number,
+                address: editFormData.address,
+                school: editFormData.school,
+                level: editFormData.level,
+                subscription_status: editFormData.subscription_status,
+                profile_picture: editFormData.profile_picture,
+                next_of_kin_full_name: editFormData.next_of_kin_full_name,
+                next_of_kin_phone_number: editFormData.next_of_kin_phone_number,
+                subjects: subjectsArr,
+            });
+            // Show success toast
+            if (req) {
+                toast({
+                    title: "Profile Update Error",
+                    description: req,
+                    variant: "destructive",
+                });
+            } else {
+                setEditDialogOpen(false);
+                toast({
+                    title: "Profile Updated",
+                    description: 'Account updated successfully.',
+                    variant: 'default',
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Update failed",
+                description: (error as Error)?.message || "Failed to update profile.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (!user) {
@@ -38,66 +93,174 @@ const Profile = () => {
         <div className="max-w-screen-xl mx-auto py-4 md:py-6">
             {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Edit Account</DialogTitle>
                     </DialogHeader>
-                    <form className="space-y-4">
-                        <div>
-                            <Label htmlFor="fullName" className="mb-2 text-sm font-bold">
-                                Full Name
-                            </Label>
-                            <Input
-                                id="fullName"
-                                type="text"
-                                value={editFormData.fullName}
-                                onChange={(e) => handleEditChange("fullName", e.target.value)}
-                                placeholder="Enter Full Name"
-                            />
+                    <form className="grid grid-cols-2 gap-4" onSubmit={e => { e.preventDefault(); handleSaveChanges(); }}>
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="fullName" className="mb-2 text-sm font-bold">
+                                    Full Name
+                                </Label>
+                                <Input
+                                    id="fullName"
+                                    type="text"
+                                    value={editFormData.fullName}
+                                    onChange={(e) => handleEditChange("fullName", e.target.value)}
+                                    placeholder="Enter Full Name"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="email" className="mb-2 text-sm font-bold">
+                                    Email
+                                </Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={editFormData.email}
+                                    onChange={(e) => handleEditChange("email", e.target.value)}
+                                    placeholder="Enter Email"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="phone_number" className="mb-2 text-sm font-bold">
+                                    Phone Number
+                                </Label>
+                                <Input
+                                    id="phone_number"
+                                    type="tel"
+                                    value={editFormData.phone_number}
+                                    onChange={(e) => handleEditChange("phone_number", e.target.value)}
+                                    placeholder="Enter Phone Number"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="address" className="mb-2 text-sm font-bold">
+                                    Address
+                                </Label>
+                                <Input
+                                    id="address"
+                                    type="text"
+                                    value={editFormData.address}
+                                    onChange={(e) => handleEditChange("address", e.target.value)}
+                                    placeholder="Enter Address"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="school" className="mb-2 text-sm font-bold">
+                                    School
+                                </Label>
+                                <Input
+                                    id="school"
+                                    type="text"
+                                    value={editFormData.school}
+                                    onChange={(e) => handleEditChange("school", e.target.value)}
+                                    placeholder="Enter School"
+                                />
+                            </div>
+                            <div>
+                                <Select
+                                    value={editFormData.level}
+                                    onValueChange={(e) => handleEditChange("level", e)}
+
+                                >
+                                    <SelectTrigger className="bg-transparent border border-input p-2 rounded-md w-full">
+                                        <SelectValue placeholder="Select Education Level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {/* <SelectItem value="primary">Primary School</SelectItem> */}
+                                        <SelectItem value="O Level">
+                                            Ordinary Level (O-Level)
+                                        </SelectItem>
+                                        <SelectItem value="A Level">
+                                            Advanced Level (A-Level)
+                                        </SelectItem>
+
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div>
-                            <Label htmlFor="email" className="mb-2 text-sm font-bold">
-                                Email
-                            </Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={editFormData.email}
-                                onChange={(e) => handleEditChange("email", e.target.value)}
-                                placeholder="Enter Email"
-                            />
+                        <div className="space-y-4">
+
+                            <div>
+                                <Label htmlFor="subscription_status" className="mb-2 text-sm font-bold">
+                                    Subscription Status
+                                </Label>
+                                <Input
+                                    id="subscription_status"
+                                    type="text"
+                                    value={editFormData.subscription_status}
+                                    onChange={(e) => handleEditChange("subscription_status", e.target.value)}
+                                    placeholder="Enter Subscription Status"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="profile_picture" className="mb-2 text-sm font-bold">
+                                    Profile Picture URL
+                                </Label>
+                                <Input
+                                    id="profile_picture"
+                                    type="text"
+                                    value={editFormData.profile_picture}
+                                    onChange={(e) => handleEditChange("profile_picture", e.target.value)}
+                                    placeholder="Enter Profile Picture URL"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="subjects" className="mb-2 text-sm font-bold">
+                                    Subjects (comma separated)
+                                </Label>
+                                <Input
+                                    id="subjects"
+                                    type="text"
+                                    value={editFormData.subjects}
+                                    onChange={(e) => handleEditChange("subjects", e.target.value)}
+                                    placeholder="e.g. Math, Physics, Chemistry"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="next_of_kin_full_name" className="mb-2 text-sm font-bold">
+                                    Next of Kin Full Name
+                                </Label>
+                                <Input
+                                    id="next_of_kin_full_name"
+                                    type="text"
+                                    value={editFormData.next_of_kin_full_name}
+                                    onChange={(e) => handleEditChange("next_of_kin_full_name", e.target.value)}
+                                    placeholder="Enter Next of Kin Full Name"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="next_of_kin_phone_number" className="mb-2 text-sm font-bold">
+                                    Next of Kin Phone Number
+                                </Label>
+                                <Input
+                                    id="next_of_kin_phone_number"
+                                    type="text"
+                                    value={editFormData.next_of_kin_phone_number}
+                                    onChange={(e) => handleEditChange("next_of_kin_phone_number", e.target.value)}
+                                    placeholder="Enter Next of Kin Phone Number"
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" type="button" onClick={() => setEditDialogOpen(false)} disabled={isSaving}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={isSaving}>
+                                    {isSaving ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
+                                            Saving...
+                                        </span>
+                                    ) : (
+                                        "Save Changes"
+                                    )}
+                                </Button>
+                            </DialogFooter>
                         </div>
-                        <div>
-                            <Label htmlFor="phoneNumber" className="mb-2 text-sm font-bold">
-                                Phone Number
-                            </Label>
-                            <Input
-                                id="phoneNumber"
-                                type="tel"
-                                value={editFormData.phoneNumber}
-                                onChange={(e) => handleEditChange("phoneNumber", e.target.value)}
-                                placeholder="Enter Phone Number"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="address" className="mb-2 text-sm font-bold">
-                                Address
-                            </Label>
-                            <Input
-                                id="address"
-                                type="text"
-                                value={editFormData.address}
-                                onChange={(e) => handleEditChange("address", e.target.value)}
-                                placeholder="Enter Address"
-                            />
-                        </div>
+
                     </form>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSaveChanges}>Save Changes</Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
             <div className="flex flex-col md:flex-row gap-6">
@@ -256,12 +419,12 @@ const Profile = () => {
                         </CardContent>
                     </Card>
 
-                    <div className="flex gap-4">
+                    {/* <div className="flex gap-4">
                         <Button variant="outline" asChild>
                             <Link to="/">Back to Dashboard</Link>
                         </Button>
                         <Button>Save Changes</Button>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>
