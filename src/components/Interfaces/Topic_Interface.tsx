@@ -2,6 +2,7 @@ import SubjectCard from "../SubjectCard";
 
 // Define interfaces for your data types
 interface Topic {
+  status: string;
   price: number;
   regularPrice: number;
   subscriptionPeriod: string;

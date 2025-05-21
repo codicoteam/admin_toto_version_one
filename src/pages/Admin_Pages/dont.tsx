@@ -1,895 +1,934 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Search,
-  X,
-  ChevronDown,
-  ChevronUp,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { supabase } from "@/helper/SupabaseClient"; // Import Supabase client
+import { Button } from "@/components/ui/button";
+import {
+  BookOpen,
+  Download,
+  Eye,
   Plus,
-  UserCircle2,
-  Menu,
-  Send,
-  Users,
-  Info,
-  Paperclip,
+  X,
+  Edit,
+  Trash2,
+  AlertCircle,
+  Upload,
   File,
-  Image,
-  Film,
-  FileAudio,
-  FileText,
-  CornerUpLeft,
-  MessageSquare,
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
-import ChatService from "@/services/chat_service"; // Import the ChatService
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import TopicContentService from "@/services/Admin_Service/Topic_Content_service";
+import Topic from "@/components/Interfaces/Topic_Interface";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// Define interface for message object
-interface MessageFile {
-  name: string;
-  type: string;
-  size: number;
-  url?: string;
+interface ContentFormData {
+  title: string;
+  description: string;
+  file_path: string[];
+  file_type: "video" | "audio" | "document";
+  Topic: string;
 }
 
-interface Message {
-  id: number;
-  text: string;
-  time: string;
-  sender: string;
-  file?: MessageFile; // Add optional file property
-  replyTo?: number; // Add optional replyTo property to reference another message
+interface ViewTopicContentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  topic: Topic | null;
 }
 
-const ChatApp = () => {
-  const [activeGroup, setActiveGroup] = useState<any>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Hi", time: "10:00", sender: "other" },
-    { id: 2, text: "How are you", time: "10:00", sender: "other" },
-    {
-      id: 3,
-      text: "I'm doing well, thanks for asking!",
-      time: "10:01",
-      sender: "user",
-      replyTo: 2, // Example of a reply to message with id 2
-    },
-  ]);
-  const [newMessage, setNewMessage] = useState("");
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [expandedSections, setExpandedSections] = useState({
-    files: true,
-    photos: true,
-    videos: false,
-    audio: false,
-    documents: false,
-    links: false,
+// Define file type extensions mapping
+const fileTypeExtensions = {
+  video: [".mp4", ".avi", ".mov", ".wmv", ".mkv", ".webm"],
+  audio: [".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"],
+  document: [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt"],
+};
+
+const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
+  open,
+  onOpenChange,
+  topic,
+}) => {
+  const [contents, setContents] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Create dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
+  const [newContent, setNewContent] = useState<ContentFormData>({
+    title: "",
+    description: "",
+    file_path: [],
+    file_type: "document",
+    Topic: "",
   });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [groupsListOpen, setGroupsListOpen] = useState(false);
-  const [infoSidebarOpen, setInfoSidebarOpen] = useState(false);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [isMediumScreen, setIsMediumScreen] = useState(false);
-  const [communities, setCommunities] = useState<any[]>([]); // State for storing communities data
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false); // State for attachment menu
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State for selected file
-  const [filePreview, setFilePreview] = useState<string | null>(null); // State for file preview
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
+  // Update dialog state
+  const [updateDialogOpen, setUpdateDialogOpen] = useState<boolean>(false);
+  const [contentToUpdate, setContentToUpdate] = useState<any>(null);
+  const [uploadedFilesForUpdate, setUploadedFilesForUpdate] = useState<File[]>(
+    []
+  );
 
-  // Fetch communities data on component mount
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [contentToDelete, setContentToDelete] = useState<string | null>(null);
+
+  // File input refs
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const updateFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Form submission state
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
   useEffect(() => {
-    const fetchCommunities = async () => {
+    const fetchTopicContents = async () => {
+      if (!topic) return;
+      const topicId = topic._id || topic.id;
+      if (!topicId) return;
+
       try {
         setLoading(true);
-        setError(null); // Clear previous errors
-
-        // Check if user is logged in by verifying token exists
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          setError("You must be logged in to view communities");
-          setLoading(false);
-          return;
-        }
-
-        const response = await ChatService.getAllChatGroups();
-
-        // Process the API response
-        if (response && response.data) {
-          setCommunities(response.data);
-
-          console.log("Communities loaded:", response.data);
-
-          // Set the first community as active if communities exist
-          if (response.data.length > 0) {
-            setActiveGroup(response.data[0]);
-          }
-        } else {
-          setError("No communities found");
-        }
-
+        setError(null);
+        const result = await TopicContentService.getTopicContentByTopicId(
+          topicId
+        );
+        setContents(result.data || []);
+      } catch (error) {
+        console.error("Failed to fetch topic contents:", error);
+        setError("Failed to load topic contents. Please try again.");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load topic contents. Please try again.",
+        });
+      } finally {
         setLoading(false);
-      } catch (err) {
-        setError(err.message || "Failed to load chat groups");
-        setLoading(false);
-        console.error("Error fetching communities:", err);
       }
     };
 
-    fetchCommunities();
-  }, []);
+    if (open && topic) {
+      fetchTopicContents();
+    }
+  }, [open, topic, toast]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() || selectedFile) {
-      const messageObj: Message = {
-        id: messages.length + 1,
-        text: newMessage.trim(),
-        time: getCurrentTime(),
-        sender: "user",
+  // Initialize new content form with topic ID when dialog opens
+  useEffect(() => {
+    if (topic) {
+      setNewContent((prev) => ({
+        ...prev,
+        Topic: topic._id || topic.id || "",
+      }));
+    }
+  }, [topic]);
+
+  // Reset file inputs when file type changes
+  useEffect(() => {
+    setUploadedFiles([]);
+  }, [newContent.file_type]);
+
+  useEffect(() => {
+    if (contentToUpdate) {
+      setUploadedFilesForUpdate([]);
+    }
+  }, [contentToUpdate?.file_type]);
+
+  // Function to upload files to Supabase
+  const uploadFilesToSupabase = async (files: File[]) => {
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        // Create a unique file name
+        const fileName = `${Date.now()}_${file.name}`;
+
+        // Upload file to the Supabase bucket
+        const { data, error } = await supabase.storage
+          .from("totoacademy") // Use your bucket name
+          .upload(fileName, file);
+
+        if (error) {
+          throw new Error(`Error uploading file: ${error.message}`);
+        }
+
+        // Get the public URL of the uploaded file
+        const { data: publicData } = supabase.storage
+          .from("totoacademy") // Use your bucket name
+          .getPublicUrl(fileName);
+
+        if (publicData) {
+          uploadedUrls.push(publicData.publicUrl);
+        }
+      }
+
+      return uploadedUrls;
+    } catch (error) {
+      console.error("Error in file upload:", error);
+      throw error;
+    }
+  };
+
+  // File upload handlers
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isUpdate = false
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const files = Array.from(e.target.files);
+
+    if (isUpdate) {
+      setUploadedFilesForUpdate((prev) => [...prev, ...files]);
+
+      // Create preview URLs for UI display only
+      const previewUrls = files.map((file) => URL.createObjectURL(file));
+
+      // For updating, we temporarily store the preview URLs
+      // These will be replaced with actual Supabase URLs when form is submitted
+      setContentToUpdate((prev) => ({
+        ...prev,
+        file_path: [...prev.file_path, ...previewUrls],
+      }));
+    } else {
+      setUploadedFiles((prev) => [...prev, ...files]);
+
+      // Create preview URLs for UI display only
+      const previewUrls = files.map((file) => URL.createObjectURL(file));
+
+      // We're just setting preview URLs for display
+      // Real URLs will be set when form is submitted
+      setNewContent((prev) => ({
+        ...prev,
+        file_path: [...prev.file_path, ...previewUrls],
+      }));
+    }
+  };
+
+  const removeFile = (index: number, isUpdate = false) => {
+    if (isUpdate) {
+      setUploadedFilesForUpdate((prev) => prev.filter((_, i) => i !== index));
+      setContentToUpdate((prev) => ({
+        ...prev,
+        file_path: prev.file_path.filter((_, i) => i !== index),
+      }));
+    } else {
+      setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+      setNewContent((prev) => ({
+        ...prev,
+        file_path: prev.file_path.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  const getAcceptedFileTypes = (fileType: string) => {
+    return fileTypeExtensions[fileType as keyof typeof fileTypeExtensions].join(
+      ","
+    );
+  };
+
+  const triggerFileInput = (isUpdate = false) => {
+    if (isUpdate) {
+      updateFileInputRef.current?.click();
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleCreateContent = async () => {
+    try {
+      setIsSubmitting(true);
+
+      // Form validation
+      if (
+        !newContent.title.trim() ||
+        !newContent.description.trim() ||
+        uploadedFiles.length === 0
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description:
+            "Please fill all required fields and upload at least one file",
+        });
+        return;
+      }
+
+      // Upload files to Supabase and get public URLs
+      const uploadedUrls = await uploadFilesToSupabase(uploadedFiles);
+
+      if (uploadedUrls.length === 0) {
+        throw new Error("Failed to upload files");
+      }
+
+      // Prepare content data with real file paths from Supabase
+      const contentToCreate = {
+        ...newContent,
+        file_path: uploadedUrls,
       };
 
-      // Add file information if a file is selected
-      if (selectedFile) {
-        messageObj.file = {
-          name: selectedFile.name,
-          type: selectedFile.type,
-          size: selectedFile.size,
-          url: filePreview || undefined,
-        };
+      await TopicContentService.createTopicContent(contentToCreate);
+
+      // Refresh content list
+      if (topic) {
+        const topicId = topic._id || topic.id;
+        const result = await TopicContentService.getTopicContentByTopicId(
+          topicId
+        );
+        setContents(result.data || []);
       }
 
-      // Add replyTo information if replying to a message
-      if (replyingTo) {
-        messageObj.replyTo = replyingTo.id;
-      }
+      toast({
+        title: "Success",
+        description: "Content created successfully",
+      });
 
-      setMessages([...messages, messageObj]);
-      setNewMessage("");
-      setSelectedFile(null);
-      setFilePreview(null);
-      setReplyingTo(null); // Clear reply state after sending
+      // Reset form and close dialog
+      setNewContent({
+        title: "",
+        description: "",
+        file_path: [],
+        file_type: "document",
+        Topic: topic ? topic._id || topic.id : "",
+      });
+      setUploadedFiles([]);
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to create content:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to create content. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleReplyToMessage = (message: Message) => {
-    setReplyingTo(message);
-    // Focus on input field after selecting a message to reply to
-    if (messageInputRef.current) {
-      messageInputRef.current.focus();
-    }
-  };
+  const handleUpdateContent = async () => {
+    if (!contentToUpdate || !contentToUpdate._id) return;
 
-  const cancelReply = () => {
-    setReplyingTo(null);
-  };
+    try {
+      setIsSubmitting(true);
 
-  const getCurrentTime = () => {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, "0")}:${now
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSections({
-      ...expandedSections,
-      [section]: !expandedSections[section],
-    });
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-
-      // Create file preview URL
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-
-      setShowAttachmentMenu(false);
-    }
-  };
-
-  const handleAttachmentClick = (type: string) => {
-    // Set accepted file types based on user selection
-    let acceptedTypes = "";
-    switch (type) {
-      case "image":
-        acceptedTypes = "image/*";
-        break;
-      case "video":
-        acceptedTypes = "video/*";
-        break;
-      case "audio":
-        acceptedTypes = "audio/*";
-        break;
-      case "document":
-        acceptedTypes = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt";
-        break;
-      default:
-        acceptedTypes = "*/*";
-    }
-
-    // Set the file input's accept attribute and trigger click
-    if (fileInputRef.current) {
-      fileInputRef.current.accept = acceptedTypes;
-      fileInputRef.current.click();
-    }
-    setShowAttachmentMenu(false);
-  };
-
-  const removeSelectedFile = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
-  };
-
-  // Find a message by its ID
-  const findMessageById = (id: number) => {
-    return messages.find((message) => message.id === id);
-  };
-
-  // File type icon mapping
-  const getFileIcon = (fileType?: string) => {
-    if (fileType?.startsWith("image/")) return <Image className="h-4 w-4" />;
-    if (fileType?.startsWith("video/")) return <Film className="h-4 w-4" />;
-    if (fileType?.startsWith("audio/"))
-      return <FileAudio className="h-4 w-4" />;
-    if (
-      fileType?.includes("pdf") ||
-      fileType?.includes("doc") ||
-      fileType?.includes("ppt") ||
-      fileType?.includes("xls")
-    )
-      return <FileText className="h-4 w-4" />;
-    return <File className="h-4 w-4" />;
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else return (bytes / 1048576).toFixed(1) + " MB";
-  };
-
-  // Helper function to truncate text
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
-
-  // Scroll to bottom of messages when new message is added
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Update screen size state and handle responsive layout
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const isLarge = window.innerWidth >= 1024;
-      const isMedium = window.innerWidth >= 768;
-      setIsLargeScreen(isLarge);
-      setIsMediumScreen(isMedium);
-      setSidebarOpen(isMedium);
-
-      // On large screens, automatically show both sidebars
-      if (isLarge) {
-        setInfoSidebarOpen(true);
-        setGroupsListOpen(true);
-      } else if (isMedium) {
-        // On medium screens, show groups list but not info sidebar
-        setGroupsListOpen(true);
-        setInfoSidebarOpen(false);
-      } else {
-        // On small screens, hide both by default
-        setGroupsListOpen(false);
-        setInfoSidebarOpen(false);
-      }
-    };
-
-    // Run on initial load
-    checkScreenSize();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkScreenSize);
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
-
-  // Close attachment menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+      // Form validation
       if (
-        showAttachmentMenu &&
-        !(event.target as Element).closest(".attachment-menu-container")
+        !contentToUpdate.title.trim() ||
+        !contentToUpdate.description.trim() ||
+        (contentToUpdate.file_path.length === 0 &&
+          uploadedFilesForUpdate.length === 0)
       ) {
-        setShowAttachmentMenu(false);
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description:
+            "Please fill all required fields and have at least one file",
+        });
+        return;
       }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showAttachmentMenu]);
+      let updatedFilePaths = [...contentToUpdate.file_path];
+
+      // If there are new files uploaded, upload them to Supabase
+      if (uploadedFilesForUpdate.length > 0) {
+        // Filter out the new files (those that are not URLs from Supabase)
+        const newFiles = uploadedFilesForUpdate;
+
+        // Upload new files to Supabase
+        const newUploadedUrls = await uploadFilesToSupabase(newFiles);
+
+        // Update the file paths with the new Supabase URLs
+        // This approach assumes all new files are at the end of the file_path array
+        // If that's not the case, we would need a more complex mapping logic
+        updatedFilePaths = updatedFilePaths.slice(
+          0,
+          updatedFilePaths.length - newFiles.length
+        );
+        updatedFilePaths = [...updatedFilePaths, ...newUploadedUrls];
+      }
+
+      const contentToSave = {
+        ...contentToUpdate,
+        file_path: updatedFilePaths,
+      };
+
+      await TopicContentService.updateTopicContent(
+        contentToUpdate._id,
+        contentToSave
+      );
+
+      // Refresh content list
+      if (topic) {
+        const topicId = topic._id || topic.id;
+        const result = await TopicContentService.getTopicContentByTopicId(
+          topicId
+        );
+        setContents(result.data || []);
+      }
+
+      toast({
+        title: "Success",
+        description: "Content updated successfully",
+      });
+
+      setUpdateDialogOpen(false);
+      setUploadedFilesForUpdate([]);
+    } catch (error) {
+      console.error("Failed to update content:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error.message || "Failed to update content. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteContent = async () => {
+    if (!contentToDelete) return;
+
+    try {
+      setIsSubmitting(true);
+      await TopicContentService.deleteTopicContent(contentToDelete);
+
+      // Remove deleted content from state
+      setContents(
+        contents.filter((content) => content._id !== contentToDelete)
+      );
+
+      toast({
+        title: "Success",
+        description: "Content deleted successfully",
+      });
+
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to delete content:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete content. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setContentToDelete(null);
+    }
+  };
+
+  const openUpdateDialog = (content: any) => {
+    setContentToUpdate({ ...content });
+    setUpdateDialogOpen(true);
+  };
+
+  const openDeleteDialog = (contentId: string) => {
+    setContentToDelete(contentId);
+    setDeleteDialogOpen(true);
+  };
+
+  // Function to get filename from path
+  const getFilenameFromPath = (path: string) => {
+    // For URLs created with URL.createObjectURL or actual file paths
+    return path.split("/").pop() || path;
+  };
+
+  if (!topic) return null;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100 overflow-hidden">
-      {/* Main Navigation Sidebar */}
-      <div
-        className={`
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-          transition-transform duration-300 ease-in-out 
-          fixed md:relative z-50 w-64 h-full
-        `}
-      >
-        <Sidebar />
-      </div>
-
-      {/* Mobile Toggles for Navigation */}
-      <div className="flex items-center bg-blue-900 text-white p-2 md:hidden fixed top-0 left-0 right-0 z-40 h-12">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1 mr-2"
-        >
-          <Menu size={20} />
-        </button>
-        <div className="flex-1 text-center font-semibold">
-          {!groupsListOpen && activeGroup?.name}
-        </div>
-        <div className="flex">
-          <button
-            onClick={() => setGroupsListOpen(!groupsListOpen)}
-            className={`p-1 mr-2 ${
-              groupsListOpen ? "bg-blue-800 rounded" : ""
-            }`}
-          >
-            <Users size={20} />
-          </button>
-          <button
-            onClick={() => setInfoSidebarOpen(!infoSidebarOpen)}
-            className={`p-1 ${infoSidebarOpen ? "bg-blue-800 rounded" : ""}`}
-          >
-            <Info size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* Backdrop for Mobile Sidebar */}
-      {sidebarOpen && !isMediumScreen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <div className="flex flex-1 overflow-hidden mt-12 md:mt-0">
-        {/* Groups List */}
-        <div
-          className={`
-            ${
-              groupsListOpen
-                ? "translate-x-0"
-                : "-translate-x-full md:translate-x-0"
-            } 
-            transition-transform duration-300 ease-in-out
-            fixed md:relative left-0 z-30 w-full md:w-64 md:min-w-64 bg-white h-[calc(100%-3rem)] md:h-full
-            flex flex-col border-r
-          `}
-        >
-          {/* Search Area */}
-          <div className="p-3 border-b">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search"
-                className="w-full py-2 pl-8 pr-10 bg-purple-50 text-gray-700 rounded-md"
-              />
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-              <Plus className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
-            </div>
-          </div>
-
-          {/* Group List - Now using data from API */}
-          <div className="p-3 space-y-2 flex-grow overflow-y-auto">
-            {loading ? (
-              <div className="text-center py-4 text-gray-500">
-                Loading groups...
-              </div>
-            ) : error ? (
-              <div className="text-center py-4 text-red-500">{error}</div>
-            ) : communities.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                No groups available
-              </div>
-            ) : (
-              communities.map((community) => (
-                <button
-                  key={community._id}
-                  className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
-                    activeGroup?._id === community._id
-                      ? "bg-blue-900 text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                  onClick={() => {
-                    setActiveGroup(community);
-                    if (!isMediumScreen) {
-                      setGroupsListOpen(false);
-                    }
-                  }}
-                >
-                  {community.name}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Backdrop for Mobile Group List */}
-        {groupsListOpen && !isMediumScreen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={() => setGroupsListOpen(false)}
-          />
-        )}
-
-        {/* Chat Area */}
-        <div
-          className={`
-            flex-1 flex flex-col bg-gray-50 h-full
-            ${
-              (groupsListOpen && !isMediumScreen) ||
-              (infoSidebarOpen && !isLargeScreen)
-                ? "hidden md:flex"
-                : "flex"
-            }
-          `}
-        >
-          <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
-            {activeGroup?.name || "Select a group"}
-          </div>
-
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-3">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {message.sender === "other" && (
-                    <div className="flex-shrink-0 mr-2">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <UserCircle2 className="h-8 w-8 text-gray-400" />
-                      </div>
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-xs rounded-lg px-4 pt-2 pb-2 relative group ${
-                      message.sender === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-blue-200 text-blue-900"
-                    }`}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-full max-w-7xl max-h-[900vh] overflow-y-auto p-0 m-0 rounded-lg">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-400 to-blue-900 p-6 text-white shrink-0 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-2xl font-bold tracking-tight">
+                    {topic.title || topic.name}
+                  </DialogTitle>
+                  <div className="flex items-center mt-2 text-green-100">
+                    <BookOpen size={16} className="mr-2" />
+                    <span className="text-sm">Topic Overview</span>
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-orange-400 border-white text-white hover:bg-orange-300 hover:text-green-900"
                   >
-                    {/* Reply message indicator - if this message is a reply to another message */}
-                    {message.replyTo && (
-                      <div
-                        className={`mb-1 p-1 text-xs rounded ${
-                          message.sender === "user"
-                            ? "bg-blue-600"
-                            : "bg-blue-300"
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <CornerUpLeft className="h-3 w-3 mr-1" />
-                          <span className="font-medium">
-                            {message.sender === "user" ? "You" : "Other"}{" "}
-                            replied to
-                          </span>
-                        </div>
-                        <div className="pl-4 border-l-2 mt-1 line-clamp-1">
-                          {truncateText(
-                            findMessageById(message.replyTo)?.text ||
-                              "Deleted message",
-                            30
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <Download size={14} className="mr-1" /> Export
+                  </Button>
+                  <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-blue-400 border-white text-white hover:bg-white hover:text-green-900"
+                  >
+                    <Plus size={14} className="mr-1" /> Add Content
+                  </Button>
+                </div>
+              </div>
+            </div>
 
-                    {message.file && (
-                      <div className="mb-2">
-                        {message.file.type.startsWith("image/") ? (
-                          <div className="mb-2">
-                            <img
-                              src={message.file.url}
-                              alt={message.file.name}
-                              className="rounded-md max-w-full max-h-40 object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className={`flex items-center p-2 rounded-md mb-2 ${
-                              message.sender === "user"
-                                ? "bg-blue-600"
-                                : "bg-blue-300"
-                            }`}
-                          >
-                            <div className="mr-2">
-                              {getFileIcon(message.file.type)}
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                              <div className="text-sm truncate">
-                                {message.file.name}
-                              </div>
-                              <div
-                                className={`text-xs ${
-                                  message.sender === "user"
-                                    ? "text-blue-200"
-                                    : "text-blue-700"
-                                }`}
-                              >
-                                {formatFileSize(message.file.size)}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {message.text && <div className="mb-1">{message.text}</div>}
-                    <div
-                      className={`text-xs ${
-                        message.sender === "user"
-                          ? "text-blue-100"
-                          : "text-blue-700"
+            {/* Topic Details */}
+            <div className="bg-white border-b border-gray-100 py-4 px-6 shrink-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h3 className="font-medium text-xs text-blue-800 mb-1">
+                    Description
+                  </h3>
+                  <p className="text-gray-700 text-sm">
+                    {topic.description || "No description available"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h3 className="font-medium text-xs text-gray-600 mb-1">
+                      Price
+                    </h3>
+                    <p className="text-base font-semibold text-green-700">
+                      ${topic.price || 0}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h3 className="font-medium text-xs text-gray-600 mb-1">
+                      Status
+                    </h3>
+                    <Badge
+                      className={`${
+                        topic.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-amber-100 text-amber-800"
                       }`}
                     >
-                      {message.time}
-                    </div>
-
-                    {/* Reply button that appears on hover */}
-                    <div
-                      className={`absolute opacity-0 group-hover:opacity-100 transition-opacity ${
-                        message.sender === "user"
-                          ? "left-0 -translate-x-full"
-                          : "right-0 translate-x-full"
-                      } top-1/2 -translate-y-1/2`}
-                    >
-                      <button
-                        onClick={() => handleReplyToMessage(message)}
-                        className="bg-gray-200 rounded-full p-1 shadow hover:bg-gray-300"
-                        title="Reply"
-                      >
-                        <MessageSquare className="h-4 w-4 text-gray-700" />
-                      </button>
-                    </div>
+                      {topic.status || "draft"}
+                    </Badge>
                   </div>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Content List */}
+            <div className="flex-grow p-6 overflow-auto">
+              {loading ? (
+                <div className="flex justify-center items-center h-40">
+                  <p>Loading topic contents...</p>
+                </div>
+              ) : error ? (
+                <div className="bg-red-50 p-4 rounded-md flex items-start">
+                  <AlertCircle className="text-red-500 mr-3" size={20} />
+                  <p className="text-red-700">{error}</p>
+                </div>
+              ) : contents.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <File className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No content yet
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Get started by adding new content to this topic.
+                  </p>
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => setCreateDialogOpen(true)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Plus size={14} className="mr-1" /> Add Content
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {contents.map((content) => (
+                    <Card key={content._id} className="overflow-hidden">
+                      <CardHeader className="bg-gray-50 p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-md">
+                              {content.title}
+                            </CardTitle>
+                            <CardDescription className="mt-1 text-xs">
+                              {new Date(content.createdAt).toLocaleDateString()}
+                            </CardDescription>
+                          </div>
+                          <Badge
+                            className={`${
+                              content.file_type === "document"
+                                ? "bg-blue-100 text-blue-800"
+                                : content.file_type === "video"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {content.file_type}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {content.description}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {content.file_path.map((path, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="flex items-center text-xs"
+                            >
+                              <File size={10} className="mr-1" />
+                              {getFilenameFromPath(path).substring(0, 15)}
+                              {getFilenameFromPath(path).length > 15
+                                ? "..."
+                                : ""}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-gray-200 hover:bg-gray-50"
+                          >
+                            <Eye size={14} className="mr-1" /> View
+                          </Button>
+                          <Button
+                            onClick={() => openUpdateDialog(content)}
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                          >
+                            <Edit size={14} className="mr-1" /> Edit
+                          </Button>
+                          <Button
+                            onClick={() => openDeleteDialog(content._id)}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-200 text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 size={14} className="mr-1" /> Delete
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Reply indicator */}
-          {replyingTo && (
-            <div className="px-3 pt-3 bg-white border-t">
-              <div className="flex items-center justify-between bg-blue-50 p-2 rounded-t-md border-l-4 border-blue-500">
-                <div className="flex-1">
-                  <div className="text-xs text-blue-700 font-medium flex items-center">
-                    <CornerUpLeft className="h-3 w-3 mr-1" />
-                    Replying to{" "}
-                    {replyingTo.sender === "user" ? "yourself" : "other"}
-                  </div>
-                  <div className="text-sm truncate">
-                    {truncateText(replyingTo.text, 50)}
-                  </div>
-                </div>
-                <button
-                  onClick={cancelReply}
-                  className="ml-2 text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+      {/* Create Content Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="w-full max-w-xl">
+          <DialogTitle>Add New Content</DialogTitle>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="title" className="text-sm font-medium">
+                Title
+              </label>
+              <Input
+                id="title"
+                value={newContent.title}
+                onChange={(e) =>
+                  setNewContent({ ...newContent, title: e.target.value })
+                }
+                placeholder="Enter content title"
+              />
             </div>
-          )}
-
-          {/* File Preview Area */}
-          {selectedFile && (
-            <div className="px-3 pt-3 bg-white border-t">
-              <div className="flex items-center bg-blue-50 p-2 rounded-md">
-                <div className="mr-2">{getFileIcon(selectedFile.type)}</div>
-                <div className="flex-1 truncate">
-                  <div className="text-sm truncate">{selectedFile.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {formatFileSize(selectedFile.size)}
-                  </div>
-                </div>
-                <button
-                  onClick={removeSelectedFile}
-                  className="ml-2 text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">
+                Description
+              </label>
+              <Textarea
+                id="description"
+                value={newContent.description}
+                onChange={(e) =>
+                  setNewContent({ ...newContent, description: e.target.value })
+                }
+                placeholder="Enter content description"
+                rows={3}
+              />
             </div>
-          )}
-
-          {/* Message Input */}
-          <div className="p-3 bg-white border-t">
-            <div className="relative flex items-center">
-              {/* Hidden file input */}
+            <div className="space-y-2">
+              <label htmlFor="file-type" className="text-sm font-medium">
+                Content Type
+              </label>
+              <Select
+                value={newContent.file_type}
+                onValueChange={(value) =>
+                  setNewContent({
+                    ...newContent,
+                    file_type: value as "video" | "audio" | "document",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select content type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                  <SelectItem value="audio">Audio</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Upload Files</label>
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleFileSelect}
-                style={{ display: "none" }}
+                className="hidden"
+                accept={getAcceptedFileTypes(newContent.file_type)}
+                onChange={(e) => handleFileSelect(e)}
+                multiple
               />
+              <div
+                onClick={() => triggerFileInput()}
+                className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50"
+              >
+                <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                <p className="mt-1 text-sm text-gray-500">
+                  Click to upload files or drag and drop
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Accepted types:{" "}
+                  {getAcceptedFileTypes(newContent.file_type)
+                    .split(",")
+                    .join(", ")}
+                </p>
+              </div>
+              {uploadedFiles.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm font-medium">Selected Files:</p>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                      >
+                        <div className="flex items-center">
+                          <File size={16} className="mr-2 text-blue-500" />
+                          <span className="text-sm truncate max-w-[200px]">
+                            {file.name}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateContent} disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Content"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              {/* Attachment button */}
-              <div className="attachment-menu-container relative">
-                <button
-                  className="text-blue-500 p-2"
-                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+      {/* Update Content Dialog */}
+      <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <DialogContent className="w-full max-w-xl">
+          <DialogTitle>Update Content</DialogTitle>
+          {contentToUpdate && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="update-title" className="text-sm font-medium">
+                  Title
+                </label>
+                <Input
+                  id="update-title"
+                  value={contentToUpdate.title}
+                  onChange={(e) =>
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      title: e.target.value,
+                    })
+                  }
+                  placeholder="Enter content title"
+                />
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="update-description"
+                  className="text-sm font-medium"
                 >
-                  <Paperclip className="h-5 w-5" />
-                </button>
-
-                {/* Attachment menu */}
-                {showAttachmentMenu && (
-                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-md shadow-lg p-2 z-10">
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => handleAttachmentClick("image")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
+                  Description
+                </label>
+                <Textarea
+                  id="update-description"
+                  value={contentToUpdate.description}
+                  onChange={(e) =>
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Enter content description"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="update-file-type"
+                  className="text-sm font-medium"
+                >
+                  Content Type
+                </label>
+                <Select
+                  value={contentToUpdate.file_type}
+                  onValueChange={(value) =>
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      file_type: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select content type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="audio">Audio</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Files</label>
+                {contentToUpdate.file_path.length > 0 && (
+                  <div className="space-y-2">
+                    {contentToUpdate.file_path.map((path, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
                       >
-                        <Image className="h-4 w-4 mr-2 text-blue-500" /> Images
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("video")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <Film className="h-4 w-4 mr-2 text-blue-500" /> Videos
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("audio")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <FileAudio className="h-4 w-4 mr-2 text-blue-500" />{" "}
-                        Audio
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("document")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <FileText className="h-4 w-4 mr-2 text-blue-500" />{" "}
-                        Documents
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("all")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <File className="h-4 w-4 mr-2 text-blue-500" /> All
-                        Files
-                      </button>
-                    </div>
+                        <div className="flex items-center">
+                          <File size={16} className="mr-2 text-blue-500" />
+                          <span className="text-sm truncate max-w-[200px]">
+                            {getFilenameFromPath(path)}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index, true)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
+                <input
+                  type="file"
+                  ref={updateFileInputRef}
+                  className="hidden"
+                  accept={getAcceptedFileTypes(contentToUpdate.file_type)}
+                  onChange={(e) => handleFileSelect(e, true)}
+                  multiple
+                />
+                <div
+                  onClick={() => triggerFileInput(true)}
+                  className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50"
+                >
+                  <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Click to upload additional files
+                  </p>
+                </div>
               </div>
-
-              <input
-                type="text"
-                ref={messageInputRef}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={replyingTo ? "Type your reply..." : "Type Message"}
-                className="flex-1 p-3 bg-blue-50 text-gray-700 rounded-lg pr-12"
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              />
-              <button
-                className="absolute right-2 text-blue-500 p-2"
-                onClick={handleSendMessage}
-              >
-                <Send className="h-5 w-5" />
-              </button>
             </div>
-          </div>
-        </div>
-
-        {/* Right Sidebar - Group Info */}
-        <div
-          className={`
-            ${
-              infoSidebarOpen
-                ? "translate-x-0"
-                : "translate-x-full lg:translate-x-0"
-            } 
-            transition-transform duration-300 ease-in-out
-            fixed lg:relative right-0 z-30 w-full sm:w-80 lg:w-64 bg-white h-[calc(100%-3rem)] md:h-full
-            flex flex-col border-l
-          `}
-        >
-          <div className="p-4 bg-gray-200 flex justify-between items-center">
-            <div className="font-semibold">Group Info</div>
-            <button
-              onClick={() => setInfoSidebarOpen(false)}
-              className="lg:hidden"
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setUpdateDialogOpen(false)}
+              disabled={isSubmitting}
             >
-              <X className="h-4 w-4 cursor-pointer" />
-            </button>
-          </div>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateContent} disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update Content"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          {/* Display Subject Information */}
-          {activeGroup && (
-            <div className="p-4 border-b">
-              <h3 className="font-medium mb-1">Subject</h3>
-              <div className="bg-blue-50 p-2 rounded">
-                <p className="text-sm">
-                  {activeGroup.subject?.subjectName || "No subject information"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {activeGroup.subject?.Level || ""}
-                </p>
-              </div>
-              <div className="mt-2">
-                <p className="text-sm font-medium">Level</p>
-                <p className="text-sm">
-                  {activeGroup.Level || "Not specified"}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Group Info Sections */}
-          <div className="p-2 flex-1 overflow-y-auto">
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("files")}
-              >
-                <span>Files</span>
-                {expandedSections.files ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.files && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No files shared</p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("photos")}
-              >
-                <span>Photos</span>
-                {expandedSections.photos ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.photos && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No photos shared</p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("videos")}
-              >
-                <span>Videos</span>
-                {expandedSections.videos ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.videos && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No videos shared</p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("audio")}
-              >
-                <span>Audio</span>
-                {expandedSections.audio ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.audio && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No audio files shared</p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("documents")}
-              >
-                <span>Documents</span>
-                {expandedSections.documents ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.documents && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No documents shared</p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-b">
-              <button
-                className="w-full p-2 flex justify-between items-center"
-                onClick={() => toggleSection("links")}
-              >
-                <span>Links</span>
-                {expandedSections.links ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              {expandedSections.links && (
-                <div className="p-2 bg-white">
-                  <p className="text-sm text-gray-500">No links shared</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Member Count */}
-          {activeGroup && (
-            <div className="p-4 border-t">
-              <h3 className="font-medium mb-1">Members</h3>
-              <div className="flex items-center">
-                <Users className="h-4 w-4 mr-2 text-blue-500" />
-                <span className="text-sm">
-                  {activeGroup.members?.length || 0} members
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Backdrop for Mobile Info Sidebar */}
-        {infoSidebarOpen && !isLargeScreen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={() => setInfoSidebarOpen(false)}
-          />
-        )}
-      </div>
-    </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This content will be permanently
+              deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteContent}
+              disabled={isSubmitting}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isSubmitting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
-export default ChatApp;
+export default ViewTopicContentDialog;
