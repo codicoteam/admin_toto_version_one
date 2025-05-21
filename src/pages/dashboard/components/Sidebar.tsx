@@ -73,7 +73,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           ))}
         </nav>
 
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* <div className="absolute bottom-4 left-4 right-4">
           <div className="bg-primary-foreground p-4 rounded-xl">
             <h3 className="font-medium mb-1">Upgrade to Pro</h3>
             <p className="text-sm text-muted-foreground mb-3">Get unlimited access to all courses</p>
@@ -81,7 +81,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               Upgrade Now
             </Button>
           </div>
-        </div>
+        </div> */}
       </aside>
     </>
   );

@@ -9,10 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+import { DollarSign } from "lucide-react";
 
 const Course = () => {
     const { id } = useParams();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [commentText, setCommentText] = useState("");
     const [isPaymentDialogVisible, setPaymentDialogVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState(null);
@@ -20,6 +22,10 @@ const Course = () => {
     const [topics, setTopics] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [wallet, setWallet] = useState<any>(null);
+    const [walletLoading, setWalletLoading] = useState(false);
+    const [transactionLoading, setTransactionLoading] = useState(false);
+    const { toast } = useToast();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -58,12 +64,69 @@ const Course = () => {
         fetchData();
     }, [id, token]);
 
+    useEffect(() => {
+        if (isPaymentDialogVisible && user?._id && token) {
+            setWalletLoading(true);
+            axios
+                .get(`https://toto-academy-backend.onrender.com/api/wallet/student/${user._id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                .then(res => setWallet(res.data.data))
+                .catch(() => setWallet(null))
+                .finally(() => setWalletLoading(false));
+        }
+    }, [isPaymentDialogVisible, user, token]);
+
     const handleCommentSubmit = () => {
         if (!commentText.trim()) return;
         console.log("Submitting comment:", commentText);
         setCommentText("");
     };
 
+    const handlePurchase = async () => {
+        if (!wallet || !selectedTopic) return;
+        if (wallet.balance < selectedTopic.price) {
+            toast({
+                title: "Insufficient Funds",
+                description: "You do not have enough balance to purchase this topic.",
+                variant: "destructive",
+            });
+            return;
+        }
+        setTransactionLoading(true);
+        try {
+            // Simulate a purchase transaction (replace with your backend endpoint)
+            await axios.post(
+                `https://toto-academy-backend.onrender.com/api/wallet/withdraw/${user._id}`,
+                {
+                    amount: selectedTopic.price,
+                    method: "wallet",
+                    reference: `TOPIC-${selectedTopic.id}-${Date.now()}`,
+                    description: `Purchase topic: ${selectedTopic.title}`,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            toast({
+                title: "Purchase Successful",
+                description: `You have purchased "${selectedTopic.title}".`,
+                variant: "default",
+            });
+            setPaymentDialogVisible(false);
+        } catch (error: any) {
+            toast({
+                title: "Purchase Failed",
+                description: error?.response?.data?.message || error?.message || "An error occurred.",
+                variant: "destructive",
+            });
+        } finally {
+            setTransactionLoading(false);
+        }
+    };
 
     if (loading) {
         return <div className="justify-center items-center py-[10vh] text-center gap-11">
@@ -128,36 +191,58 @@ const Course = () => {
                         <DialogHeader>
                             <DialogTitle>Payment Required</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4">
-                            <p className="text-sm text-muted-foreground">
-                                To access <strong>{selectedTopic?.title}</strong>, please complete the payment.
-                            </p>
-
-                            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                                <div className="flex justify-between">
-                                    <span>Price:</span>
-                                    <span className="font-medium">${selectedTopic?.price}</span>
-                                </div>
-                                {selectedTopic?.regularPrice && (
-                                    <div className="flex justify-between text-sm text-muted-foreground">
-                                        <span>Regular Price:</span>
-                                        <span className="line-through">${selectedTopic?.regularPrice}</span>
-                                    </div>
-                                )}
-                                {selectedTopic?.subscriptionPeriod && (
-                                    <div className="flex justify-between text-sm text-muted-foreground">
-                                        <span>Subscription:</span>
-                                        <span>{selectedTopic?.subscriptionPeriod}</span>
-                                    </div>
-                                )}
+                        {walletLoading ? (
+                            <div className="flex items-center gap-2 py-6">
+                                <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></span>
+                                Loading wallet...
                             </div>
-                        </div>
+                        ) : wallet ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <DollarSign className="h-6 w-6 text-primary" />
+                                    <div>
+                                        <div className="font-semibold">Wallet Balance:</div>
+                                        <div className="text-lg font-bold">
+                                            {wallet.currency ? wallet.currency + " " : "$"}
+                                            {wallet.balance?.toFixed(2) ?? "0.00"}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div>
+                                        To access <strong>{selectedTopic?.title}</strong>, you need to pay <span className="font-bold">${selectedTopic?.price}</span>.
+                                    </div>
+                                    {wallet.balance < selectedTopic?.price && (
+                                        <div className="text-red-500 mt-2 font-medium">
+                                            Insufficient funds. Please add money to your wallet.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-red-500">Failed to load wallet information.</div>
+                        )}
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setPaymentDialogVisible(false)}>
+                            <Button variant="outline" onClick={() => setPaymentDialogVisible(false)} disabled={transactionLoading}>
                                 Cancel
                             </Button>
-                            <Button onClick={() => alert("Payment successful!")}>
-                                Pay Now (${selectedTopic?.price})
+                            <Button
+                                onClick={handlePurchase}
+                                disabled={
+                                    walletLoading ||
+                                    transactionLoading ||
+                                    !wallet ||
+                                    wallet.balance < selectedTopic?.price
+                                }
+                            >
+                                {transactionLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
+                                        Processing...
+                                    </span>
+                                ) : (
+                                    "Pay Now"
+                                )}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -170,7 +170,7 @@ const Dashboard = () => {
             <CardContent className="text-center">
               <div className="space-y-4">
                 <SectionTitle
-                  title="Popular Sourses"
+                  title="Popular Subjects"
                 />
                 {courses.map((course) => (
                   <Card className="flex flex-col justify-center items-center p-2 border-dotted hover:shadow-lg transition">
@@ -202,27 +202,27 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
-          <div className="w-full bg-primary-foreground rounded-xl p-6">
-            <h3 className="font-semibold text-lg mb-4">Upcoming Lessons</h3>
-            <div className="space-y-3">
-              {upcomingLessons.map((lesson) => (
-                <div key={lesson.id} className="flex gap-3 p-3 rounded-lg border border-border">
-                  <div className="rounded-full bg-primary/10 p-3 h-11 w-11 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{lesson.title}</h4>
-                    <p className="text-sm text-muted-foreground">{lesson.course}</p>
-                    <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>{lesson.date}</span>
-                      <span>{lesson.duration}</span>
+          {/* <div className="w-full bg-primary-foreground rounded-xl p-6">
+              <h3 className="font-semibold text-lg mb-4">Upcoming Lessons</h3>
+              <div className="space-y-3">
+                {upcomingLessons.map((lesson) => (
+                  <div key={lesson.id} className="flex gap-3 p-3 rounded-lg border border-border">
+                    <div className="rounded-full bg-primary/10 p-3 h-11 w-11 flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{lesson.title}</h4>
+                      <p className="text-sm text-muted-foreground">{lesson.course}</p>
+                      <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                        <span>{lesson.date}</span>
+                        <span>{lesson.duration}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <Button variant="outline" className="w-full mt-4">View All Scheduled Lessons</Button>
-          </div>
+                ))}
+              </div>
+              <Button variant="outline" className="w-full mt-4">View All Scheduled Lessons</Button>
+            </div> */}
         </div>
       </div>
 

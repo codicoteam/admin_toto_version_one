@@ -1,79 +1,241 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DollarSign, Plus, ArrowUpRight, ArrowDownLeft, Check } from "lucide-react";
+import { DollarSign, Plus, ArrowUpRight, ArrowDownLeft, Check, TriangleAlert } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
+import { useAuth } from "@/context/AuthContext";
+import { log } from "console";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const Wallet = () => {
   const [activeTab, setActiveTab] = useState("transactions");
+  const [walletData, setWalletData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAddMoneyOpen, setAddMoneyOpen] = useState(false);
+  const [addAmount, setAddAmount] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const { toast } = useToast();
+  const [walletError, setWalletError] = useState<string | null>(null);
 
-  // Mock wallet data
-  const walletData = {
-    balance: 125.00,
-    transactions: [
-      {
-        id: "t1",
-        type: "deposit",
-        amount: 50.00,
-        date: "Apr 15, 2025",
-        description: "Wallet top-up",
-        status: "completed",
-      },
-      {
-        id: "t2",
-        type: "payment",
-        amount: 25.00,
-        date: "Apr 10, 2025",
-        description: "Advanced Data Science with Python",
-        status: "completed",
-      },
-      {
-        id: "t3",
-        type: "deposit",
-        amount: 100.00,
-        date: "Mar 28, 2025",
-        description: "Wallet top-up",
-        status: "completed",
-      },
-      {
-        id: "t4",
-        type: "payment",
-        amount: 35.00,
-        date: "Mar 20, 2025",
-        description: "Introduction to Web Development",
-        status: "completed",
-      },
-      {
-        id: "t5",
-        type: "refund",
-        amount: 35.00,
-        date: "Mar 15, 2025",
-        description: "Refund: UX Design Masterclass",
-        status: "completed",
-      },
-    ],
-    paymentMethods: [
-      {
-        id: "p1",
-        type: "visa",
-        lastDigits: "4242",
-        expiryDate: "05/26",
-        isDefault: true,
-      },
-      {
-        id: "p2",
-        type: "mastercard",
-        lastDigits: "8765",
-        expiryDate: "12/25",
-        isDefault: false,
-      },
-    ],
+  const { token, user } = useAuth();
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      setLoading(true);
+      setWalletError(null);
+      try {
+        try {
+          const response = await axios.get(
+            "https://toto-academy-backend.onrender.com/api/wallet/student/6820fbf11297ba9d3807abee",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              maxBodyLength: Infinity,
+            }
+          );
+          setWalletData(response.data.data || null);
+          setWalletError(null);
+          console.log("Wallet data:", response.data.data);
+        } catch (error: any) {
+          setWalletData(null);
+          const errMsg = error?.response?.data?.message || error?.message || "An error occurred while fetching wallet data.";
+          setWalletError(errMsg);
+          toast({
+            title: "Error loading wallet",
+            description: errMsg,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        setWalletData(null);
+        setWalletError("An error occurred while fetching wallet data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchWallet();
+  }, [token]);
+
+  const handleAddMoney = async () => {
+    setAddLoading(true);
+    try {
+      // Prepare deposit data
+      const depositData = {
+        amount: Number(addAmount),
+        method: "bank_transfer",
+        reference: `REF${Date.now()}`,
+        description: "Deposit from bank"
+      };
+
+      // Use the wallet ID from walletData
+      const walletId = user?._id;
+      const response = await axios.post(
+        `https://toto-academy-backend.onrender.com/api/wallet/deposit/${walletId}`,
+        depositData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // Optionally, refresh wallet data here
+      // await fetchWallet(); // You may need to move fetchWallet out of useEffect for this
+      console.log("Deposit response:", response.data);
+      toast({
+        title: "Deposit Successful",
+        description: "Your deposit was successful.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Deposit error:", error);
+      toast({
+        title: "Deposit Error",
+        description: error?.response?.data?.message || error?.message || "An error occurred while adding money.",
+        variant: "destructive",
+      });
+    }
+    setTimeout(() => {
+      setAddLoading(false);
+      setAddMoneyOpen(false);
+      setAddAmount("");
+      // Optionally, refresh wallet data here
+    }, 1200);
   };
+
+  const handleCreateWallet = async () => {
+    try {
+      setLoading(true);
+      // You may need to get the student id from user context or walletError context
+      // Here, using the same hardcoded id as above for demonstration
+      const payload = {
+        student: user?._id,
+        currency: "USD",
+      };
+      const response = await axios.post(
+        "https://toto-academy-backend.onrender.com/api/wallet/create",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          maxBodyLength: Infinity,
+        }
+      );
+      setWalletData(response.data.data || null);
+      setWalletError(null);
+      toast({
+        title: "Wallet Created",
+        description: "Your wallet has been created successfully.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Create Wallet Error",
+        description: error?.response?.data?.message || error?.message || "An error occurred while creating wallet.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="justify-center items-center py-[10vh] text-center gap-11">
+      <div className="flex justify-center items-center">
+        <div className="loader">
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+          <div className="loader-square"></div>
+        </div>
+      </div>
+      <div className="pt-10">
+
+        Loading wallet...
+      </div>
+    </div>;
+  }
+
+  if (!walletData) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center ">
+        <div className="text-center">
+          <TriangleAlert className="h-32 w-32 mx-auto text-red-500" />
+          <h1 className="text-4xl font-bold mb-4">Error Loading Wallet</h1>
+          <p className="text-xl text-gray-600 mb-4">{walletError || "Failed to load wallet data."}</p>
+          <a
+            href={window.location.pathname}
+            className="text-blue-500 hover:text-blue-700 underline"
+          >
+            Reload
+          </a>
+          {walletError === "Wallet not found" && (
+            <div className="mt-6">
+              <Button onClick={handleCreateWallet} disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
+                    Creating Wallet...
+                  </span>
+                ) : (
+                  "Create Wallet"
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-4 md:py-6">
+      {/* Add Money Dialog */}
+      <Dialog open={isAddMoneyOpen} onOpenChange={setAddMoneyOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Money</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-2 font-medium">Amount</label>
+              <Input
+                type="number"
+                min={1}
+                value={addAmount}
+                onChange={e => setAddAmount(e.target.value)}
+                placeholder="Enter amount"
+                disabled={addLoading}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMoneyOpen(false)} disabled={addLoading}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddMoney} disabled={addLoading || !addAmount || Number(addAmount) <= 0}>
+              {addLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
+                  Adding...
+                </span>
+              ) : (
+                "Add Money"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <SectionTitle
         title="Wallet"
         description="Manage your balance and transactions"
@@ -91,12 +253,17 @@ const Wallet = () => {
                 <DollarSign className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold">${walletData.balance.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Last updated: April 15, 2025</p>
+                <div className="text-2xl font-bold">
+                  {walletData.currency ? walletData.currency + " " : "$"}
+                  {walletData.balance?.toFixed(2) ?? "0.00"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Last updated: {walletData.updatedAt ? new Date(walletData.updatedAt).toLocaleDateString() : "N/A"}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button className="flex-1 gap-1">
+              <Button className="flex-1 gap-1" onClick={() => setAddMoneyOpen(true)}>
                 <Plus className="h-4 w-4" /> Add Money
               </Button>
               {/* <Button variant="outline" className="flex-1 gap-1">
@@ -153,32 +320,22 @@ const Wallet = () => {
 
         <TabsContent value="transactions" className="bg-white dark:bg-background border rounded-lg p-6">
           <div className="space-y-4">
-            {walletData.transactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">
-                <div className={`rounded-full p-2 ${transaction.type === "deposit"
-                  ? "bg-green-100 text-green-600"
-                  : transaction.type === "refund"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-red-100 text-red-600"
-                  }`}>
-                  {transaction.type === "deposit" || transaction.type === "refund" ? (
-                    <ArrowDownLeft className="h-5 w-5" />
-                  ) : (
-                    <ArrowUpRight className="h-5 w-5" />
-                  )}
+            {/* Deposits */}
+            {(walletData.deposits ?? []).map((transaction: any) => (
+              <div key={transaction._id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">
+                <div className="rounded-full p-2 bg-green-100 text-green-600">
+                  <ArrowDownLeft className="h-5 w-5" />
                 </div>
-
                 <div className="flex-1">
-                  <h4 className="font-medium">{transaction.description}</h4>
-                  <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                  <h4 className="font-medium">{transaction.description || "Deposit"}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {transaction.date ? new Date(transaction.date).toLocaleDateString() : ""}
+                  </p>
                 </div>
-
                 <div className="text-right">
-                  <div className={`font-medium ${transaction.type === "deposit" || transaction.type === "refund"
-                    ? "text-green-600"
-                    : "text-red-600"
-                    }`}>
-                    {transaction.type === "deposit" || transaction.type === "refund" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                  <div className="font-medium text-green-600">
+                    +{walletData.currency ? walletData.currency + " " : "$"}
+                    {Number(transaction.amount).toFixed(2)}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
                     <Check className="h-3 w-3 text-green-500" />
@@ -187,37 +344,43 @@ const Wallet = () => {
                 </div>
               </div>
             ))}
+            {/* Withdrawals */}
+            {(walletData.withdrawals ?? []).map((transaction: any) => (
+              <div key={transaction._id} className="flex items-center gap-4 p-3 border-b border-border last:border-0">
+                <div className="rounded-full p-2 bg-red-100 text-red-600">
+                  <ArrowUpRight className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium">{transaction.description || "Withdrawal"}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {transaction.date ? new Date(transaction.date).toLocaleDateString() : ""}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium text-red-600">
+                    -{walletData.currency ? walletData.currency + " " : "$"}
+                    {Number(transaction.amount).toFixed(2)}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
+                    <Check className="h-3 w-3 text-green-500" />
+                    {transaction.status}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/* If no transactions */}
+            {(!walletData.deposits?.length && !walletData.withdrawals?.length) && (
+              <div className="text-center text-muted-foreground py-8">No transactions found.</div>
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="payment-methods" className="bg-white rounded-lg p-6">
           <div className="space-y-4">
-            {walletData.paymentMethods.map((method) => (
-              <div key={method.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                <div className="w-12 h-8 bg-muted rounded flex items-center justify-center">
-                  {method.type === "visa" ? (
-                    <span className="text-blue-600 font-bold">VISA</span>
-                  ) : (
-                    <span className="text-orange-600 font-bold">MC</span>
-                  )}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium capitalize">{method.type}</h4>
-                    {method.isDefault && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        Default
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">•••• {method.lastDigits} | Expires: {method.expiryDate}</p>
-                </div>
-
-                <Button variant="ghost" size="sm">Edit</Button>
-              </div>
-            ))}
-
+            {/* No payment methods in API response, so show a placeholder */}
+            <div className="text-center text-muted-foreground py-8">
+              No payment methods found.
+            </div>
             <div className="mt-4">
               <Button variant="outline" className="w-full gap-2">
                 <Plus className="h-4 w-4" />
