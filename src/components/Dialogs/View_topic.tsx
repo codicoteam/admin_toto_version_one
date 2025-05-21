@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Upload,
   File,
+  FileText,
 } from "lucide-react";
 import {
   Card,
@@ -48,6 +49,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { supabase } from "@/helper/SupabaseClient"; // Import supabase client
 
 interface ContentFormData {
   title: string;
@@ -80,6 +82,11 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Viewer states
+  const [viewerOpen, setViewerOpen] = useState<boolean>(false);
+  const [viewingContent, setViewingContent] = useState<any>(null);
+  const [viewingFileIndex, setViewingFileIndex] = useState<number>(0);
+
   // Create dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
   const [newContent, setNewContent] = useState<ContentFormData>({
@@ -103,11 +110,15 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   const [contentToDelete, setContentToDelete] = useState<string | null>(null);
 
   // File input refs
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const updateFileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const updateFileInputRef = useRef<HTMLInputElement>(null);
+  const exportLinkRef = useRef<HTMLAnchorElement>(null);
 
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Export state
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTopicContents = async () => {
@@ -161,6 +172,43 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     }
   }, [contentToUpdate?.file_type]);
 
+  // Upload files to Supabase
+  const uploadFilesToSupabase = async (files: File[]) => {
+    try {
+      const uploadPromises = files.map(async (file) => {
+        // Create a unique file name
+        const fileName = `${Date.now()}_${file.name}`;
+
+        // Upload file to the Supabase bucket
+        const { data, error } = await supabase.storage
+          .from("topics") // Using the topics bucket
+          .upload(fileName, file);
+
+        if (error) {
+          console.error("Error uploading file:", error);
+          throw new Error(`Error uploading file: ${error.message}`);
+        }
+
+        // Get the public URL of the uploaded file
+        const { data: publicData } = supabase.storage
+          .from("topics")
+          .getPublicUrl(fileName);
+
+        if (publicData) {
+          return publicData.publicUrl;
+        }
+
+        return null;
+      });
+
+      const results = await Promise.all(uploadPromises);
+      return results.filter((url) => url !== null) as string[];
+    } catch (error) {
+      console.error("Error in file upload:", error);
+      throw error;
+    }
+  };
+
   // File upload handlers
   const handleFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -173,20 +221,20 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     if (isUpdate) {
       setUploadedFilesForUpdate((prev) => [...prev, ...files]);
 
-      // Store file paths
-      const newFilePaths = files.map((file) => URL.createObjectURL(file));
+      // Store files temporarily (actual URLs will be updated after Supabase upload)
+      const tempFilePaths = files.map((file) => URL.createObjectURL(file));
       setContentToUpdate((prev) => ({
         ...prev,
-        file_path: [...prev.file_path, ...newFilePaths],
+        file_path: [...prev.file_path, ...tempFilePaths],
       }));
     } else {
       setUploadedFiles((prev) => [...prev, ...files]);
 
-      // Store file paths
-      const newFilePaths = files.map((file) => URL.createObjectURL(file));
+      // Store files temporarily (actual URLs will be updated after Supabase upload)
+      const tempFilePaths = files.map((file) => URL.createObjectURL(file));
       setNewContent((prev) => ({
         ...prev,
-        file_path: [...prev.file_path, ...newFilePaths],
+        file_path: [...prev.file_path, ...tempFilePaths],
       }));
     }
   };
@@ -229,7 +277,7 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       if (
         !newContent.title.trim() ||
         !newContent.description.trim() ||
-        !newContent.file_path.length
+        !uploadedFiles.length
       ) {
         toast({
           variant: "destructive",
@@ -240,10 +288,17 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         return;
       }
 
-      // In a real implementation, you would upload files to a server here
-      // For now, we'll just use the file paths (object URLs) as placeholders
+      // Upload files to Supabase and get URLs
+      const uploadedUrls = await uploadFilesToSupabase(uploadedFiles);
+
+      if (!uploadedUrls.length) {
+        throw new Error("Failed to upload files");
+      }
+
+      // Create content with Supabase URLs
       const contentToCreate = {
         ...newContent,
+        file_path: uploadedUrls,
       };
 
       await TopicContentService.createTopicContent(contentToCreate);
@@ -305,9 +360,26 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         return;
       }
 
-      // In a real implementation, you would upload files to a server here
+      let updatedFilePaths = [...contentToUpdate.file_path];
+
+      // If there are new files, upload them to Supabase
+      if (uploadedFilesForUpdate.length > 0) {
+        const newUploadedUrls = await uploadFilesToSupabase(
+          uploadedFilesForUpdate
+        );
+
+        if (newUploadedUrls.length > 0) {
+          // Replace the temporary URLs with actual Supabase URLs
+          const tempUrlsCount = uploadedFilesForUpdate.length;
+          updatedFilePaths = updatedFilePaths
+            .slice(0, updatedFilePaths.length - tempUrlsCount)
+            .concat(newUploadedUrls);
+        }
+      }
+
       const contentToSave = {
         ...contentToUpdate,
+        file_path: updatedFilePaths,
       };
 
       await TopicContentService.updateTopicContent(
@@ -390,7 +462,132 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     return path.split("/").pop() || path;
   };
 
+  // Function to handle file download
+  const handleDownloadFile = async (fileUrl: string) => {
+    try {
+      // Create a temporary anchor element
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.target = "_blank";
+      link.download = getFilenameFromPath(fileUrl);
+
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Download Started",
+        description: "Your file download has started.",
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Unable to download file. Please try again.",
+      });
+    }
+  };
+
+  // Function to handle content view
+  const handleViewContent = (content: any, fileIndex: number = 0) => {
+    setViewingContent(content);
+    setViewingFileIndex(fileIndex);
+    setViewerOpen(true);
+  };
+
+  // Function to export all topic content as JSON
+  const handleExportTopic = async () => {
+    if (!topic) return;
+
+    try {
+      setIsExporting(true);
+
+      // Create export data structure
+      const exportData = {
+        topic: {
+          id: topic._id || topic.id,
+          title: topic.title || topic.name,
+          description: topic.description,
+          price: topic.price,
+          regularPrice: topic.regularPrice,
+        },
+        contents: contents.map((content) => ({
+          id: content._id,
+          title: content.title,
+          description: content.description,
+          file_type: content.file_type,
+          file_paths: content.file_path,
+          createdAt: content.createdAt,
+          updatedAt: content.updatedAt,
+        })),
+        exportDate: new Date().toISOString(),
+      };
+
+      // Convert to JSON string
+      const jsonString = JSON.stringify(exportData, null, 2);
+
+      // Create blob and download
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      // Use ref to create hidden link and trigger download
+      if (exportLinkRef.current) {
+        exportLinkRef.current.href = url;
+        exportLinkRef.current.download = `${topic.title || topic.name}_export_${
+          new Date().toISOString().split("T")[0]
+        }.json`;
+        exportLinkRef.current.click();
+
+        // Clean up
+        URL.revokeObjectURL(url);
+      }
+
+      toast({
+        title: "Export Complete",
+        description: "Topic content exported successfully.",
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Unable to export topic content. Please try again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!topic) return null;
+
+  // Determine file type icon based on filename
+  const getFileIcon = (filename: string) => {
+    const ext = filename.split(".").pop()?.toLowerCase();
+
+    if (["pdf", "doc", "docx", "txt"].includes(ext || "")) {
+      return <FileText size={12} className="mr-1" />;
+    } else {
+      return <File size={12} className="mr-1" />;
+    }
+  };
+
+  // Determine if file is viewable in browser
+  const isViewableInBrowser = (filePath: string) => {
+    const ext = filePath.split(".").pop()?.toLowerCase();
+    return [
+      "pdf",
+      "txt",
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "mp4",
+      "mp3",
+      "wav",
+    ].includes(ext || "");
+  };
 
   return (
     <>
@@ -414,8 +611,19 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                     variant="outline"
                     size="sm"
                     className="bg-orange-400 border-white text-white hover:bg-orange-300 hover:text-green-900"
+                    onClick={handleExportTopic}
+                    disabled={isExporting || contents.length === 0}
                   >
-                    <Download size={14} className="mr-1" /> Export
+                    {isExporting ? (
+                      <div className="flex items-center">
+                        <div className="h-3 w-3 rounded-full border-2 border-t-transparent border-white animate-spin mr-1" />
+                        Exporting...
+                      </div>
+                    ) : (
+                      <>
+                        <Download size={14} className="mr-1" /> Export
+                      </>
+                    )}
                   </Button>
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
@@ -425,6 +633,8 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                   >
                     <Plus size={14} className="mr-1" /> Add Content
                   </Button>
+                  {/* Hidden export link */}
+                  <a ref={exportLinkRef} className="hidden" />
                 </div>
               </div>
             </div>
@@ -563,13 +773,16 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                                         className="flex justify-between items-center text-xs text-blue-600"
                                       >
                                         <span className="truncate flex items-center">
-                                          <File size={12} className="mr-1" />
+                                          {getFileIcon(file)}
                                           {getFilenameFromPath(file)}
                                         </span>
                                         <Button
                                           size="icon"
                                           variant="ghost"
                                           className="h-6 w-6"
+                                          onClick={() =>
+                                            handleDownloadFile(file)
+                                          }
                                         >
                                           <Download size={12} />
                                         </Button>
@@ -584,6 +797,11 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                                 variant="outline"
                                 size="sm"
                                 className="h-7 text-xs"
+                                onClick={() => handleViewContent(content, 0)}
+                                disabled={
+                                  content.file_path?.length === 0 ||
+                                  !isViewableInBrowser(content.file_path[0])
+                                }
                               >
                                 <Eye size={12} className="mr-1" /> View
                               </Button>
@@ -591,6 +809,16 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                                 variant="outline"
                                 size="sm"
                                 className="text-blue-600 h-7 text-xs"
+                                onClick={() => {
+                                  // If there's only one file, download it directly
+                                  if (content.file_path?.length === 1) {
+                                    handleDownloadFile(content.file_path[0]);
+                                  } else if (content.file_path?.length > 1) {
+                                    // For multiple files, create a zip or download the first one
+                                    handleDownloadFile(content.file_path[0]);
+                                  }
+                                }}
+                                disabled={!content.file_path?.length}
                               >
                                 <Download size={12} className="mr-1" /> Download
                               </Button>
@@ -649,66 +877,187 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* File Viewer Dialog */}
+      {/* File Viewer Dialog */}
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          <div className="bg-gradient-to-r from-blue-400 to-blue-900 p-4 text-white">
+            <div className="flex justify-between items-center">
+              <DialogTitle className="text-lg font-medium">
+                {viewingContent?.title}
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-400/20"
+                onClick={() => setViewerOpen(false)}
+              >
+                <X size={18} />
+              </Button>
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50">
+            {/* File navigation if multiple files */}
+            {viewingContent?.file_path?.length > 1 && (
+              <div className="mb-4 bg-white p-2 rounded-md shadow-sm overflow-x-auto">
+                <div className="flex space-x-2">
+                  {viewingContent.file_path.map((file: string, i: number) => (
+                    <Button
+                      key={i}
+                      variant={viewingFileIndex === i ? "default" : "outline"}
+                      size="sm"
+                      className={`text-xs whitespace-nowrap ${
+                        viewingFileIndex === i ? "bg-blue-600" : "text-blue-600"
+                      }`}
+                      onClick={() => setViewingFileIndex(i)}
+                    >
+                      {getFileIcon(file)}
+                      {getFilenameFromPath(file).substring(0, 15)}
+                      {getFilenameFromPath(file).length > 15 ? "..." : ""}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* File viewer */}
+            {viewingContent?.file_path?.length > 0 && (
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                {/* Description */}
+                <div className="mb-4 pb-3 border-b border-gray-100">
+                  <h3 className="text-xs font-medium text-gray-500 mb-1">
+                    Description
+                  </h3>
+                  <p className="text-sm text-gray-700">
+                    {viewingContent.description}
+                  </p>
+                </div>
+
+                {/* Content viewer based on file type */}
+                <div className="bg-gray-50 rounded-lg p-4 min-h-[300px] flex items-center justify-center">
+                  {(() => {
+                    if (!viewingContent.file_path[viewingFileIndex]) {
+                      return (
+                        <div className="text-gray-500 flex flex-col items-center">
+                          <AlertCircle size={24} className="mb-2" />
+                          <p>File not available</p>
+                        </div>
+                      );
+                    }
+
+                    const filePath = viewingContent.file_path[viewingFileIndex];
+                    const fileExt = filePath.split(".").pop()?.toLowerCase();
+
+                    if (
+                      ["jpg", "jpeg", "png", "gif", "webp"].includes(
+                        fileExt || ""
+                      )
+                    ) {
+                      return (
+                        <img
+                          src={filePath}
+                          alt={getFilenameFromPath(filePath)}
+                          className="max-w-full max-h-[500px] object-contain"
+                        />
+                      );
+                    } else if (["mp4", "webm"].includes(fileExt || "")) {
+                      return (
+                        <video
+                          controls
+                          className="max-w-full max-h-[500px]"
+                          src={filePath}
+                        >
+                          Your browser does not support video playback
+                        </video>
+                      );
+                    } else if (["mp3", "wav", "ogg"].includes(fileExt || "")) {
+                      return (
+                        <audio controls className="w-full" src={filePath}>
+                          Your browser does not support audio playback
+                        </audio>
+                      );
+                    } else if (fileExt === "pdf") {
+                      return (
+                        <iframe
+                          src={filePath}
+                          className="w-full h-[500px] border-0"
+                          title={getFilenameFromPath(filePath)}
+                        />
+                      );
+                    } else {
+                      return (
+                        <div className="text-center">
+                          <div className="bg-gray-100 rounded-lg p-8 mb-4 flex flex-col items-center">
+                            <File size={48} className="text-gray-400 mb-3" />
+                            <p className="text-sm text-gray-600 mb-1">
+                              {getFilenameFromPath(filePath)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              This file type cannot be previewed
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDownloadFile(filePath)}
+                          >
+                            <Download size={14} className="mr-1" /> Download
+                            File
+                          </Button>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="bg-white p-4 border-t">
+            <div className="flex justify-between w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (viewingContent?.file_path?.length > 0) {
+                    handleDownloadFile(
+                      viewingContent.file_path[viewingFileIndex]
+                    );
+                  }
+                }}
+                disabled={
+                  !viewingContent?.file_path?.length ||
+                  !viewingContent.file_path[viewingFileIndex]
+                }
+              >
+                <Download size={14} className="mr-1" /> Download
+              </Button>
+              <Button size="sm" onClick={() => setViewerOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Content Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogTitle className="text-2xl font-semibold mb-2">
-            Add New Content
-          </DialogTitle>
-
-          <div className="grid gap-6 py-4">
-            <div>
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Title *
-              </label>
-              <Input
-                id="title"
-                placeholder="Enter content title"
-                value={newContent.title}
-                onChange={(e) =>
-                  setNewContent({ ...newContent, title: e.target.value })
-                }
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Description *
-              </label>
-              <Textarea
-                id="description"
-                placeholder="Enter content description"
-                value={newContent.description}
-                onChange={(e) =>
-                  setNewContent({ ...newContent, description: e.target.value })
-                }
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="file-type"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                File Type *
+        <DialogContent className="max-w-lg">
+          <DialogTitle>Add Content</DialogTitle>
+          <div className="space-y-4 my-2">
+            <div className="grid gap-3">
+              <label className="text-sm font-medium">
+                Content Type
+                <span className="text-red-500 ml-0.5">*</span>
               </label>
               <Select
                 value={newContent.file_type}
-                onValueChange={(value) => {
+                onValueChange={(value) =>
                   setNewContent({
                     ...newContent,
-                    file_type: value as any,
-                    file_path: [],
-                  });
-                  setUploadedFiles([]);
-                }}
+                    file_type: value as ContentFormData["file_type"],
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select content type" />
@@ -719,87 +1068,101 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                   <SelectItem value="audio">Audio</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                {newContent.file_type === "document" &&
-                  "Allowed file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT"}
-                {newContent.file_type === "video" &&
-                  "Allowed file types: MP4, AVI, MOV, WMV, MKV, WebM"}
-                {newContent.file_type === "audio" &&
-                  "Allowed file types: MP3, WAV, OGG, M4A, FLAC, AAC"}
-              </p>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Upload Files *
+            <div className="grid gap-3">
+              <label className="text-sm font-medium">
+                Title<span className="text-red-500 ml-0.5">*</span>
+              </label>
+              <Input
+                value={newContent.title}
+                onChange={(e) =>
+                  setNewContent({ ...newContent, title: e.target.value })
+                }
+                placeholder="Content title"
+              />
+            </div>
+
+            <div className="grid gap-3">
+              <label className="text-sm font-medium">
+                Description<span className="text-red-500 ml-0.5">*</span>
+              </label>
+              <Textarea
+                value={newContent.description}
+                onChange={(e) =>
+                  setNewContent({
+                    ...newContent,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Content description"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid gap-3">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">
+                  Files<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => triggerFileInput()}
-                  type="button"
-                  className="bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  className="text-xs"
                 >
-                  <Upload size={14} className="mr-1" /> Select Files
+                  <Upload size={12} className="mr-1" /> Upload Files
                 </Button>
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  multiple
-                  accept={getAcceptedFileTypes(newContent.file_type)}
-                  onChange={(e) => handleFileSelect(e)}
-                />
               </div>
-
-              <div className="max-h-60 overflow-y-auto border rounded-md p-2">
-                {uploadedFiles.length > 0 ? (
-                  <ul className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileSelect}
+                accept={getAcceptedFileTypes(newContent.file_type)}
+                multiple
+              />
+              {uploadedFiles.length > 0 ? (
+                <div className="bg-gray-50 rounded-md p-2 max-h-40 overflow-y-auto">
+                  <ul className="space-y-1">
                     {uploadedFiles.map((file, index) => (
                       <li
                         key={index}
-                        className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                        className="flex justify-between items-center text-sm bg-white rounded px-2 py-1"
                       >
-                        <div className="flex items-center text-sm">
-                          <File className="h-4 w-4 mr-2 text-blue-500" />
-                          <span className="truncate max-w-sm">{file.name}</span>
-                          <span className="ml-2 text-xs text-gray-500">
+                        <div className="flex items-center text-xs truncate">
+                          <File size={12} className="mr-1 shrink-0" />
+                          <span className="truncate">{file.name}</span>
+                          <span className="text-gray-400 text-xs ml-1 shrink-0">
                             ({(file.size / 1024).toFixed(1)} KB)
                           </span>
                         </div>
                         <Button
+                          type="button"
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-6 w-6 text-gray-500"
                           onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
-                          <X size={16} />
+                          <X size={12} />
                         </Button>
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
-                    <Upload size={32} className="mb-2 text-gray-300" />
-                    <p className="text-sm">No files selected</p>
-                    <p className="text-xs mt-1">
-                      Click "Select Files" to upload {newContent.file_type}{" "}
-                      files
-                    </p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 text-gray-500 text-sm border border-dashed rounded-md p-4 text-center">
+                  <Upload size={16} className="mx-auto mb-1" />
+                  <p className="text-xs">No files uploaded</p>
+                </div>
+              )}
             </div>
           </div>
-
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
-                setCreateDialogOpen(false);
-                setUploadedFiles([]);
                 setNewContent({
                   title: "",
                   description: "",
@@ -807,90 +1170,46 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                   file_type: "document",
                   Topic: topic ? topic._id || topic.id : "",
                 });
+                setUploadedFiles([]);
+                setCreateDialogOpen(false);
               }}
-              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateContent}
-              disabled={isSubmitting || uploadedFiles.length === 0}
-              className="bg-green-700 hover:bg-green-800 text-white"
+              disabled={isSubmitting}
+              className="bg-blue-600 text-white hover:bg-blue-700"
             >
-              {isSubmitting ? "Creating..." : "Create Content"}
+              {isSubmitting ? (
+                <div className="flex items-center">
+                  <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin mr-1" />
+                  Creating...
+                </div>
+              ) : (
+                "Create Content"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Update Content Dialog */}
-      {contentToUpdate && (
-        <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogTitle className="text-2xl font-semibold mb-2">
-              Update Content
-            </DialogTitle>
-
-            <div className="grid gap-6 py-4">
-              <div>
-                <label
-                  htmlFor="edit-title"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Title *
-                </label>
-                <Input
-                  id="edit-title"
-                  placeholder="Enter content title"
-                  value={contentToUpdate.title}
-                  onChange={(e) =>
-                    setContentToUpdate({
-                      ...contentToUpdate,
-                      title: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="edit-description"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Description *
-                </label>
-                <Textarea
-                  id="edit-description"
-                  placeholder="Enter content description"
-                  value={contentToUpdate.description}
-                  onChange={(e) =>
-                    setContentToUpdate({
-                      ...contentToUpdate,
-                      description: e.target.value,
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="edit-file-type"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  File Type *
-                </label>
+      <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogTitle>Edit Content</DialogTitle>
+          {contentToUpdate && (
+            <div className="space-y-4 my-2">
+              <div className="grid gap-3">
+                <label className="text-sm font-medium">Content Type</label>
                 <Select
                   value={contentToUpdate.file_type}
-                  onValueChange={(value) => {
-                    // Clear file paths when changing file type
+                  onValueChange={(value) =>
                     setContentToUpdate({
                       ...contentToUpdate,
-                      file_type: value as any,
-                      file_path: [],
-                    });
-                    setUploadedFilesForUpdate([]);
-                  }}
+                      file_type: value,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select content type" />
@@ -901,166 +1220,156 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                     <SelectItem value="audio">Audio</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">
-                  {contentToUpdate.file_type === "document" &&
-                    "Allowed file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT"}
-                  {contentToUpdate.file_type === "video" &&
-                    "Allowed file types: MP4, AVI, MOV, WMV, MKV, WebM"}
-                  {contentToUpdate.file_type === "audio" &&
-                    "Allowed file types: MP3, WAV, OGG, M4A, FLAC, AAC"}
-                </p>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Files *
+              <div className="grid gap-3">
+                <label className="text-sm font-medium">
+                  Title<span className="text-red-500 ml-0.5">*</span>
+                </label>
+                <Input
+                  value={contentToUpdate.title}
+                  onChange={(e) =>
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      title: e.target.value,
+                    })
+                  }
+                  placeholder="Content title"
+                />
+              </div>
+
+              <div className="grid gap-3">
+                <label className="text-sm font-medium">
+                  Description<span className="text-red-500 ml-0.5">*</span>
+                </label>
+                <Textarea
+                  value={contentToUpdate.description}
+                  onChange={(e) =>
+                    setContentToUpdate({
+                      ...contentToUpdate,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Content description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid gap-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">
+                    Files<span className="text-red-500 ml-0.5">*</span>
                   </label>
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => triggerFileInput(true)}
-                    type="button"
-                    className="bg-blue-50 text-blue-600 hover:bg-blue-100"
+                    className="text-xs"
                   >
-                    <Upload size={14} className="mr-1" /> Add More Files
+                    <Upload size={12} className="mr-1" /> Upload More Files
                   </Button>
-                  {/* Hidden file input */}
-                  <input
-                    type="file"
-                    ref={updateFileInputRef}
-                    className="hidden"
-                    multiple
-                    accept={getAcceptedFileTypes(contentToUpdate.file_type)}
-                    onChange={(e) => handleFileSelect(e, true)}
-                  />
                 </div>
-
-                <div className="max-h-60 overflow-y-auto border rounded-md p-2">
-                  {contentToUpdate.file_path.length > 0 ? (
-                    <ul className="space-y-2">
+                <input
+                  ref={updateFileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => handleFileSelect(e, true)}
+                  accept={getAcceptedFileTypes(contentToUpdate.file_type)}
+                  multiple
+                />
+                {contentToUpdate.file_path?.length > 0 ? (
+                  <div className="bg-gray-50 rounded-md p-2 max-h-40 overflow-y-auto">
+                    <ul className="space-y-1">
                       {contentToUpdate.file_path.map(
-                        (filePath: string, index: number) => {
-                          const isNewFile =
-                            index >=
-                            contentToUpdate.file_path.length -
-                              uploadedFilesForUpdate.length;
-                          const fileName = isNewFile
-                            ? uploadedFilesForUpdate[
-                                index -
-                                  (contentToUpdate.file_path.length -
-                                    uploadedFilesForUpdate.length)
-                              ].name
-                            : getFilenameFromPath(filePath);
-
-                          return (
-                            <li
-                              key={index}
-                              className={`flex items-center justify-between p-2 rounded-md ${
-                                isNewFile ? "bg-green-50" : "bg-gray-50"
-                              }`}
+                        (filePath: string, index: number) => (
+                          <li
+                            key={index}
+                            className="flex justify-between items-center text-sm bg-white rounded px-2 py-1"
+                          >
+                            <div className="flex items-center text-xs truncate">
+                              <File size={12} className="mr-1 shrink-0" />
+                              <span className="truncate">
+                                {getFilenameFromPath(filePath)}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-gray-500"
+                              onClick={() => removeFile(index, true)}
                             >
-                              <div className="flex items-center text-sm">
-                                <File
-                                  className={`h-4 w-4 mr-2 ${
-                                    isNewFile
-                                      ? "text-green-500"
-                                      : "text-blue-500"
-                                  }`}
-                                />
-                                <span className="truncate max-w-sm">
-                                  {fileName}
-                                </span>
-                                {isNewFile && (
-                                  <Badge
-                                    variant="outline"
-                                    className="ml-2 text-xs bg-green-100 text-green-800"
-                                  >
-                                    New
-                                  </Badge>
-                                )}
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFile(index, true)}
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <X size={16} />
-                              </Button>
-                            </li>
-                          );
-                        }
+                              <X size={12} />
+                            </Button>
+                          </li>
+                        )
                       )}
                     </ul>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
-                      <Upload size={32} className="mb-2 text-gray-300" />
-                      <p className="text-sm">No files selected</p>
-                      <p className="text-xs mt-1">
-                        Click "Add More Files" to upload{" "}
-                        {contentToUpdate.file_type} files
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 text-gray-500 text-sm border border-dashed rounded-md p-4 text-center">
+                    <Upload size={16} className="mx-auto mb-1" />
+                    <p className="text-xs">No files uploaded</p>
+                  </div>
+                )}
               </div>
             </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setUpdateDialogOpen(false);
-                  setContentToUpdate(null);
-                  setUploadedFilesForUpdate([]);
-                }}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpdateContent}
-                disabled={
-                  isSubmitting || contentToUpdate.file_path.length === 0
-                }
-                className="bg-blue-700 hover:bg-blue-800 text-white"
-              >
-                {isSubmitting ? "Updating..." : "Update Content"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setContentToUpdate(null);
+                setUploadedFilesForUpdate([]);
+                setUpdateDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateContent}
+              disabled={isSubmitting}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center">
+                  <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin mr-1" />
+                  Updating...
+                </div>
+              ) : (
+                "Update Content"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center text-red-600">
-              <AlertCircle className="h-5 w-5 mr-2" /> Confirm Deletion
-            </AlertDialogTitle>
+            <AlertDialogTitle>Delete Content</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this content? This action cannot
               be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setContentToDelete(null);
-              }}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteContent}
+              className="bg-red-500 text-white hover:bg-red-600"
               disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {isSubmitting ? "Deleting..." : "Delete"}
+              {isSubmitting ? (
+                <div className="flex items-center">
+                  <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin mr-1" />
+                  Deleting...
+                </div>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
