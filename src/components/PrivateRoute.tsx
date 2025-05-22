@@ -2,15 +2,16 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({
+const PrivateRoute: React.FC<{ children: React.ReactNode; redirectTo?: string }> = ({
   children,
+  redirectTo = "/login",
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { checkLogin } = useAuth();
+  const isAuthenticated = checkLogin()
   console.log("PrivateRoute isAuthenticated:", isAuthenticated);
 
   return false ? <>{children}</> : <Navigate to="/admin_login" />;
-  // eslint-disable-next-line no-constant-condition
-  return true ? <>{children}</> : <Navigate to="/reserourceupload" />;
+  return isAuthenticated ? <>{children}</> : <Navigate to={redirectTo} />;
 };
 
 export default PrivateRoute;
