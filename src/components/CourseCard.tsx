@@ -3,18 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 
-interface CourseCardProps {
+export interface CourseCardProps {
   id: string;
   title: string;
-  instructor: {
-    name: string;
-    avatar?: string;
-  };
+  // instructor: {
+  //   name: string;
+  //   avatar?: string;
+  // };
   thumbnailUrl: string;
   category: string;
-  lessonsCount: number;
-  duration: string;
+  duration?: string;
   enrolled?: boolean;
   progress?: number;
 }
@@ -22,11 +22,8 @@ interface CourseCardProps {
 const CourseCard = ({
   id,
   title,
-  instructor,
   thumbnailUrl,
   category,
-  lessonsCount,
-  duration,
   enrolled = false,
   progress,
 }: CourseCardProps) => {
@@ -38,13 +35,13 @@ const CourseCard = ({
           alt={title}
           className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
         />
-        <Badge className="absolute top-3 left-3 bg-white/90 text-foreground hover:bg-white/90 backdrop-blur-sm">
+        <Badge className="absolute top-3 left-3 bg-white/40 dark:bg-background/40 text-foreground hover:bg-white/90 backdrop-blur-sm border border-input">
           {category}
         </Badge>
       </div>
       <CardContent className="pt-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
-        <div className="flex items-center gap-2 mb-3">
+        {/* <div className="flex items-center gap-2 mb-3">
           <Avatar className="h-6 w-6">
             <AvatarImage src={instructor.avatar} />
             <AvatarFallback>{instructor.name[0]}</AvatarFallback>
@@ -54,15 +51,20 @@ const CourseCard = ({
           </span>
         </div>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground">{instructor.name}</span>
+        </div> */}
+        {/* <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
             <span>{lessonsCount} lessons</span>
           </div>
-          <div className="flex items-center gap-1">
+           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             <span>{duration}</span>
           </div>
         </div>
+          </div> 
+        </div> */}
 
         {enrolled && progress !== undefined && (
           <div className="mt-3">
@@ -81,13 +83,17 @@ const CourseCard = ({
       </CardContent>
       <CardFooter className="pt-0">
         <Button
+          asChild
           variant={enrolled ? "outline" : "default"}
           className={`w-full ${
             enrolled ? "" : "bg-primary hover:bg-primary/90"
           }`}
         >
-          {enrolled ? "Continue Learning" : "Enroll Now"}
+          <Link to={`/courses/${id}`} className="w-full flex items-center justify-center">
+            {enrolled ? "Continue Learning" : "View Course"}
+          </Link>
         </Button>
+
       </CardFooter>
     </Card>
   );

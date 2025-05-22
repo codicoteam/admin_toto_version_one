@@ -8,7 +8,7 @@ import logimage from "@/assets/log.jpg";
 import logo from "@/assets/logo2.png";
 import backgroundImage from "@/assets/bg.jpg";
 
-const Register = () => {
+const ForgotPassword = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -91,4 +91,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default ForgotPassword;
