@@ -1,51 +1,35 @@
-import React, { useState, useEffect, useRef } from "react";
+import Sidebar from "@/components/Sidebar";
+import { toast } from "@/hooks/use-toast";
+import ChatService from "@/services/chat_service";
 import {
-  Search,
-  X,
   ChevronDown,
   ChevronUp,
-  Plus,
-  UserCircle2,
-  Menu,
-  Send,
-  Users,
   Info,
-  Paperclip,
-  File,
-  Image,
-  Film,
-  FileAudio,
-  FileText,
-  CornerUpLeft,
-  MoreVertical,
+  Menu,
+  Plus,
+  Search,
+  Send,
+  UserCircle2,
+  Users,
+  X,
+  Trash2,
+  Star,
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
-import ChatService from "@/services/chat_service"; // Import the ChatService
+import { useEffect, useRef, useState } from "react";
 
-// Define interface for message object
-interface MessageFile {
-  name: string;
-  type: string;
-  size: number;
-  url?: string;
-}
-
-interface Message {
-  id: number;
-  text: string;
-  time: string;
-  sender: string;
-  file?: MessageFile; // Add optional file property
-  replyTo?: number; // Reference to the message being replied to
-}
-
-const ChatApp = () => {
-  const [activeGroup, setActiveGroup] = useState<any>(null);
-  const [messages, setMessages] = useState<Message[]>([
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ChatApp = (ChatServiceData: any) => {
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [messages, setMessages] = useState([
     { id: 1, text: "Hi", time: "10:00", sender: "other" },
     { id: 2, text: "How are you", time: "10:00", sender: "other" },
   ]);
   const [newMessage, setNewMessage] = useState("");
+  const [newGroupName, setNewGroupName] = useState("");
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     files: true,
     photos: true,
@@ -54,94 +38,351 @@ const ChatApp = () => {
     documents: false,
     links: false,
   });
+
+  const [profilePic, setProfilePic] = useState(null);
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [groupsListOpen, setGroupsListOpen] = useState(false);
   const [infoSidebarOpen, setInfoSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isMediumScreen, setIsMediumScreen] = useState(false);
-  const [communities, setCommunities] = useState<any[]>([]); // State for storing communities data
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false); // State for attachment menu
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State for selected file
-  const [filePreview, setFilePreview] = useState<string | null>(null); // State for file preview
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null); // New state for replying to a message
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [groupSubject, setGroupSubject] = useState("General");
+  const [groupLevel, setGroupLevel] = useState("Beginner");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [isSending, setIsSending] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
+  // Add these state variables near the other state declarations
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updatedGroupName, setUpdatedGroupName] = useState("");
+  const [updatedGroupSubject, setUpdatedGroupSubject] = useState("");
+  const [updatedGroupLevel, setUpdatedGroupLevel] = useState("");
 
-  // Fetch communities data on component mount
+  const messagesEndRef = useRef(null);
+
   useEffect(() => {
-    const fetchCommunities = async () => {
-      try {
-        setLoading(true);
-        setError(null); // Clear previous errors
+    const savedFavorites = localStorage.getItem("chatFavorites");
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
 
-        // Check if user is logged in by verifying token exists
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          setError("You must be logged in to view communities");
-          setLoading(false);
-          return;
-        }
+  useEffect(() => {
+    localStorage.setItem("chatFavorites", JSON.stringify(favorites));
+  }, [favorites]);
 
-        const response = await ChatService.getAllChatGroups();
-
-        // Process the API response
-        if (response && response.data) {
-          setCommunities(response.data);
-
-          console.log("Communities loaded:", response.data);
-
-          // Set the first community as active if communities exist
-          if (response.data.length > 0) {
-            setActiveGroup(response.data[0]);
-          }
-        } else {
-          setError("No communities found");
-        }
-
-        setLoading(false);
-      } catch (err) {
-        setError(err.message || "Failed to load chat groups");
-        setLoading(false);
-        console.error("Error fetching communities:", err);
+  const toggleFavorite = (groupId: string) => {
+    setFavorites((prev) => {
+      if (prev.includes(groupId)) {
+        return prev.filter((id) => id !== groupId);
+      } else {
+        return [...prev, groupId];
       }
-    };
+    });
+  };
 
-    fetchCommunities();
+  const isFavorite = (groupId: string) => {
+    return favorites.includes(groupId);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateCommunities = (data: any) => {
+    setCommunities(data);
+  };
+
+  const fetchChatGroups = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      const result = await ChatService.getAllChatGroups();
+      const chatData = result.data || [];
+      updateCommunities(chatData);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch chat groups:", err);
+      setError("Failed to load chat groups. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load chat groups. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Group name cannot be empty",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const apiGroupData = {
+        name: newGroupName.trim(),
+        profilePicture: "https://example.com/images/group3.jpg",
+        Level: "Form 3",
+        subject: "681c67c388b9909f563ee689",
+
+        students: ["681374a1a32332081e3da351", "680f9e902aba5e42cfb4770b"],
+      };
+
+      console.log("Sending group data to API:", apiGroupData);
+
+      const result = await ChatService.createGroup(apiGroupData);
+      console.log("API response:", result);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Group created successfully",
+        });
+
+        setNewGroupName("");
+        setGroupSubject("");
+        setGroupLevel("");
+        setProfilePic("");
+
+        setShowNewGroupModal(false);
+
+        fetchChatGroups();
+      }
+    } catch (error) {
+      console.error("Failed to create group:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to create group. Please try again.";
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Add this function with the other handler functions
+  const handleUpdateGroup = async () => {
+    if (!activeGroup?._id) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No active group selected.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const updateData = {
+        name: updatedGroupName.trim() || activeGroup.name,
+        subject: updatedGroupSubject || activeGroup.subject,
+        Level: updatedGroupLevel || activeGroup.Level,
+      };
+
+      const result = await ChatService.updateGroup(activeGroup._id, updateData);
+
+      if (result?.message) {
+        toast({
+          title: "Success",
+          description: "Group updated successfully",
+        });
+
+        setUpdatedGroupName("");
+        setUpdatedGroupSubject("");
+        setUpdatedGroupLevel("");
+        setShowUpdateModal(false);
+
+        fetchChatGroups();
+      } else {
+        throw new Error(result?.message || "Failed to update group.");
+      }
+    } catch (err) {
+      console.error("Failed to update group:", err);
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          err?.message || "Failed to update group. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlecreateMessage = async () => {
+    if (!newMessage.trim() || !activeGroup?._id || isSending) return;
+
+    setIsSending(true);
+
+    try {
+      const messageData = {
+        content: newMessage.trim(),
+        senderId: "currentUserId", // Replace with actual user ID from your auth
+        senderName: "Current User", // Replace with actual username
+        timestamp: new Date().toISOString(),
+      };
+
+      // Call the API
+      await ChatService.createMessage(activeGroup._id, messageData);
+
+      // Update local state
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(), // Using timestamp as temporary ID
+          text: newMessage,
+          time: getCurrentTime(),
+          sender: "user",
+        },
+      ]);
+
+      setNewMessage("");
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to send message",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Add this function to open the update modal
+  const openUpdateModal = (group) => {
+    setUpdatedGroupName(group.name);
+    setUpdatedGroupSubject(group.subject?.subjectName || "");
+    setUpdatedGroupLevel(group.Level || "");
+    setShowUpdateModal(true);
+  };
+
+  const openDeleteConfirmModal = (group) => {
+    setGroupToDelete(group);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!groupToDelete?._id) return;
+
+    try {
+      const result = await ChatService.deletegroup(groupToDelete._id);
+      console.log(
+        "---deleted code--------deleted code----------------",
+        result?.message
+      );
+
+      if (result?.message == "Community deleted successfully") {
+        toast({
+          title: "Success",
+          description: "Group deleted successfully",
+        });
+
+        if (activeGroup?._id === groupToDelete._id) {
+          setActiveGroup(null);
+        }
+
+        toggleFavorite(groupToDelete._id);
+
+        setShowDeleteConfirmModal(false);
+        setGroupToDelete(null);
+
+        fetchChatGroups();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed",
+          description: result?.message || "Could not delete the group.",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete group:", err);
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          err?.response?.data?.message ||
+          "Failed to delete group. Please try again.",
+      });
+    }
+  };
+
+  const handleExitGroup = async () => {
+    if (!activeGroup || !activeGroup._id) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No active group selected.",
+      });
+      return;
+    }
+
+    try {
+      const result = await ChatService.exitGroup(activeGroup._id);
+
+      if (result?.success) {
+        toast({
+          title: "Success",
+          description: "You have left the group successfully",
+        });
+
+        toggleFavorite(activeGroup._id);
+        setActiveGroup(null);
+        setShowExitConfirmModal(false);
+        fetchChatGroups();
+      } else {
+        throw new Error(result?.message || "Failed to leave group.");
+      }
+    } catch (err) {
+      console.error("Failed to exit group:", err);
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err?.message || "Failed to leave group. Please try again.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchChatGroups();
   }, []);
 
   const handleSendMessage = () => {
-    if (newMessage.trim() || selectedFile) {
-      const messageObj: Message = {
-        id: messages.length + 1,
-        text: newMessage.trim(),
-        time: getCurrentTime(),
-        sender: "user",
-      };
-
-      // Add reply information if replying to a message
-      if (replyingTo) {
-        messageObj.replyTo = replyingTo.id;
-      }
-
-      // Add file information if a file is selected
-      if (selectedFile) {
-        messageObj.file = {
-          name: selectedFile.name,
-          type: selectedFile.type,
-          size: selectedFile.size,
-          url: filePreview || undefined,
-        };
-      }
-
-      setMessages([...messages, messageObj]);
+    if (newMessage.trim()) {
+      setMessages([
+        ...messages,
+        {
+          id: messages.length + 1,
+          text: newMessage,
+          time: getCurrentTime(),
+          sender: "user",
+        },
+      ]);
       setNewMessage("");
-      setSelectedFile(null);
-      setFilePreview(null);
-      setReplyingTo(null); // Clear reply state after sending
     }
   };
 
@@ -153,120 +394,17 @@ const ChatApp = () => {
       .padStart(2, "0")}`;
   };
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section) => {
     setExpandedSections({
       ...expandedSections,
       [section]: !expandedSections[section],
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-
-      // Create file preview URL
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-
-      setShowAttachmentMenu(false);
-    }
-  };
-
-  const handleAttachmentClick = (type: string) => {
-    // Set accepted file types based on user selection
-    let acceptedTypes = "";
-    switch (type) {
-      case "image":
-        acceptedTypes = "image/*";
-        break;
-      case "video":
-        acceptedTypes = "video/*";
-        break;
-      case "audio":
-        acceptedTypes = "audio/*";
-        break;
-      case "document":
-        acceptedTypes = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt";
-        break;
-      default:
-        acceptedTypes = "*/*";
-    }
-
-    // Set the file input's accept attribute and trigger click
-    if (fileInputRef.current) {
-      fileInputRef.current.accept = acceptedTypes;
-      fileInputRef.current.click();
-    }
-    setShowAttachmentMenu(false);
-  };
-
-  const removeSelectedFile = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
-  };
-
-  // Function to handle replying to a message
-  const handleReplyToMessage = (message: Message) => {
-    setReplyingTo(message);
-
-    // Focus on the message input after selecting a message to reply to
-    if (messageInputRef.current) {
-      messageInputRef.current.focus();
-    }
-  };
-
-  // Cancel replying to a message
-  const cancelReply = () => {
-    setReplyingTo(null);
-  };
-
-  // Get the message being replied to
-  const getReplyMessage = (replyId: number | undefined) => {
-    if (!replyId) return null;
-    return messages.find((msg) => msg.id === replyId);
-  };
-
-  // File type icon mapping
-  const getFileIcon = (fileType?: string) => {
-    if (fileType?.startsWith("image/")) return <Image className="h-4 w-4" />;
-    if (fileType?.startsWith("video/")) return <Film className="h-4 w-4" />;
-    if (fileType?.startsWith("audio/"))
-      return <FileAudio className="h-4 w-4" />;
-    if (
-      fileType?.includes("pdf") ||
-      fileType?.includes("doc") ||
-      fileType?.includes("ppt") ||
-      fileType?.includes("xls")
-    )
-      return <FileText className="h-4 w-4" />;
-    return <File className="h-4 w-4" />;
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else return (bytes / 1048576).toFixed(1) + " MB";
-  };
-
-  // Get a short preview of the message text for the reply context
-  const getMessagePreview = (text: string, maxLength = 30) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
-
-  // Scroll to bottom of messages when new message is added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Update screen size state and handle responsive layout
   useEffect(() => {
     const checkScreenSize = () => {
       const isLarge = window.innerWidth >= 1024;
@@ -275,77 +413,22 @@ const ChatApp = () => {
       setIsMediumScreen(isMedium);
       setSidebarOpen(isMedium);
 
-      // On large screens, automatically show both sidebars
       if (isLarge) {
         setInfoSidebarOpen(true);
         setGroupsListOpen(true);
       } else if (isMedium) {
-        // On medium screens, show groups list but not info sidebar
         setGroupsListOpen(true);
         setInfoSidebarOpen(false);
       } else {
-        // On small screens, hide both by default
         setGroupsListOpen(false);
         setInfoSidebarOpen(false);
       }
     };
 
-    // Run on initial load
     checkScreenSize();
-
-    // Add event listener for window resize
     window.addEventListener("resize", checkScreenSize);
-
-    // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
-  // Close attachment menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        showAttachmentMenu &&
-        !(event.target as Element).closest(".attachment-menu-container")
-      ) {
-        setShowAttachmentMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showAttachmentMenu]);
-
-  // Message context menu for reply option
-  const MessageContextMenu = ({ message }: { message: Message }) => {
-    const [showMenu, setShowMenu] = useState(false);
-
-    return (
-      <div className="relative">
-        <button
-          className="p-1 text-gray-500 rounded-full hover:bg-gray-200 focus:outline-none"
-          onClick={() => setShowMenu(!showMenu)}
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
-
-        {showMenu && (
-          <div className="absolute z-50 right-0 bottom-full mb-1 bg-white shadow-lg rounded-md py-1 w-32">
-            <button
-              className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
-              onClick={() => {
-                handleReplyToMessage(message);
-                setShowMenu(false);
-              }}
-            >
-              <CornerUpLeft className="h-4 w-4 mr-2" /> Reply
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100 overflow-hidden">
@@ -417,14 +500,21 @@ const ChatApp = () => {
               <input
                 type="text"
                 placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full py-2 pl-8 pr-10 bg-purple-50 text-gray-700 rounded-md"
               />
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-              <Plus className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+              <button
+                onClick={() => setShowNewGroupModal(true)}
+                className="absolute right-2 top-2.5 h-4 w-4 text-gray-500"
+              >
+                <Plus />
+              </button>
             </div>
           </div>
 
-          {/* Group List - Now using data from API */}
+          {/* Group List */}
           <div className="p-3 space-y-2 flex-grow overflow-y-auto">
             {loading ? (
               <div className="text-center py-4 text-gray-500">
@@ -437,24 +527,36 @@ const ChatApp = () => {
                 No groups available
               </div>
             ) : (
-              communities.map((community) => (
-                <button
-                  key={community._id}
-                  className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
-                    activeGroup?._id === community._id
-                      ? "bg-blue-900 text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                  onClick={() => {
-                    setActiveGroup(community);
-                    if (!isMediumScreen) {
-                      setGroupsListOpen(false);
-                    }
-                  }}
-                >
-                  {community.name}
-                </button>
-              ))
+              communities
+                .filter((community) =>
+                  community.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+                )
+                .map((community) => (
+                  <div key={community._id} className="group relative">
+                    <button
+                      className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
+                        activeGroup?._id === community._id
+                          ? "bg-blue-900 text-white"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                      onClick={() => {
+                        setActiveGroup(community);
+                        if (!isMediumScreen) {
+                          setGroupsListOpen(false);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{community.name}</span>
+                        {isFavorite(community._id) && (
+                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                ))
             )}
           </div>
         </div>
@@ -480,7 +582,12 @@ const ChatApp = () => {
           `}
         >
           <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
-            {activeGroup?.name || "Select a group"}
+            <div className="flex-1">
+              {activeGroup?.name || "Select a group"}
+            </div>
+            {activeGroup && isFavorite(activeGroup._id) && (
+              <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+            )}
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto">
@@ -499,112 +606,22 @@ const ChatApp = () => {
                       </div>
                     </div>
                   )}
-
-                  <div className="relative">
+                  <div
+                    className={`max-w-xs rounded-lg px-4 py-2 ${
+                      message.sender === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-blue-200 text-blue-900"
+                    }`}
+                  >
+                    <div className="mb-1">{message.text}</div>
                     <div
-                      className={`max-w-xs rounded-lg px-4 py-2 ${
+                      className={`text-xs ${
                         message.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-blue-200 text-blue-900"
+                          ? "text-blue-100"
+                          : "text-blue-700"
                       }`}
                     >
-                      {/* Reply context section */}
-                      {message.replyTo && (
-                        <div
-                          className={`rounded-md px-2 py-1 mb-2 text-xs flex items-center ${
-                            message.sender === "user"
-                              ? "bg-blue-600"
-                              : "bg-blue-300"
-                          }`}
-                        >
-                          <CornerUpLeft className="h-3 w-3 mr-1 inline-block" />
-                          <div className="flex-1 overflow-hidden">
-                            <div className="font-medium">
-                              {getReplyMessage(message.replyTo)?.sender ===
-                              "user"
-                                ? "You"
-                                : "Them"}
-                            </div>
-                            <div className="truncate">
-                              {getReplyMessage(message.replyTo)?.file &&
-                                "[Media] "}
-                              {getReplyMessage(message.replyTo)?.text
-                                ? getMessagePreview(
-                                    getReplyMessage(message.replyTo)?.text || ""
-                                  )
-                                : getReplyMessage(message.replyTo)?.file
-                                ? "File"
-                                : "Message"}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {message.file && (
-                        <div className="mb-2">
-                          {message.file.type.startsWith("image/") ? (
-                            <div className="mb-2">
-                              <img
-                                src={message.file.url}
-                                alt={message.file.name}
-                                className="rounded-md max-w-full max-h-40 object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              className={`flex items-center p-2 rounded-md mb-2 ${
-                                message.sender === "user"
-                                  ? "bg-blue-600"
-                                  : "bg-blue-300"
-                              }`}
-                            >
-                              <div className="mr-2">
-                                {getFileIcon(message.file.type)}
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <div className="text-sm truncate">
-                                  {message.file.name}
-                                </div>
-                                <div
-                                  className={`text-xs ${
-                                    message.sender === "user"
-                                      ? "text-blue-200"
-                                      : "text-blue-700"
-                                  }`}
-                                >
-                                  {formatFileSize(message.file.size)}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {message.text && (
-                        <div className="mb-1">{message.text}</div>
-                      )}
-                      <div
-                        className={`text-xs ${
-                          message.sender === "user"
-                            ? "text-blue-100"
-                            : "text-blue-700"
-                        }`}
-                      >
-                        {message.time}
-                      </div>
-                    </div>
-
-                    {/* Message actions - reply button */}
-                    <div
-                      className={`absolute ${
-                        message.sender === "user" ? "left-0" : "right-0"
-                      } top-1/2 transform ${
-                        message.sender === "user"
-                          ? "-translate-x-full"
-                          : "translate-x-full"
-                      }`}
-                    >
-                      <MessageContextMenu message={message} />
+                      {message.time}
                     </div>
                   </div>
                 </div>
@@ -613,117 +630,9 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Reply Indicator */}
-          {replyingTo && (
-            <div className="px-3 pt-3 bg-white border-t">
-              <div className="flex items-center justify-between bg-blue-50 p-2 rounded-t-md">
-                <div className="flex items-center">
-                  <CornerUpLeft className="h-4 w-4 mr-2 text-blue-500" />
-                  <div>
-                    <div className="text-xs font-medium">
-                      Replying to{" "}
-                      {replyingTo.sender === "user" ? "yourself" : "them"}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      {replyingTo.text
-                        ? getMessagePreview(replyingTo.text)
-                        : "Media"}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={cancelReply}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* File Preview Area */}
-          {selectedFile && (
-            <div className="px-3 pt-3 bg-white border-t">
-              <div className="flex items-center bg-blue-50 p-2 rounded-md">
-                <div className="mr-2">{getFileIcon(selectedFile.type)}</div>
-                <div className="flex-1 truncate">
-                  <div className="text-sm truncate">{selectedFile.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {formatFileSize(selectedFile.size)}
-                  </div>
-                </div>
-                <button
-                  onClick={removeSelectedFile}
-                  className="ml-2 text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Message Input */}
           <div className="p-3 bg-white border-t">
             <div className="relative flex items-center">
-              {/* Hidden file input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                style={{ display: "none" }}
-              />
-
-              {/* Attachment button */}
-              <div className="attachment-menu-container relative">
-                <button
-                  className="text-blue-500 p-2"
-                  onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                >
-                  <Paperclip className="h-5 w-5" />
-                </button>
-
-                {/* Attachment menu */}
-                {showAttachmentMenu && (
-                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-md shadow-lg p-2 z-10">
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => handleAttachmentClick("image")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <Image className="h-4 w-4 mr-2 text-blue-500" /> Images
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("video")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <Film className="h-4 w-4 mr-2 text-blue-500" /> Videos
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("audio")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <FileAudio className="h-4 w-4 mr-2 text-blue-500" />{" "}
-                        Audio
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("document")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <FileText className="h-4 w-4 mr-2 text-blue-500" />{" "}
-                        Documents
-                      </button>
-                      <button
-                        onClick={() => handleAttachmentClick("all")}
-                        className="flex items-center w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded-md"
-                      >
-                        <File className="h-4 w-4 mr-2 text-blue-500" /> All
-                        Files
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               <input
                 type="text"
                 ref={messageInputRef}
@@ -909,30 +818,78 @@ const ChatApp = () => {
             </div>
           </div>
 
-          {/* Members Section */}
-          <div className="p-4 border-t">
-            <h3 className="font-medium mb-2">Members</h3>
-            <div className="space-y-2">
-              {activeGroup?.members?.map((member) => (
-                <div key={member._id} className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
-                    <UserCircle2 className="h-8 w-8 text-gray-400" />
+          {/* Members List */}
+          <div className="p-4">
+            {loading ? (
+              <div className="text-center">Loading...</div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="font-medium">
+                    {activeGroup
+                      ? `${activeGroup.students?.length || 0} members`
+                      : "0 members"}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {member.name || "Unknown user"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {member.role || "Member"}
-                    </p>
-                  </div>
+                  <X className="h-4 w-4 cursor-pointer" />
                 </div>
-              )) || (
-                <p className="text-sm text-gray-500">
-                  No members information available
-                </p>
+
+                <div className="space-y-2">
+                  {activeGroup &&
+                    activeGroup.students?.map((student) => (
+                      <div
+                        key={student._id}
+                        className="bg-white p-2 rounded border"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                          <span className="text-sm">{`${student.firstName} ${student.lastName}`}</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-4 mt-auto space-y-2">
+            <button
+              onClick={() => activeGroup && toggleFavorite(activeGroup._id)}
+              className={`w-full py-2 px-4 border rounded font-medium flex items-center justify-center ${
+                activeGroup && isFavorite(activeGroup._id)
+                  ? "bg-yellow-100 border-yellow-500 text-yellow-700"
+                  : "border-blue-500 text-blue-500"
+              } hover:bg-yellow-50 transition-colors`}
+              disabled={!activeGroup}
+            >
+              {activeGroup && isFavorite(activeGroup._id) ? (
+                <>
+                  <Star className="h-4 w-4 mr-2 fill-yellow-500 text-yellow-500" />
+                  Favorited
+                </>
+              ) : (
+                <>
+                  <Star className="h-4 w-4 mr-2" />
+                  Add to favorites
+                </>
               )}
-            </div>
+            </button>
+            <button
+              onClick={() => setShowExitConfirmModal(true)}
+              className="w-full py-2 px-4 bg-red-500 text-white rounded font-medium hover:bg-red-600 transition-colors"
+              disabled={!activeGroup}
+            >
+              Exit Group
+            </button>
+            {activeGroup && (
+              <button
+                onClick={() => openDeleteConfirmModal(activeGroup)}
+                className="w-full py-2 px-4 bg-red-700 text-white rounded font-medium flex items-center justify-center hover:bg-red-800 transition-colors"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Group
+              </button>
+            )}
           </div>
         </div>
 
@@ -944,6 +901,278 @@ const ChatApp = () => {
           />
         )}
       </div>
+
+      {/* New Group Modal */}
+      {showNewGroupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Create New Group</h3>
+              <button
+                onClick={() => setShowNewGroupModal(false)}
+                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Group Name */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Group Name
+              </label>
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="Enter group name"
+              />
+            </div>
+
+            {/* Profile Picture */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Profile Picture
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setProfilePic(e.target.files[0])}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+
+            {/* Level Dropdown */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">O Level</label>
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Form 1</option>
+                <option value="beginner">Form 2</option>
+                <option value="intermediate">Form 3</option>
+                <option value="advanced">Form 4</option>
+              </select>
+            </div>
+
+            {/* Students Dropdown */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Students</label>
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select student</option>
+                <option value="john_doe">John Doe</option>
+                <option value="jane_smith">Jane Smith</option>
+                <option value="alex_johnson">Alex Johnson</option>
+              </select>
+            </div>
+
+            {/* Subject Dropdown */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Subject</label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select subject</option>
+                <option value="math">Maths</option>
+                <option value="science">Science</option>
+                <option value="history">Electronics</option>
+              </select>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowNewGroupModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateGroup}
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-70"
+              >
+                {isSubmitting ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Group Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Update Group</h3>
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Group Name */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Group Name
+              </label>
+              <input
+                type="text"
+                value={updatedGroupName}
+                onChange={(e) => setUpdatedGroupName(e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="Enter new group name"
+              />
+            </div>
+
+            {/* Subject */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Subject</label>
+              <input
+                type="text"
+                value={updatedGroupSubject}
+                onChange={(e) => setUpdatedGroupSubject(e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="Enter new subject"
+              />
+            </div>
+
+            {/* Level */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Level</label>
+              <select
+                value={updatedGroupLevel}
+                onChange={(e) => setUpdatedGroupLevel(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="Form 1">Form 1</option>
+                <option value="Form 2">Form 2</option>
+                <option value="Form 3">Form 3</option>
+                <option value="Form 4">Form 4</option>
+              </select>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowUpdateModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleUpdateGroup}
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-70"
+              >
+                {isSubmitting ? "Updating..." : "Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-red-600">
+                Delete Group
+              </h3>
+              <button
+                onClick={() => setShowDeleteConfirmModal(false)}
+                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Are you sure you want to delete/Update the group "
+                <span className="font-semibold">{groupToDelete?.name}</span>"?
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              {activeGroup && (
+                <button
+                  onClick={() => openUpdateModal(activeGroup)}
+                  className="w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Update Group
+                </button>
+              )}
+              <button
+                onClick={() => setShowDeleteConfirmModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteGroup}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-blue-600">
+                Exit Group
+              </h3>
+              <button
+                onClick={() => setShowExitConfirmModal(false)}
+                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Are you sure you want to exit the group "
+                <span className="font-semibold">{activeGroup?.name}</span>"?
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                You won't be able to see group messages anymore.
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowExitConfirmModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExitGroup}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Yes, Exit Group
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
