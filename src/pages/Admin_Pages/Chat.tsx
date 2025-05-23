@@ -67,6 +67,9 @@ const ChatApp = (ChatServiceData: any) => {
   const [updatedGroupSubject, setUpdatedGroupSubject] = useState("");
   const [updatedGroupLevel, setUpdatedGroupLevel] = useState("");
 
+  // inside your component:
+  const messageInputRef = useRef<HTMLInputElement>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
