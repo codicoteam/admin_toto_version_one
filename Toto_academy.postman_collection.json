@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "50a49ba9-e513-465e-8601-637526c3d884",
+		"_postman_id": "510b1523-6160-49d8-84b9-74b2b3e550d0",
 		"name": "Toto_academy",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-		"_exporter_id": "34985382",
-		"_collection_link": "https://clinpridesoftwaretechco.postman.co/workspace/My-Workspace~a8bdf15c-ddb7-41a0-8ab4-2648791c0b61/collection/34985382-50a49ba9-e513-465e-8601-637526c3d884?action=share&source=collection_link&creator=34985382"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43478047"
 	},
 	"item": [
 		{
@@ -24,7 +23,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/admin_route/signup"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/admin_route/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"admin_route",
+								"signup"
+							]
+						}
 					},
 					"response": []
 				},
@@ -33,13 +45,30 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1NDAxOTIyLCJleHAiOjE3NDU0MzA3MjJ9._Jk8k6NZGSqow6QrI5XLAL2Mz78i0TDE7X2KHTdgvCo"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1NDAxOTIyLCJleHAiOjE3NDU0MzA3MjJ9._Jk8k6NZGSqow6QrI5XLAL2Mz78i0TDE7X2KHTdgvCo",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/admin_route/getalladmins"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/admin_route/getalladmins",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"admin_route",
+								"getalladmins"
+							]
+						}
 					},
 					"response": []
 				},
@@ -57,7 +86,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/admin_route/login"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/admin_route/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"admin_route",
+								"login"
+							]
+						}
 					},
 					"response": []
 				}
@@ -66,6 +108,280 @@
 		{
 			"name": "student",
 			"item": [
+				{
+					"name": "student_wallet",
+					"item": [
+						{
+							"name": "Create",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NzkyMDE5LCJleHAiOjE3NDY4MjA4MTl9.BctT6QO0KS3crV_A10I_FbtDWhNcpEjtYZmI4s3eZGI",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"student\": \"681374a1a32332081e3da351\", \r\n  \"currency\": \"USD\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/create",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetAll",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/all",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getBy_Stud_Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/student/:studentId",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"student",
+										":studentId"
+									],
+									"variable": [
+										{
+											"key": "studentId",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/update/:id",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"update",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/wallet//delete/:id",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"",
+										"delete",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "withdrawal",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2Nzg1NjgzLCJleHAiOjE3NDY4MTQ0ODN9.Py0aaaKAOkfL866HhpJdwJUIUHAFfB40ppqYOWoxplw",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"amount\": 50,\r\n  \"method\": \"card\",\r\n  \"reference\": \"TXN123321\",\r\n  \"description\": \"Stationery purchase\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/withdraw/681374a1a32332081e3da351",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"withdraw",
+										"681374a1a32332081e3da351"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deposit",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NzkyMDE5LCJleHAiOjE3NDY4MjA4MTl9.BctT6QO0KS3crV_A10I_FbtDWhNcpEjtYZmI4s3eZGI",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "",
+										"value": "",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"amount\": 100,\r\n  \"method\": \"bank_transfer\",\r\n  \"reference\": \"REF123456\",\r\n  \"description\": \"Deposit from bank\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/deposit/681374a1a32332081e3da351",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"deposit",
+										"681374a1a32332081e3da351"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "dashboard_data",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2Nzg1NjgzLCJleHAiOjE3NDY4MTQ0ODN9.Py0aaaKAOkfL866HhpJdwJUIUHAFfB40ppqYOWoxplw",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/wallet/dashboard",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"wallet",
+										"dashboard"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "sign up",
 					"request": {
@@ -80,7 +396,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/student_route/signup"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"signup"
+							]
+						}
 					},
 					"response": []
 				},
@@ -98,7 +427,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/student_route/login"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"login"
+							]
+						}
 					},
 					"response": []
 				},
@@ -116,7 +458,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/student_route/loginbyphone"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/loginbyphone",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"loginbyphone"
+							]
+						}
 					},
 					"response": []
 				},
@@ -125,13 +480,30 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/student_route/getallstudents"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/getallstudents",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"getallstudents"
+							]
+						}
 					},
 					"response": []
 				},
@@ -140,9 +512,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhjYmM2ZDQwN2MzMjIxZjM2YjVlMCIsInBob25lIjoiKzI2Mzc3MTIzNDU2NyIsImlhdCI6MTc0NTQwNzgzMSwiZXhwIjoxNzQ1NDM2NjMxfQ.e8ZVy7ddDlJcJ1IdpnRGsl2kgpiFhYDi4bl6fZgpZPc"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhjYmM2ZDQwN2MzMjIxZjM2YjVlMCIsInBob25lIjoiKzI2Mzc3MTIzNDU2NyIsImlhdCI6MTc0NTQwNzgzMSwiZXhwIjoxNzQ1NDM2NjMxfQ.e8ZVy7ddDlJcJ1IdpnRGsl2kgpiFhYDi4bl6fZgpZPc",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
 						"header": [],
@@ -155,7 +531,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/student_route/updatestudent/6808cbc6d407c3221f36b5e0"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/updatestudent/6808cbc6d407c3221f36b5e0",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"updatestudent",
+								"6808cbc6d407c3221f36b5e0"
+							]
+						}
 					},
 					"response": []
 				},
@@ -164,7 +554,21 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/student_route/deletestudent/6808cbc6d407c3221f36b5e0"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/student_route/deletestudent/6808cbc6d407c3221f36b5e0",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"student_route",
+								"deletestudent",
+								"6808cbc6d407c3221f36b5e0"
+							]
+						}
 					},
 					"response": []
 				}
@@ -177,7 +581,10 @@
 					"name": "create",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -185,7 +592,10 @@
 					"name": "getall",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -193,7 +603,10 @@
 					"name": "get",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -201,7 +614,10 @@
 					"name": "New Request",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -215,9 +631,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDAzNzcxLCJleHAiOjE3NDc0MzI1NzF9.hLVWsMUom1xiPGrDzP5gHbEc0kEMnEGlcNRGy0SEKuU",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -230,7 +650,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/subject/create"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/subject/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"subject",
+								"create"
+							]
+						}
 					},
 					"response": []
 				},
@@ -239,9 +672,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1ODQxMjMzLCJleHAiOjE3NDU4NzAwMzN9.tuLSsxNAQkQL-PITsQZC3Db-6bi_Kzjw3ZFP_YOvtrg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1ODQxMjMzLCJleHAiOjE3NDU4NzAwMzN9.tuLSsxNAQkQL-PITsQZC3Db-6bi_Kzjw3ZFP_YOvtrg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
 						"header": [],
@@ -254,7 +691,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/subject/update/680f6c8ce4e0804cf98cab35"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/subject/update/680f6c8ce4e0804cf98cab35",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"subject",
+								"update",
+								"680f6c8ce4e0804cf98cab35"
+							]
+						}
 					},
 					"response": []
 				},
@@ -263,13 +714,30 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/subject/getall"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/subject/getall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"subject",
+								"getall"
+							]
+						}
 					},
 					"response": []
 				},
@@ -278,15 +746,54 @@
 					"request": {
 						"method": "DELETE",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/subject/delete/680f6c8ce4e0804cf98cab35"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/subject/delete/680f6c8ce4e0804cf98cab35",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"subject",
+								"delete",
+								"680f6c8ce4e0804cf98cab35"
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "getone",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ1ODQxMjMzLCJleHAiOjE3NDU4NzAwMzN9.tuLSsxNAQkQL-PITsQZC3Db-6bi_Kzjw3ZFP_YOvtrg",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/subject/get/680f6c8ce4e0804cf98cab35",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"subject",
+								"get",
+								"680f6c8ce4e0804cf98cab35"
+							]
+						}
 					},
 					"response": []
 				}
@@ -300,22 +807,45 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4meyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDAzNzcxLCJleHAiOjE3NDc0MzI1NzF9.hLVWsMeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDAzNzcxLCJleHAiOjE3NDc0MzI1NzF9.hLVWsMUeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDAzNzcxLCJleHAiOjE3NDc0MzI1NzF9.hLVWsMUom1xiPGrDzP5gHbEc0kEMnEGlcNRGy0SEKuU",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "bearer ",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"title\": \"Introduction to Indices\",\n    \"description\": \"This topic covers basic algebra concepts including variables, expressions, and equations.\",\n    \"subject\": \"681374c7a32332081e3da353\",\n    \"subjectName\": \"Shona\",\n    \"showTopic\": true,\n    \"price\": 10,\n    \"regularPrice\": 15,\n    \"subscriptionPeriod\": \"Monthly\"\n}",
+							"raw": "{\n    \"title\": \"Introduction to Indices\",\n    \"description\": \"This topic covers basic algebra concepts including variables, expressions, and equations.\",\n    \"subject\": \"6827446a91daefff86c91ec2\",\n    \"subjectName\": \"Shona\",\n    \"showTopic\": true,\n    \"price\": 10,\n    \"regularPrice\": 15,\n    \"subscriptionPeriod\": \"Monthly\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/topic_in_subject/create"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_in_subject/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_in_subject",
+								"create"
+							]
+						}
 					},
 					"response": []
 				},
@@ -327,12 +857,22 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDEwMzI2LCJleHAiOjE3NDc0MzkxMjZ9.9lBzQleIvMOrAEfcbSjtFYhqmz9h5YHbLOhna_t-BFA",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "",
@@ -342,7 +882,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/topic_in_subject/getall"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_in_subject/getall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_in_subject",
+								"getall"
+							]
+						}
 					},
 					"response": []
 				},
@@ -350,7 +903,10 @@
 					"name": "update",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -358,7 +914,10 @@
 					"name": "get",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -375,9 +934,13 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-									}
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+											"type": "string"
+										}
+									]
 								},
 								"method": "POST",
 								"header": [],
@@ -390,7 +953,20 @@
 										}
 									}
 								},
-								"url": "http://localhost:4071/api/v1/comment_topic_content/create"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/create",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"create"
+									]
+								}
 							},
 							"response": []
 						},
@@ -399,13 +975,30 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-									}
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:4071/api/v1/comment_topic_content/getall"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/getall",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"getall"
+									]
+								}
 							},
 							"response": []
 						},
@@ -414,13 +1007,31 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-									}
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+											"type": "string"
+										}
+									]
 								},
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:4071/api/v1/comment_topic_content/bytopic/6814887e24dcd63d82ad6521"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/bytopic/6814887e24dcd63d82ad6521",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"bytopic",
+										"6814887e24dcd63d82ad6521"
+									]
+								}
 							},
 							"response": []
 						},
@@ -429,7 +1040,21 @@
 							"request": {
 								"method": "DELETE",
 								"header": [],
-								"url": "http://localhost:4071/api/v1/comment_topic_content/delete/6814887e24dcd63d82ad6521"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/delete/6814887e24dcd63d82ad6521",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"delete",
+										"6814887e24dcd63d82ad6521"
+									]
+								}
 							},
 							"response": []
 						},
@@ -438,9 +1063,13 @@
 							"request": {
 								"auth": {
 									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-									}
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+											"type": "string"
+										}
+									]
 								},
 								"method": "PUT",
 								"header": [],
@@ -453,7 +1082,21 @@
 										}
 									}
 								},
-								"url": "http://localhost:4071/api/v1/comment_topic_content/update/6814887e24dcd63d82ad6521"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/update/6814887e24dcd63d82ad6521",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"update",
+										"6814887e24dcd63d82ad6521"
+									]
+								}
 							},
 							"response": []
 						},
@@ -462,7 +1105,22 @@
 							"request": {
 								"method": "DELETE",
 								"header": [],
-								"url": "http://localhost:4071/api/v1/comment_topic_content/delete/bytopic/6814887e24dcd63d82ad6521"
+								"url": {
+									"raw": "http://localhost:4071/api/v1/comment_topic_content/delete/bytopic/6814887e24dcd63d82ad6521",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"comment_topic_content",
+										"delete",
+										"bytopic",
+										"6814887e24dcd63d82ad6521"
+									]
+								}
 							},
 							"response": []
 						}
@@ -473,9 +1131,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -488,7 +1150,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/topic_content/create"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_content/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_content",
+								"create"
+							]
+						}
 					},
 					"response": []
 				},
@@ -496,7 +1171,10 @@
 					"name": "getall",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -505,9 +1183,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
 						"header": [],
@@ -520,7 +1202,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/topic_content/update/6814887724dcd63d82ad651f"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_content/update/6814887724dcd63d82ad651f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_content",
+								"update",
+								"6814887724dcd63d82ad651f"
+							]
+						}
 					},
 					"response": []
 				},
@@ -529,13 +1225,31 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/topic_content/get/6814887724dcd63d82ad651f"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_content/get/6814887724dcd63d82ad651f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_content",
+								"get",
+								"6814887724dcd63d82ad651f"
+							]
+						}
 					},
 					"response": []
 				},
@@ -544,13 +1258,31 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "DELETE",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/topic_content/delete/6814887724dcd63d82ad651f"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_content/delete/6814887724dcd63d82ad651f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_content",
+								"delete",
+								"6814887724dcd63d82ad651f"
+							]
+						}
 					},
 					"response": []
 				},
@@ -559,13 +1291,31 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2MTc0MDM2LCJleHAiOjE3NDYyMDI4MzZ9.2IOEYuGm4m_22opw69M-VgLCvSluyVkjbbxLkIUgxPM",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/topic_content/by-topic/6814813924dcd63d82ad6519"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/topic_content/by-topic/6814813924dcd63d82ad6519",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"topic_content",
+								"by-topic",
+								"6814813924dcd63d82ad6519"
+							]
+						}
 					},
 					"response": []
 				},
@@ -573,7 +1323,10 @@
 					"name": "New Request",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -588,48 +1341,215 @@
 						{
 							"name": "create-message",
 							"request": {
-								"method": "GET",
-								"header": []
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"community\": \"681c6a3e88b9909f563ee690\",\n  \"sender\": \"681374a1a32332081e3da351\",\n  \"message\": \"Hello everyone! Don't forget our meeting tomorrow at 10am.\",\n  \"imagePath\": [\n    \"https://example.com/images/meeting-reminder.jpg\",\n    \"https://example.com/images/group-logo.png\"\n  ]\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/create",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"create"
+									]
+								}
 							},
 							"response": []
 						},
 						{
 							"name": "getall",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/get/681c87570fc9d323da5e3625",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"get",
+										"681c87570fc9d323da5e3625"
+									]
+								}
 							},
 							"response": []
 						},
 						{
 							"name": "gatallbycomunityid",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/community/681c6a3e88b9909f563ee690",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"community",
+										"681c6a3e88b9909f563ee690"
+									]
+								}
 							},
 							"response": []
 						},
 						{
-							"name": "deletebycomunitid",
+							"name": "deletebyid",
 							"request": {
-								"method": "GET",
-								"header": []
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/delete/681c87570fc9d323da5e3625",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"delete",
+										"681c87570fc9d323da5e3625"
+									]
+								}
 							},
 							"response": []
 						},
 						{
 							"name": "updatemessage",
 							"request": {
-								"method": "GET",
-								"header": []
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"community\": \"681c6a3e88b9909f563ee690\",\n  \"sender\": \"681374a1a32332081e3da351\",\n  \"message\": \"Hello everyone! Don't forget our meeting tomorrow at 10am.\",\n  \"imagePath\": [\n    \"https://example.com/images/meeting-reminder.jpg\"  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/update/681c87570fc9d323da5e3625",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"update",
+										"681c87570fc9d323da5e3625"
+									]
+								}
 							},
 							"response": []
 						},
 						{
-							"name": "deletemessage",
+							"name": "getmsgbysendeid",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+											"type": "string"
+										}
+									]
+								},
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": {
+									"raw": "http://localhost:4071/api/v1/message_community_route/sender/681374a1a32332081e3da351",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4071",
+									"path": [
+										"api",
+										"v1",
+										"message_community_route",
+										"sender",
+										"681374a1a32332081e3da351"
+									]
+								}
 							},
 							"response": []
 						}
@@ -640,9 +1560,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -655,7 +1579,20 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/community_service/create"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"create"
+							]
+						}
 					},
 					"response": []
 				},
@@ -664,13 +1601,30 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/community_service/getall"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/getall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"getall"
+							]
+						}
 					},
 					"response": []
 				},
@@ -679,13 +1633,31 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/community_service/get/681c6a3e88b9909f563ee690"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/get/681c6a3e88b9909f563ee690",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"get",
+								"681c6a3e88b9909f563ee690"
+							]
+						}
 					},
 					"response": []
 				},
@@ -694,9 +1666,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "PUT",
 						"header": [],
@@ -709,7 +1685,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/community_service/update/681c6a3e88b9909f563ee690"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/update/681c6a3e88b9909f563ee690",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"update",
+								"681c6a3e88b9909f563ee690"
+							]
+						}
 					},
 					"response": []
 				},
@@ -718,7 +1708,21 @@
 					"request": {
 						"method": "DELETE",
 						"header": [],
-						"url": "http://localhost:4071/api/v1/community_service/delete/681c6a3e88b9909f563ee690"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/delete/681c6a3e88b9909f563ee690",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"delete",
+								"681c6a3e88b9909f563ee690"
+							]
+						}
 					},
 					"response": []
 				},
@@ -727,9 +1731,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -742,7 +1750,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/community_service/join/681c6a3e88b9909f563ee690"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/join/681c6a3e88b9909f563ee690",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"join",
+								"681c6a3e88b9909f563ee690"
+							]
+						}
 					},
 					"response": []
 				},
@@ -754,9 +1776,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "GET",
 						"header": [],
@@ -769,7 +1795,21 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/community_service/subject/681c67c388b9909f563ee689"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/subject/681c67c388b9909f563ee689",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"subject",
+								"681c67c388b9909f563ee689"
+							]
+						}
 					},
 					"response": []
 				},
@@ -778,9 +1818,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg"
-							}
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTM3NGExYTMyMzMyMDgxZTNkYTM1MSIsImVtYWlsIjoidGluYXNoZS5tb3lvQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ2NjkyMzUyLCJleHAiOjE3NDY3MjExNTJ9.E_9Xzb8f7TX8vw9MXgx3PxgQq49VTe34FPP0z1dhbdg",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
@@ -793,27 +1837,495 @@
 								}
 							}
 						},
-						"url": "http://localhost:4071/api/v1/community_service/leave/681c6a3e88b9909f563ee690"
+						"url": {
+							"raw": "http://localhost:4071/api/v1/community_service/leave/681c6a3e88b9909f563ee690",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"community_service",
+								"leave",
+								"681c6a3e88b9909f563ee690"
+							]
+						}
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "New Request",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"name": "Library_Books",
+			"item": [
+				{
+					"name": "createNewBook",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllBooks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/getall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"getall"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetBookById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/get/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"get",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Book_By_Subject_Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/get-by-subject/:subjectId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"get-by-subject",
+								":subjectId"
+							],
+							"variable": [
+								{
+									"key": "subjectId",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update_Book_By_Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/update/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"update",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DeleteBookById",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/library_book/delete/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"library_book",
+								"delete",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
-			"name": "New Request",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"name": "Exams",
+			"item": [
+				{
+					"name": "getAll_Exams",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:4071/api/v1/exam/getall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"exam",
+								"getall"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getExamBy_Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/exam/get/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"exam",
+								"get",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateExamBy_Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/exam/update/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"exam",
+								"update",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteExam_ById",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "createExam",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDhiODQyMzgwZTgzMTMwMTA5MzFmOCIsImVtYWlsIjoicHBwcHBAZ21haWwuY29tIiwiaWF0IjoxNzQ3NDEwMzI2LCJleHAiOjE3NDc0MzkxMjZ9.9lBzQleIvMOrAEfcbSjtFYhqmz9h5YHbLOhna_t-BFA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"subject\": \"6827446a91daefff86c91ec2\", \r\n  \"Topic\": \"6814813924dcd63d82ad6519\", \r\n  \"level\": \"O Level\",\r\n  \"title\": \"Physics Paper 1 - Forces and Motion\",\r\n  \"durationInMinutes\": 60,\r\n  \"questions\": [\r\n    {\r\n      \"questionText\": \"What is the unit of force?\",\r\n      \"options\": [\"Newton\", \"Joule\", \"Watt\", \"Pascal\"],\r\n      \"correctAnswer\": \"Newton\"\r\n    },\r\n    {\r\n      \"questionText\": \"What is acceleration due to gravity on Earth?\",\r\n      \"options\": [\"9.8 m/s²\", \"10 m/s\", \"8.9 m/s²\", \"9.2 m/s²\"],\r\n      \"correctAnswer\": \"9.8 m/s²\"\r\n    }\r\n  ],\r\n  \"isPublished\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:4071/api/v1/exam/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"exam",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "createPayment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/createPayment",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"createPayment"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllPayments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/getAllPayments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"getAllPayments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getPaymentById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/getAllPayments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"getAllPayments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updatePaymentStatus",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/paymentStatus/:id/status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"paymentStatus",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getPaymentsByStatus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/status/:status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"status",
+								":status"
+							],
+							"variable": [
+								{
+									"key": "status",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DeletePayment",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4071/api/v1/payment/delete/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4071",
+							"path": [
+								"api",
+								"v1",
+								"payment",
+								"delete",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

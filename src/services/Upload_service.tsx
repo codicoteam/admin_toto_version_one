@@ -1,7 +1,8 @@
 // Upload_service.js
 import axios from "axios";
 
-const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/library_book";
+const BASE_URL =
+  "https://toto-academy-backend.onrender.com/api/v1/library_book";
 
 /**
  * Service for handling file upload and update operations
@@ -17,7 +18,7 @@ const UploadService = {
       const response = await axios.post(`${BASE_URL}/create`, formData, {
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
@@ -37,7 +38,7 @@ const UploadService = {
       const response = await axios.put(`${BASE_URL}/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;

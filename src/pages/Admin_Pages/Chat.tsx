@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import { toast } from "@/hooks/use-toast";
+import SubjectService from "@/services/Admin_Service/Subject_service";
 import ChatService from "@/services/chat_service";
 import {
   ChevronDown,
@@ -71,6 +72,37 @@ const ChatApp = (ChatServiceData: any) => {
   const messageInputRef = useRef<HTMLInputElement>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef(null);
+  const [subjects, setSubjects] = useState([]);
+
+  //fecth subjects
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setLoading(true);
+        const data = await SubjectService.getAllSubjects();
+        console.log("API Response:", data); // Debug log
+
+        // Handle different response structures
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        } else if (data && Array.isArray(data.subjects)) {
+          setSubjects(data.subjects);
+        } else if (data && Array.isArray(data.data)) {
+          setSubjects(data.data);
+        } else {
+          console.error("Unexpected data structure:", data);
+          setSubjects([]);
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+        setSubjects([]); // Set empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem("chatFavorites");
@@ -123,6 +155,7 @@ const ChatApp = (ChatServiceData: any) => {
   };
 
   const handleCreateGroup = async () => {
+    // Validation checks
     if (!newGroupName.trim()) {
       toast({
         variant: "destructive",
@@ -132,16 +165,41 @@ const ChatApp = (ChatServiceData: any) => {
       return;
     }
 
+    if (!selectedLevel) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select an education level",
+      });
+      return;
+    }
+
+    if (!selectedSubject) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a subject",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Handle profile picture upload first if there's a file
+      let profilePictureUrl = "";
+      if (profilePic) {
+        // You'll need to implement file upload logic here
+        // For now, we'll use a placeholder or skip if no upload service
+        profilePictureUrl = ""; // Replace with actual upload result
+      }
+
       const apiGroupData = {
         name: newGroupName.trim(),
-        profilePicture: "https://example.com/images/group3.jpg",
-        Level: "Form 3",
-        subject: "681c67c388b9909f563ee689",
-
-        students: ["681374a1a32332081e3da351", "680f9e902aba5e42cfb4770b"],
+        profilePicture: profilePictureUrl || "default-group-avatar.png", // Provide default or uploaded URL
+        Level: selectedLevel, // Use the selected level from dropdown
+        subject: selectedSubject, // Use the selected subject from dropdown
+        students: [], // Empty array for now, or add logic to include selected students
       };
 
       console.log("Sending group data to API:", apiGroupData);
@@ -155,13 +213,14 @@ const ChatApp = (ChatServiceData: any) => {
           description: "Group created successfully",
         });
 
+        // Reset form fields
         setNewGroupName("");
-        setGroupSubject("");
-        setGroupLevel("");
-        setProfilePic("");
+        setSelectedSubject(""); // Reset the correct state variable
+        setSelectedLevel(""); // Reset the correct state variable
+        setProfilePic(null); // Reset file input
+        setSelectedStudent(""); // Reset student selection
 
         setShowNewGroupModal(false);
-
         fetchChatGroups();
       }
     } catch (error) {
@@ -181,7 +240,6 @@ const ChatApp = (ChatServiceData: any) => {
       setIsSubmitting(false);
     }
   };
-
   // Add this function with the other handler functions
   const handleUpdateGroup = async () => {
     if (!activeGroup?._id) {
@@ -493,7 +551,7 @@ const ChatApp = (ChatServiceData: any) => {
                 : "-translate-x-full md:translate-x-0"
             } 
             transition-transform duration-300 ease-in-out
-            fixed md:relative left-0 z-30 w-full md:w-64 md:min-w-64 bg-white h-[calc(100%-3rem)] md:h-full
+            fixed md:relative left-0 z-30 w-full md:w-80 md:min-w-64 bg-white h-[calc(100%-3rem)] md:h-full
             flex flex-col border-r
           `}
         >
@@ -539,10 +597,10 @@ const ChatApp = (ChatServiceData: any) => {
                 .map((community) => (
                   <div key={community._id} className="group relative">
                     <button
-                      className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium ${
+                      className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                         activeGroup?._id === community._id
                           ? "bg-blue-900 text-white"
-                          : "bg-gray-100 text-gray-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                       onClick={() => {
                         setActiveGroup(community);
@@ -552,9 +610,56 @@ const ChatApp = (ChatServiceData: any) => {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{community.name}</span>
+                        <div className="flex items-center space-x-3">
+                          {/* Profile Picture */}
+                          <div className="flex-shrink-0">
+                            {community.profilePicture ? (
+                              <img
+                                src={community.profilePicture}
+                                alt={`${community.name} profile`}
+                                className="h-8 w-8 rounded-full object-cover"
+                                onError={(e) => {
+                                  // Fallback to initials if image fails to load
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                  const nextSibling =
+                                    target.nextSibling as HTMLElement;
+                                  if (nextSibling) {
+                                    nextSibling.style.display = "flex";
+                                  }
+                                }}
+                              />
+                            ) : null}
+                            {/* Fallback avatar with initials */}
+                            <div
+                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                                community.profilePicture ? "hidden" : "flex"
+                              } ${
+                                activeGroup?._id === community._id
+                                  ? "bg-blue-700 text-white"
+                                  : "bg-gray-300 text-gray-600"
+                              }`}
+                              style={{
+                                display: community.profilePicture
+                                  ? "none"
+                                  : "flex",
+                              }}
+                            >
+                              {community.name
+                                .split(" ")
+                                .slice(0, 2)
+                                .map((word) => word.charAt(0).toUpperCase())
+                                .join("")}
+                            </div>
+                          </div>
+
+                          {/* Group Name */}
+                          <span className="truncate">{community.name}</span>
+                        </div>
+
+                        {/* Favorite Star */}
                         {isFavorite(community._id) && (
-                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 flex-shrink-0" />
                         )}
                       </div>
                     </button>
@@ -563,7 +668,6 @@ const ChatApp = (ChatServiceData: any) => {
             )}
           </div>
         </div>
-
         {/* Backdrop for Mobile Group List */}
         {groupsListOpen && !isMediumScreen && (
           <div
@@ -906,106 +1010,152 @@ const ChatApp = (ChatServiceData: any) => {
       </div>
 
       {/* New Group Modal */}
+
       {showNewGroupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Create New Group</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-t-2xl">
+              <h3 className="text-2xl font-bold text-white">
+                Create New Group
+              </h3>
+              <p className="text-blue-100 mt-2">Set up your new study group</p>
               <button
                 onClick={() => setShowNewGroupModal(false)}
-                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+                className="absolute top-6 right-6 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            {/* Group Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                Group Name
-              </label>
-              <input
-                type="text"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="Enter group name"
-              />
-            </div>
+            <div className="p-8 space-y-6">
+              {/* Group Name */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Group Name
+                </label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800"
+                  placeholder="Enter a catchy group name"
+                />
+              </div>
 
-            {/* Profile Picture */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                Profile Picture
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setProfilePic(e.target.files[0])}
-                className="w-full p-2 border rounded"
-              />
-            </div>
+              {/* Profile Picture */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Profile Picture
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProfilePic(e.target.files[0])}
+                    className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 transition-colors duration-200 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:cursor-pointer hover:file:bg-blue-100"
+                  />
+                </div>
+              </div>
 
-            {/* Level Dropdown */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">O Level</label>
-              <select
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Form 1</option>
-                <option value="beginner">Form 2</option>
-                <option value="intermediate">Form 3</option>
-                <option value="advanced">Form 4</option>
-              </select>
-            </div>
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Level Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Education Level
+                  </label>
+                  <select
+                    value={selectedLevel}
+                    onChange={(e) => setSelectedLevel(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 bg-white"
+                  >
+                    <option value="">Select Level</option>
+                    <option value="Form 1">Form 1</option>
+                    <option value="Form 2">Form 2</option>
+                    <option value="Form 3">Form 3</option>
+                    <option value="Form 4">Form 4</option>
+                    <option value="A Level">A Level</option>
+                  </select>
+                </div>
 
-            {/* Students Dropdown */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Students</label>
-              <select
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Select student</option>
-                <option value="john_doe">John Doe</option>
-                <option value="jane_smith">Jane Smith</option>
-                <option value="alex_johnson">Alex Johnson</option>
-              </select>
-            </div>
+                {/* Students Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Add Students
+                  </label>
+                  <select
+                    value={selectedStudent}
+                    onChange={(e) => setSelectedStudent(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 bg-white"
+                  >
+                    <option value="">Select student</option>
+                    {[].map((student, index) => (
+                      <option key={index} value={student.value}>
+                        {student.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-            {/* Subject Dropdown */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Subject</label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Select subject</option>
-                <option value="math">Maths</option>
-                <option value="science">Science</option>
-                <option value="history">Electronics</option>
-              </select>
-            </div>
+              {/* Subject Dropdown */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Subject
+                </label>
+                <select
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 bg-white disabled:bg-gray-50"
+                  disabled={loading}
+                >
+                  <option value="">
+                    {loading ? "Loading subjects..." : "Select subject"}
+                  </option>
+                  {Array.isArray(subjects) &&
+                    subjects.map((subject, index) => (
+                      <option
+                        key={subject.id || subject._id || index}
+                        value={
+                          subject.value ||
+                          subject.code ||
+                          subject.id ||
+                          subject._id
+                        }
+                      >
+                        {subject.name ||
+                          subject.title ||
+                          subject.subjectName ||
+                          "Unknown Subject"}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowNewGroupModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateGroup}
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-70"
-              >
-                {isSubmitting ? "Creating..." : "Create"}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                <button
+                  onClick={() => setShowNewGroupModal(false)}
+                  className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateGroup}
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Creating...
+                    </span>
+                  ) : (
+                    "Create Group"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1013,75 +1163,92 @@ const ChatApp = (ChatServiceData: any) => {
 
       {/* Update Group Modal */}
       {showUpdateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Update Group</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-green-600 to-blue-600 p-8 rounded-t-2xl">
+              <h3 className="text-2xl font-bold text-white">Update Group</h3>
+              <p className="text-green-100 mt-2">Modify your group settings</p>
               <button
                 onClick={() => setShowUpdateModal(false)}
-                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+                className="absolute top-6 right-6 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            {/* Group Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                Group Name
-              </label>
-              <input
-                type="text"
-                value={updatedGroupName}
-                onChange={(e) => setUpdatedGroupName(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="Enter new group name"
-              />
-            </div>
+            <div className="p-8 space-y-6">
+              {/* Group Name */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Group Name
+                </label>
+                <input
+                  type="text"
+                  value={updatedGroupName}
+                  onChange={(e) => setUpdatedGroupName(e.target.value)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-800"
+                  placeholder="Enter new group name"
+                />
+              </div>
 
-            {/* Subject */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Subject</label>
-              <input
-                type="text"
-                value={updatedGroupSubject}
-                onChange={(e) => setUpdatedGroupSubject(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="Enter new subject"
-              />
-            </div>
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Subject */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={updatedGroupSubject}
+                    onChange={(e) => setUpdatedGroupSubject(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-800"
+                    placeholder="Enter new subject"
+                  />
+                </div>
 
-            {/* Level */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Level</label>
-              <select
-                value={updatedGroupLevel}
-                onChange={(e) => setUpdatedGroupLevel(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="Form 1">Form 1</option>
-                <option value="Form 2">Form 2</option>
-                <option value="Form 3">Form 3</option>
-                <option value="Form 4">Form 4</option>
-              </select>
-            </div>
+                {/* Level */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Education Level
+                  </label>
+                  <select
+                    value={updatedGroupLevel}
+                    onChange={(e) => setUpdatedGroupLevel(e.target.value)}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-800 bg-white"
+                  >
+                    <option value="Form 1">Form 1</option>
+                    <option value="Form 2">Form 2</option>
+                    <option value="Form 3">Form 3</option>
+                    <option value="Form 4">Form 4</option>
+                  </select>
+                </div>
+              </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowUpdateModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleUpdateGroup}
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-70"
-              >
-                {isSubmitting ? "Updating..." : "Update"}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                <button
+                  onClick={() => setShowUpdateModal(false)}
+                  className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateGroup}
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Updating...
+                    </span>
+                  ) : (
+                    "Update Group"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1089,47 +1256,90 @@ const ChatApp = (ChatServiceData: any) => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-red-600">
-                Delete Group
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-red-600 to-pink-600 p-8 rounded-t-2xl">
+              <div className="flex items-center">
+                <div className="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                  <Trash2 className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    Delete Group
+                  </h3>
+                  <p className="text-red-100 mt-1">This action is permanent</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowDeleteConfirmModal(false)}
-                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+                className="absolute top-6 right-6 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="mb-6">
-              <p className="text-gray-700">
-                Are you sure you want to delete/Update the group "
-                <span className="font-semibold">{groupToDelete?.name}</span>"?
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              {activeGroup && (
+
+            <div className="p-8">
+              {/* Warning Message */}
+              <div className="bg-red-50 border-l-4 border-red-400 p-6 mb-6 rounded-r-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-lg font-semibold text-red-800">
+                      Are you sure you want to delete this group?
+                    </h4>
+                    <div className="mt-2 text-red-700">
+                      <p className="text-base">
+                        You're about to permanently delete the group{" "}
+                        <span className="font-bold bg-red-100 px-2 py-1 rounded">
+                          "{groupToDelete?.name}"
+                        </span>
+                      </p>
+                      <ul className="list-disc list-inside mt-3 space-y-1 text-sm">
+                        <li>All messages and files will be lost forever</li>
+                        <li>All group members will be removed</li>
+                        <li>This action cannot be undone</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                {activeGroup && (
+                  <button
+                    onClick={() => openUpdateModal(activeGroup)}
+                    className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    Update Instead
+                  </button>
+                )}
                 <button
-                  onClick={() => openUpdateModal(activeGroup)}
-                  className="w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                  className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
                 >
-                  Update Group
+                  Cancel
                 </button>
-              )}
-              <button
-                onClick={() => setShowDeleteConfirmModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteGroup}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
+                <button
+                  onClick={handleDeleteGroup}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                >
+                  Delete Permanently
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1137,41 +1347,92 @@ const ChatApp = (ChatServiceData: any) => {
 
       {/* Exit Confirmation Modal */}
       {showExitConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-blue-600">
-                Exit Group
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-orange-600 to-red-600 p-8 rounded-t-2xl">
+              <div className="flex items-center">
+                <div className="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Exit Group</h3>
+                  <p className="text-orange-100 mt-1">Leave this study group</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowExitConfirmModal(false)}
-                className="hover:bg-gray-100 rounded-full p-1 transition-colors"
+                className="absolute top-6 right-6 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="mb-6">
-              <p className="text-gray-700">
-                Are you sure you want to exit the group "
-                <span className="font-semibold">{activeGroup?.name}</span>"?
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                You won't be able to see group messages anymore.
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowExitConfirmModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleExitGroup}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                Yes, Exit Group
-              </button>
+
+            <div className="p-8">
+              {/* Info Message */}
+              <div className="bg-orange-50 border-l-4 border-orange-400 p-6 mb-6 rounded-r-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-orange-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-lg font-semibold text-orange-800">
+                      Ready to leave the group?
+                    </h4>
+                    <div className="mt-2 text-orange-700">
+                      <p className="text-base">
+                        You're about to exit the group{" "}
+                        <span className="font-bold bg-orange-100 px-2 py-1 rounded">
+                          "{activeGroup?.name}"
+                        </span>
+                      </p>
+                      <ul className="list-disc list-inside mt-3 space-y-1 text-sm">
+                        <li>You won't receive new messages from this group</li>
+                        <li>You can rejoin if invited again</li>
+                        <li>Your previous messages will remain in the group</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => setShowExitConfirmModal(false)}
+                  className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
+                >
+                  Stay in Group
+                </button>
+                <button
+                  onClick={handleExitGroup}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                >
+                  Yes, Exit Group
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/library_book";
+const BASE_URL =
+  "https://toto-academy-backend.onrender.com/api/v1/library_book";
 
 /**
  * Service for handling library book-related API requests
@@ -19,6 +20,7 @@ const LibraryService = {
       });
       return response.data;
     } catch (error) {
+      console.error("Get all books error:", error);
       throw error.response?.data || "Failed to retrieve books";
     }
   },
@@ -37,33 +39,64 @@ const LibraryService = {
       });
       return response.data;
     } catch (error) {
+      console.error("Get book by ID error:", error);
       throw error.response?.data || "Failed to retrieve book";
     }
   },
+
   /**
-     * Create a new group
-     * @param {Object} BookData - Data to create group
-     * @returns {Promise} Promise with created group data
-     */
-    createBook: async (BookData) => {
-      console.log(BookData);
-      try {
-        const response = await axios.post(
-          `${BASE_URL}/create`,
-          JSON.stringify(BookData),
-          {
-            headers: {
-              Authorization: `Bearer ${getAuthToken()}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        return response.data;
-      } catch (error) {
-        throw error.response?.data || "Failed to create group";
+   * Get books by subject ID
+   * @param {string} subjectId - Subject ID to filter books
+   * @returns {Promise} Promise with filtered book data
+   */
+  getBooksBySubjectId: async (subjectId) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/subject/${subjectId}`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get books by subject ID error:", error);
+      throw error.response?.data || "Failed to retrieve books by subject";
+    }
+  },
+
+  /**
+   * Create a new book
+   * @param {Object} BookData - Data to create book
+   * @returns {Promise} Promise with created book data
+   */
+  createBook: async (BookData) => {
+    console.log("Creating book with data:", BookData);
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/create`,
+        BookData, // Don't stringify - axios will handle this
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Create book error:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+
+      // Return more detailed error information
+      if (error.response?.data) {
+        throw error.response.data;
+      } else if (error.message) {
+        throw { message: error.message, success: false };
+      } else {
+        throw { message: "Failed to create book", success: false };
       }
-    },
-  
+    }
+  },
 
   /**
    * Delete a book
@@ -79,6 +112,7 @@ const LibraryService = {
       });
       return response.data;
     } catch (error) {
+      console.error("Delete book error:", error);
       throw error.response?.data || "Failed to delete book";
     }
   },
@@ -89,7 +123,11 @@ const LibraryService = {
  * @returns {string} Authentication token
  */
 const getAuthToken = () => {
-  return localStorage.getItem("adminToken");
+  const token = localStorage.getItem("adminToken");
+  if (!token) {
+    console.warn("No admin token found in localStorage");
+  }
+  return token;
 };
 
 export default LibraryService;
