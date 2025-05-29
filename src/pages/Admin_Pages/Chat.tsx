@@ -1,7 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import { toast } from "@/hooks/use-toast";
 import SubjectService from "@/services/Admin_Service/Subject_service";
-import ChatService from "@/services/chat_service";
+import ChatService from "@/services/Admin_Service/chat_service";
 import {
   ChevronDown,
   ChevronUp,
@@ -17,14 +17,15 @@ import {
   Star,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import CommunityMessageService from "@/services/Admin_Service/message_service";
+import { useAuth } from "../../context/AuthContext"; // Import your auth context
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ChatApp = (ChatServiceData: any) => {
+  const { user } = useAuth(); // Get the authenticated user
   const [activeGroup, setActiveGroup] = useState(null);
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hi", time: "10:00", sender: "other" },
-    { id: 2, text: "How are you", time: "10:00", sender: "other" },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
@@ -73,6 +74,57 @@ const ChatApp = (ChatServiceData: any) => {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef(null);
   const [subjects, setSubjects] = useState([]);
+
+  const currentUserId = user?._id; // Get the current user ID
+
+  //fecth messages by communityid
+  // Add this useEffect to fetch messages when activeGroup changes
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!activeGroup?._id) {
+        setMessages([]);
+        return;
+      }
+
+      setIsLoadingMessages(true);
+      try {
+        const response = await CommunityMessageService.getMessagesByCommunity(
+          activeGroup._id
+        );
+
+        // Transform the backend data to match your component's expected format
+        const transformedMessages =
+          response.data?.map((msg) => ({
+            id: msg._id,
+            text: msg.message,
+            time: new Date(msg.createdAt).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }),
+            // Fixed: use msg.sender._id since sender is an object in your API response
+            sender: msg.sender._id === currentUserId ? "user" : "other",
+            senderInfo: {
+              id: msg.sender._id,
+              name: `${msg.sender.firstName} ${msg.sender.lastName}`,
+              firstName: msg.sender.firstName,
+              lastName: msg.sender.lastName,
+            },
+            // Handle images from your API response
+            images: msg.imagePath || [],
+          })) || [];
+
+        setMessages(transformedMessages);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+        setMessages([]);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [activeGroup?._id, currentUserId]); // Add currentUserId to dependencies
 
   //fecth subjects
   useEffect(() => {
@@ -291,44 +343,129 @@ const ChatApp = (ChatServiceData: any) => {
     }
   };
 
-  const handlecreateMessage = async () => {
-    if (!newMessage.trim() || !activeGroup?._id || isSending) return;
+  // Fixed handleCreateMessage function
+  // const handleCreateMessage = async () => {
+  //   console.log("--------------message called");
+  //   if (!newMessage.trim()) return;
 
-    setIsSending(true);
+  //   if (!activeGroup || !activeGroup._id) {
+  //     console.error("activeGroup is missing or invalid:", activeGroup);
+  //     toast({
+  //       variant: "destructive",
+  //       title: "Error",
+  //       description: "No group is selected to send the message to.",
+  //     });
+  //     return;
+  //   }
+
+  //   if (isSending) return;
+
+  //   setIsSending(true);
+
+  //   const messageData = {
+  //     message: newMessage.trim(),
+  //     senderId: user._id,
+  //   };
+
+  //   const response = await CommunityMessageService.createMessage(
+  //     activeGroup._id,
+  //     messageData
+  //   );
+  //   console.log("-----------------------callled", response);
+
+  //   const newMessageObj = {
+  //     id: response._id || Date.now(),
+  //     text: newMessage,
+  //     time: getCurrentTime(),
+  //     sender: "user",
+  //     senderId: user._id,
+  //     senderName: `${user.firstName} ${user.lastName}`,
+  //   };
+  //   console.log("-------------------------------newMessageObj", newMessageObj);
+
+  //   setMessages((prev) => [...prev, newMessageObj]);
+  //   setNewMessage("");
+  //   if (setReplyingTo) setReplyingTo(null);
+
+  //   setTimeout(() => {
+  //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  //   }, 100);
+
+  //   toast({
+  //     title: "Success",
+  //     description: "Message sent successfully",
+  //   });
+  //   // } catch (error) {
+  //   //   console.error("Failed to send message:", error);
+  //   //   const errorMessage =
+  //   //     error?.response?.data?.message ||
+  //   //     error?.message ||
+  //   //     "Failed to send message. Please try again.";
+  //   //   toast({
+  //   //     variant: "destructive",
+  //   //     title: "Error",
+  //   //     description: errorMessage,
+  //   //   });
+  //   // } finally {
+  //   //   setIsSending(false);
+  //   // }
+  // };
+  const handleSendMessage = async () => {
+    // Add detailed logging to debug the issue
+    console.log("handleSendMessage called");
+    console.log("newMessage:", newMessage);
+    console.log("isSending:", isSending);
+    console.log("activeGroup:", activeGroup);
+    console.log("user:", user);
+
+    if (!newMessage.trim() || isSending || !activeGroup || !user?._id) {
+      console.log("Early return - conditions not met");
+      console.log("newMessage.trim():", newMessage.trim());
+      console.log("isSending:", isSending);
+      console.log("activeGroup:", activeGroup);
+      console.log("user._id:", user?._id);
+      return;
+    }
 
     try {
+      setIsSending(true);
+      console.log("Sending message...");
+
+      // Match your Postman body structure exactly
       const messageData = {
-        content: newMessage.trim(),
-        senderId: "currentUserId", // Replace with actual user ID from your auth
-        senderName: "Current User", // Replace with actual username
-        timestamp: new Date().toISOString(),
+        community: activeGroup._id, // Changed from senderId to community
+        sender: user._id, // Changed from senderId to sender
+        message: newMessage.trim(),
+        imagePath: [], // Keep this as empty array for now
       };
 
-      // Call the API
-      await ChatService.createMessage(activeGroup._id, messageData);
+      console.log("messageData:", messageData);
 
-      // Update local state
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(), // Using timestamp as temporary ID
-          text: newMessage,
-          time: getCurrentTime(),
-          sender: "user",
-        },
-      ]);
+      const response = await CommunityMessageService.createMessage(
+        activeGroup._id,
+        messageData
+      );
 
+      console.log("Response received:", response);
+
+      // Update messages in state
+      setMessages((prev) => [...prev, response]);
+
+      // Clear input
       setNewMessage("");
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      if (messageInputRef.current) {
+        messageInputRef.current.focus();
+      }
+
+      console.log("Message sent successfully");
     } catch (error) {
       console.error("Failed to send message:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.response?.data?.message || "Failed to send message",
-      });
+      console.error("Error details:", error.response?.data || error.message);
+      // Show user-friendly error feedback
+      alert("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
+      console.log("isSending set to false");
     }
   };
 
@@ -431,21 +568,6 @@ const ChatApp = (ChatServiceData: any) => {
   useEffect(() => {
     fetchChatGroups();
   }, []);
-
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          text: newMessage,
-          time: getCurrentTime(),
-          sender: "user",
-        },
-      ]);
-      setNewMessage("");
-    }
-  };
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -679,14 +801,13 @@ const ChatApp = (ChatServiceData: any) => {
         {/* Chat Area */}
         <div
           className={`
-            flex-1 flex flex-col bg-gray-50 h-full
-            ${
-              (groupsListOpen && !isMediumScreen) ||
-              (infoSidebarOpen && !isLargeScreen)
-                ? "hidden md:flex"
-                : "flex"
-            }
-          `}
+    flex-1 flex flex-col bg-gray-50 h-full
+    ${
+      (groupsListOpen && !isMediumScreen) || (infoSidebarOpen && !isLargeScreen)
+        ? "hidden md:flex"
+        : "flex"
+    }
+  `}
         >
           <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
             <div className="flex-1">
@@ -699,44 +820,66 @@ const ChatApp = (ChatServiceData: any) => {
 
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-3">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {message.sender === "other" && (
-                    <div className="flex-shrink-0 mr-2">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <UserCircle2 className="h-8 w-8 text-gray-400" />
-                      </div>
-                    </div>
-                  )}
+              {isLoadingMessages ? (
+                <div className="flex justify-center items-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  No messages yet. Start the conversation!
+                </div>
+              ) : (
+                messages.map((message) => (
                   <div
-                    className={`max-w-xs rounded-lg px-4 py-2 ${
+                    key={message.id}
+                    className={`flex ${
                       message.sender === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-blue-200 text-blue-900"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
-                    <div className="mb-1">{message.text}</div>
-                    <div
-                      className={`text-xs ${
-                        message.sender === "user"
-                          ? "text-blue-100"
-                          : "text-blue-700"
-                      }`}
-                    >
-                      {message.time}
+                    {message.sender === "other" && (
+                      <div className="flex-shrink-0 mr-2">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                          <UserCircle2 className="h-8 w-8 text-gray-400" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-col max-w-xs">
+                      {/* Sender name - only show for other users */}
+                      {message.sender === "other" && (
+                        <div className="text-xs text-gray-600 mb-1 ml-2 font-medium">
+                          {message.senderInfo?.name ||
+                            `${message.senderInfo?.firstName} ${message.senderInfo?.lastName}` ||
+                            "Unknown User"}
+                        </div>
+                      )}
+                      <div
+                        className={`rounded-lg px-4 py-2 ${
+                          message.sender === "user"
+                            ? "bg-blue-500 text-white"
+                            : "bg-blue-200 text-blue-900"
+                        }`}
+                      >
+                        <div className="mb-1">{message.text}</div>
+                        <div
+                          className={`text-xs ${
+                            message.sender === "user"
+                              ? "text-blue-100"
+                              : "text-blue-700"
+                          }`}
+                        >
+                          {message.time}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
               <div ref={messagesEndRef} />
             </div>
           </div>
-
+          {/* Message Input */}
           {/* Message Input */}
           <div className="p-3 bg-white border-t">
             <div className="relative flex items-center">
@@ -746,19 +889,35 @@ const ChatApp = (ChatServiceData: any) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder={replyingTo ? "Type your reply..." : "Type Message"}
-                className="flex-1 p-3 bg-blue-50 text-gray-700 rounded-lg pr-12"
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1 p-3 bg-blue-50 text-gray-700 rounded-lg pr-12 disabled:opacity-50"
+                onKeyPress={(e) =>
+                  e.key === "Enter" && !isSending && handleSendMessage()
+                }
+                disabled={isSending || !activeGroup}
               />
               <button
-                className="absolute right-2 text-blue-500 p-2"
+                className={`absolute right-2 p-2 transition-colors ${
+                  isSending || !activeGroup || !newMessage.trim()
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-500 hover:text-blue-600"
+                }`}
                 onClick={handleSendMessage}
+                disabled={isSending || !activeGroup || !newMessage.trim()}
               >
-                <Send className="h-5 w-5" />
+                {isSending ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
               </button>
             </div>
+            {!activeGroup && (
+              <p className="text-xs text-gray-500 mt-1 text-center">
+                Select a group to start messaging
+              </p>
+            )}
           </div>
         </div>
-
         {/* Right Sidebar - Group Info */}
         <div
           className={`

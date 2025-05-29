@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/community_service";
+const BASE_URL =
+  "https://toto-academy-backend.onrender.com/api/v1/community_service";
 
 /**
  * Service for handling community service (chat group) API requests
@@ -55,9 +56,10 @@ const ChatService = {
    */
   createMessage: async (groupId, messageData) => {
     try {
+      // Fixed URL - removed duplicate BASE_URL and quotes
       const response = await axios.post(
-        `${BASE_URL}/"https://toto-academy-backend.onrender.com/api/v1/message_community_route/create"/${groupId}/messages`,
-        JSON.stringify(messageData),
+        `${BASE_URL}/message_community_route/create/${groupId}/messages`,
+        messageData, // No need to stringify, axios handles this
         {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
@@ -67,7 +69,8 @@ const ChatService = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || "Failed to create message";
+      console.error("Create message error:", error);
+      throw error.response?.data || error;
     }
   },
 

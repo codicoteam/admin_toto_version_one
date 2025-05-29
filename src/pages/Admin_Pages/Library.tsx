@@ -59,20 +59,28 @@ const Library = () => {
   const confirmDeleteBook = async () => {
     try {
       await LibraryService.deleteBook(confirmDelete);
-      setBooks(books.filter(book => book._id !== confirmDelete));
+      setBooks(books.filter((book) => book._id !== confirmDelete));
       setConfirmDelete(null);
     } catch (err) {
-      alert('Failed to delete book');
+      alert("Failed to delete book");
       setConfirmDelete(null);
     }
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="flex justify-center items-center min-h-screen text-red-500">{error}</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        {error}
+      </div>
+    );
   }
 
   return (
@@ -115,13 +123,13 @@ const Library = () => {
             <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
             <p className="mb-6">Are you sure you want to delete this book?</p>
             <div className="flex justify-end space-x-3">
-              <Button 
+              <Button
                 className="bg-gray-200 hover:bg-gray-300 text-gray-800"
                 onClick={cancelDelete}
               >
                 No
               </Button>
-              <Button 
+              <Button
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={confirmDeleteBook}
               >
@@ -143,19 +151,28 @@ const Library = () => {
           {/* Books Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => (
-              <div key={book._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div
+                key={book._id}
+                className="bg-white rounded-lg shadow-md overflow-hidden"
+              >
                 <div className="p-4">
                   <div className="flex items-center mb-2">
                     <BookOpen className="text-blue-900 mr-2" size={18} />
-                    <h3 className="text-lg font-semibold">{book.subject?.subjectName}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {book.subject?.subjectName}
+                    </h3>
                   </div>
-                  <p className="text-gray-600 mb-1"><strong>Level:</strong> {book.level}</p>
-                  <p className="text-gray-600 mb-1"><strong>Author:</strong> {book.authorFullName}</p>
+                  <p className="text-gray-600 mb-1">
+                    <strong>Level:</strong> {book.level}
+                  </p>
+                  <p className="text-gray-600 mb-1">
+                    <strong>Author:</strong> {book.authorFullName}
+                  </p>
                   <p className="text-gray-600 mb-3">{book.description}</p>
                   <div className="flex justify-between items-center">
-                    <a 
-                      href={book.filePath} 
-                      target="_blank" 
+                    <a
+                      href={book.filePath}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block"
                     >
@@ -163,7 +180,7 @@ const Library = () => {
                         Download
                       </Button>
                     </a>
-                    <Button 
+                    <Button
                       className="bg-red-600 hover:bg-red-700 text-white"
                       onClick={() => openDeleteConfirmation(book._id)}
                     >

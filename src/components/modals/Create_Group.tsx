@@ -20,7 +20,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import ChatService from "@/services/chat_service"; // Import the ChatService
+import ChatService from "@/services/Admin_Service/chat_service"; // Import the ChatService
 
 // Define interface for message object
 interface MessageFile {

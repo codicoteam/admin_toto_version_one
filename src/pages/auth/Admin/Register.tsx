@@ -46,67 +46,110 @@ const Admin_Register = () => {
   };
 
   // Handle form submission
+  // Enhanced form submission handler for your Register component
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Basic validation
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.contactNumber ||
-      !formData.password
-    ) {
-      showMessage("error", "Please fill all required fields");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Create FormData object for sending multipart/form-data (for file upload)
+      // Enhanced validation with specific error messages
+      const errors = [];
+
+      if (!formData.firstName?.trim()) errors.push("First name is required");
+      if (!formData.lastName?.trim()) errors.push("Last name is required");
+      if (!formData.email?.trim()) errors.push("Email is required");
+      if (!formData.contactNumber?.trim())
+        errors.push("Contact number is required");
+      if (!formData.password) errors.push("Password is required");
+
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (formData.email && !emailRegex.test(formData.email.trim())) {
+        errors.push("Please enter a valid email address");
+      }
+
+      // Password strength validation (optional)
+      if (formData.password && formData.password.length < 6) {
+        errors.push("Password must be at least 6 characters long");
+      }
+
+      // Contact number validation (basic)
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{7,15}$/;
+      if (
+        formData.contactNumber &&
+        !phoneRegex.test(formData.contactNumber.trim())
+      ) {
+        errors.push("Please enter a valid contact number");
+      }
+
+      if (errors.length > 0) {
+        showMessage("error", errors.join(". "));
+        setIsLoading(false);
+        return;
+      }
+
+      // Create FormData with validation
       const adminData = new FormData();
 
-      // Append form fields to FormData
-      Object.keys(formData).forEach((key) => {
-        adminData.append(key, formData[key]);
-      });
+      // Append fields with trimming and validation
+      adminData.append("firstName", formData.firstName.trim());
+      adminData.append("lastName", formData.lastName.trim());
+      adminData.append("email", formData.email.trim().toLowerCase());
+      adminData.append("contactNumber", formData.contactNumber.trim());
+      adminData.append("password", formData.password);
 
-      // Append profile picture if exists
+      // Handle profile picture with validation
       if (profilePicture) {
+        // Validate file size (max 5MB)
+        if (profilePicture.size > 5 * 1024 * 1024) {
+          showMessage("error", "Profile picture must be less than 5MB");
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate file type
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!allowedTypes.includes(profilePicture.type)) {
+          showMessage(
+            "error",
+            "Profile picture must be a valid image (JPEG, PNG, GIF, or WebP)"
+          );
+          setIsLoading(false);
+          return;
+        }
+
         adminData.append("profilePicture", profilePicture);
       }
 
-      // Log form data for debugging
-      console.log("Form data fields:");
-      for (let pair of adminData.entries()) {
-        console.log(
-          pair[0] +
-            ": " +
-            (pair[0] === "profilePicture" ? "File object" : pair[1])
-        );
+      // Debug logging
+      console.log("Submitting form with data:");
+      for (const [key, value] of adminData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
       }
 
-      // Call SignUpAdmin service
+      // Call the service
       const response = await SignUpAdmin(adminData);
 
       // Handle successful response
       showMessage("success", "Registration successful!");
 
-      // Save user data if needed
-      if (response.user) {
-        localStorage.setItem("adminUser", JSON.stringify(response.user));
-      }
-
-      // Navigate to login page or dashboard
+      // Navigate to login or dashboard
       navigate("/Admin_login");
     } catch (error) {
       console.error("Registration error:", error);
-      // Enhanced error message display
+
+      // Display user-friendly error message
       const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Registration failed. Please try again.";
+        error.message || "Registration failed. Please try again.";
       showMessage("error", errorMessage);
     } finally {
       setIsLoading(false);
