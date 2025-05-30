@@ -7,6 +7,7 @@ import student from "@/assets/home1.png";
 import StudentService from "../../services/Admin_Service/Student_service";
 import CourseService from "@/services/Admin_Service/Subject_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
+import { Link } from "react-router-dom";
 
 const Admin_Dashboard = () => {
   // Set initial sidebar state based on screen size
@@ -75,9 +76,6 @@ const Admin_Dashboard = () => {
     // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
-  // Get top performing students (assuming higher performance means higher grades)
-  const topPerformingStudents = students.slice(0, 5); // Get top 5 students
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 relative">
@@ -229,12 +227,12 @@ const Admin_Dashboard = () => {
 
           {/* Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left Column - Top Performing Students */}
+            {/* Left Column - All Students */}
             <div className="col-span-1">
               <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-medium text-blue-900">
-                    Top Performing Students
+                    All Students
                   </h2>
                   <a
                     href="#"
@@ -245,15 +243,15 @@ const Admin_Dashboard = () => {
                 </div>
 
                 {/* Student List */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-96 overflow-y-auto">
                   {loading ? (
                     <div className="text-center p-4">Loading students...</div>
                   ) : error ? (
                     <div className="text-center p-4 text-red-500">
                       Error: {error}
                     </div>
-                  ) : topPerformingStudents.length > 0 ? (
-                    topPerformingStudents.map((student) => (
+                  ) : students.length > 0 ? (
+                    students.map((student) => (
                       <div
                         key={student._id}
                         className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-900 text-white rounded-md p-2 hover:bg-blue-800 transition-colors"
@@ -266,12 +264,12 @@ const Admin_Dashboard = () => {
                             {student.firstName} {student.lastName}
                           </span>
                         </div>
-                        <Button
+                        {/* <Button
                           size="sm"
                           className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 text-xs w-full sm:w-auto"
                         >
                           View Progress
-                        </Button>
+                        </Button> */}
                       </div>
                     ))
                   ) : (
@@ -319,7 +317,7 @@ const Admin_Dashboard = () => {
               <div className="bg-white p-4 rounded-lg shadow-md mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-medium text-blue-900">
-                    Popular Courses
+                    All Courses
                   </h2>
                   <a
                     href="#"
@@ -330,37 +328,44 @@ const Admin_Dashboard = () => {
                 </div>
 
                 {/* Course List */}
+                {/* Course List */}
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {[
-                    { name: "Mathematics", topics: "30+ Topics" },
-                    { name: "Biology", topics: "30+ Topics" },
-                    { name: "Chemistry", topics: "30+ Topics" },
-                    { name: "Physics", topics: "30+ Topics" },
-                    { name: "Geography", topics: "30+ Topics" },
-                  ].map((course, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md p-2 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center mb-2 sm:mb-0">
-                        <div className="h-10 w-10 bg-blue-100 rounded-md mr-3"></div>
-                        <div>
-                          <div className="font-medium text-blue-900">
-                            {course.name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {course.topics}
+                  {loading ? (
+                    <div className="text-center p-4">Loading courses...</div>
+                  ) : error ? (
+                    <div className="text-center p-4 text-red-500">
+                      Error: {error}
+                    </div>
+                  ) : course.length > 0 ? (
+                    course.map((courseItem, index) => (
+                      <div
+                        key={courseItem._id || index}
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md p-2 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center mb-2 sm:mb-0">
+                          <div className="h-10 w-10 bg-blue-100 rounded-md mr-3"></div>
+                          <div>
+                            <div className="font-medium text-blue-900">
+                              {courseItem.subjectName || courseItem.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {courseItem.topics || "30+ Topics"}
+                            </div>
                           </div>
                         </div>
+                        <Link to="/courses">
+                          <Button
+                            size="sm"
+                            className="bg-white border border-blue-900 hover:bg-blue-50 text-blue-900 text-xs w-full sm:w-auto"
+                          >
+                            View Course
+                          </Button>
+                        </Link>
                       </div>
-                      <Button
-                        size="sm"
-                        className="bg-white border border-blue-900 hover:bg-blue-50 text-blue-900 text-xs w-full sm:w-auto"
-                      >
-                        View Course
-                      </Button>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-center p-4">No courses found</div>
+                  )}
                 </div>
               </div>
 

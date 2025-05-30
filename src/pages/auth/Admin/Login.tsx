@@ -51,7 +51,11 @@ const Admin_login = () => {
 
       // Save auth token or user data to localStorage if needed
       localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      const storedUser = localStorage.setItem(
+        "user",
+        JSON.stringify(response.user)
+      );
+      console.log("----- storeduser", storedUser);
 
       // Navigate to dashboard or home page
       navigate("/admin_dashboard");

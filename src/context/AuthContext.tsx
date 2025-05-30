@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("token");
-
+        console.log("---------stored User", storedUser);
         if (storedUser && storedToken) {
           try {
             const userData = JSON.parse(storedUser);
