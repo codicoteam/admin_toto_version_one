@@ -10,10 +10,6 @@ const Sidebar = () => {
     { label: "LIBRARY", path: "/library" },
     { label: "WALLET", path: "/reserourcewalle" },
     { label: "SETTINGS", path: "/settingspage" },
-    // { label: "LIBRARY", path: "/reserourceupload" },
-    // { label: "PAYMENTS", path: "/reserourcewalle" },
-    // { label: "ANALYTICS", path: "/analytics" },
-    // { label: "SETTINGS", path: "/settings" },
   ];
 
   return (
