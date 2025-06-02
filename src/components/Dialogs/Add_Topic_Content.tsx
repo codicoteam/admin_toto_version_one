@@ -225,7 +225,7 @@ const AddTopicContentDialog: React.FC<AddTopicContentDialogProps> = ({
               id="title"
               value={contentData.title}
               onChange={handleChange}
-              placeholder="Enter content title"
+              placeholder="Enter content ttitle"
               required
             />
           </div>
