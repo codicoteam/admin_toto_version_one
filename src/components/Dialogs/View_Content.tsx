@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import TopicContentService from "@/services/Admin_Service/Topic_Content_service";
 import Topic from "../Interfaces/Topic_Interface";
+import CreateContentDialog from "./Add_Topic_Content";
 
 interface ViewTopicContentDialogProps {
   open: boolean;

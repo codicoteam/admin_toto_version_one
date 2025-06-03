@@ -20,6 +20,7 @@ import {
   FileText,
   Music,
   Video,
+  Calculator,
 } from "lucide-react";
 import {
   Card,
@@ -52,6 +53,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/helper/SupabaseClient"; // Import supabase client
+import "mathlive";
+
+declare global {
+  interface Window {
+    MathLive: any;
+  }
+}
+
+declare namespace JSX {
+  interface IntrinsicElements {
+    "math-field": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement>,
+      HTMLElement
+    > & {
+      value?: string;
+    };
+  }
+}
 
 interface ContentFormData {
   title: string;
@@ -124,6 +143,102 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   const [textDialogOpen, setTextDialogOpen] = useState(false);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [tempText, setTempText] = useState("");
+
+  //maths
+  const [showMathInput, setShowMathInput] = useState(false);
+  const [mathExpression, setMathExpression] = useState("");
+  const mathFieldRef = useRef(null);
+
+  // Add this to your component's imports/dependencies section
+  useEffect(() => {
+    // Load MathLive dynamically
+    const loadMathLive = async () => {
+      if (!window.MathLive) {
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/mathlive@0.95.0/dist/mathlive.min.js";
+        script.onload = () => {
+          console.log("MathLive loaded successfully");
+        };
+        document.head.appendChild(script);
+      }
+    };
+    loadMathLive();
+  }, []);
+
+  // Updated math field initialization useEffect
+  useEffect(() => {
+    if (showMathInput && mathFieldRef.current && window.MathLive) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        try {
+          // Clear any existing content
+          mathFieldRef.current.innerHTML = "";
+
+          // Create math field
+          const mathField = new window.MathLive.MathfieldElement({
+            defaultMode: "math",
+            keypressSound: null,
+            plonkSound: null,
+            onContentDidChange: (mf) => {
+              setMathExpression(mf.value);
+            },
+          });
+
+          mathField.style.fontSize = "18px";
+          mathField.style.minHeight = "60px";
+          mathField.style.padding = "8px";
+          mathField.style.border = "1px solid #d1d5db";
+          mathField.style.borderRadius = "6px";
+
+          mathFieldRef.current.appendChild(mathField);
+        } catch (error) {
+          console.error("Error initializing MathLive:", error);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showMathInput]);
+  // Updated insertMathExpression function
+  const insertMathExpression = () => {
+    if (mathExpression) {
+      const mathLatex = `\\(${mathExpression}\\)`;
+      const textarea = document.querySelector(
+        "[data-math-textarea]"
+      ) as HTMLTextAreaElement;
+
+      if (textarea) {
+        const start = textarea.selectionStart || 0;
+        const end = textarea.selectionEnd || 0;
+        const newText =
+          tempText.substring(0, start) + mathLatex + tempText.substring(end);
+
+        setTempText(newText);
+
+        // Focus back to textarea and set cursor position
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + mathLatex.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+
+        // Reset math field
+        if (mathFieldRef.current?.firstChild) {
+          mathFieldRef.current.firstChild.value = "";
+        }
+        setMathExpression("");
+      }
+    }
+  };
+
+  // Updated quick symbol insertion function
+  const insertQuickSymbol = (symbol) => {
+    if (mathFieldRef.current?.firstChild && window.MathLive) {
+      const mathField = mathFieldRef.current.firstChild;
+      mathField.executeCommand(["insert", symbol]);
+      mathField.focus();
+    }
+  };
 
   // Add this function to handle text button click
   const handleTextButtonClick = (index) => {
@@ -932,7 +1047,6 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-
       {/* File Viewer Dialog */}
       {/* File Viewer Dialog */}
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
@@ -1095,7 +1209,6 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Create Content Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50/30 border-0 shadow-2xl">
@@ -1559,10 +1672,11 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Text Input Popup Dialog */}
+      {/* // Replace your existing Text Input Popup Dialog with this updated
+      version: */}
       <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50/30 border-0 shadow-2xl">
+        <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50/30 border-0 shadow-2xl">
           {/* Header */}
           <div className="relative -m-6 mb-0 p-6 bg-gradient-to-r from-slate-600 via-gray-600 to-slate-600 text-white flex-shrink-0">
             <div className="absolute inset-0 bg-black/10"></div>
@@ -1574,26 +1688,159 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                 Add Lesson Text
               </DialogTitle>
               <p className="text-slate-100 mt-2 text-sm">
-                Enter the text content for this lesson item
+                Enter the text content for this lesson item with mathematical
+                expressions
               </p>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full"></div>
-                Lesson Text Content
-              </label>
-              <Textarea
-                value={tempText}
-                onChange={(e) => setTempText(e.target.value)}
-                placeholder="Enter your lesson content here..."
-                rows={12}
-                className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-              />
+          <div className="flex-1 overflow-hidden p-6 flex gap-6">
+            {/* Text Input Section */}
+            <div
+              className={`${
+                showMathInput ? "w-1/2" : "w-full"
+              } flex flex-col transition-all duration-300`}
+            >
+              <div className="space-y-3 flex-1 flex flex-col">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full"></div>
+                    Lesson Text Content
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMathInput(!showMathInput)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                  >
+                    {showMathInput ? (
+                      <>
+                        <X size={14} className="mr-1" />
+                        Hide Math
+                      </>
+                    ) : (
+                      <>
+                        <Calculator size={14} className="mr-1" />
+                        Add Math
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <Textarea
+                  data-math-textarea
+                  value={tempText}
+                  onChange={(e) => setTempText(e.target.value)}
+                  placeholder="Enter your lesson content here... Use \\( \\) for inline math or \\[ \\] for display math"
+                  className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none flex-1 min-h-[400px]"
+                />
+              </div>
             </div>
+            {/* Math Input Section */}
+
+            {showMathInput && (
+              <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
+                <div className="space-y-4 flex-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                      Mathematical Expression
+                    </label>
+                  </div>
+
+                  {/* Math Input Field */}
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
+                    <div
+                      ref={mathFieldRef}
+                      className="math-field-container"
+                      style={{ minHeight: "60px" }}
+                    />
+                  </div>
+
+                  {/* Quick Math Symbols */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-600">
+                      Quick Insert:
+                    </h4>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        {
+                          symbol: "\\frac{#0}{#1}",
+                          display: "𝑎/𝑏",
+                          label: "Fraction",
+                        },
+                        { symbol: "#0^{#1}", display: "x²", label: "Power" },
+                        {
+                          symbol: "\\sqrt{#0}",
+                          display: "√x",
+                          label: "Square Root",
+                        },
+                        {
+                          symbol: "\\sum_{#0}^{#1}",
+                          display: "∑",
+                          label: "Sum",
+                        },
+                        {
+                          symbol: "\\int_{#0}^{#1}",
+                          display: "∫",
+                          label: "Integral",
+                        },
+                        { symbol: "\\alpha", display: "α", label: "Alpha" },
+                        { symbol: "\\beta", display: "β", label: "Beta" },
+                        { symbol: "\\pi", display: "π", label: "Pi" },
+                        { symbol: "\\infty", display: "∞", label: "Infinity" },
+                        { symbol: "\\leq", display: "≤", label: "Less Equal" },
+                        {
+                          symbol: "\\geq",
+                          display: "≥",
+                          label: "Greater Equal",
+                        },
+                        { symbol: "\\neq", display: "≠", label: "Not Equal" },
+                      ].map((item, index) => (
+                        <Button
+                          key={index}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 text-sm hover:bg-blue-50 border-gray-200"
+                          onClick={() => insertQuickSymbol(item.symbol)}
+                          title={item.label}
+                        >
+                          {item.display}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Math Preview */}
+                  {mathExpression && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-600">
+                        Preview:
+                      </h4>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
+                        <math-field read-only style={{ fontSize: "16px" }}>
+                          {mathExpression}
+                        </math-field>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Insert Button */}
+                  <Button
+                    type="button"
+                    onClick={insertMathExpression}
+                    disabled={!mathExpression}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Insert Math Expression
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -1604,6 +1851,8 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                 onClick={() => {
                   setTextDialogOpen(false);
                   setTempText("");
+                  setShowMathInput(false);
+                  setMathExpression("");
                 }}
                 className="flex-1 h-10 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
               >
@@ -1622,7 +1871,6 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Update Content Dialog */}
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
         <DialogContent className="max-w-lg">
@@ -1773,7 +2021,6 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -1806,5 +2053,6 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
     </>
   );
 };
+<script src="https://unpkg.com/mathlive@0.95.0/dist/mathlive.min.js"></script>;
 
 export default ViewTopicContentDialog;
