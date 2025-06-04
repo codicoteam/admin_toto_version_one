@@ -55,6 +55,7 @@ import AddTopicDialog from "@/components/Dialogs/Add_topic";
 import { supabase } from "@/helper/SupabaseClient";
 import AddSubjectDialog from "@/components/Dialogs/Add__Subject";
 import DeleteSubjectDialog from "@/components/Dialogs/Delete_Subject";
+import EditSubjectDialog from "@/components/Dialogs/Edit_Subject";
 
 const AdminSubjects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -92,6 +93,76 @@ const AdminSubjects: React.FC = () => {
   const [deletingSubjectTitle, setDeletingSubjectTitle] = useState<string>("");
   const [deleteSubjectDialogOpen, setDeleteSubjectDialogOpen] =
     useState<boolean>(false);
+
+  //editi subject
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [editSubjectDialogOpen, setEditSubjectDialogOpen] =
+    useState<boolean>(false);
+
+  // Add these handler functions in your AdminSubjects component
+  const handleEditSubject = (subject: Subject) => {
+    setEditingSubject(subject);
+    setEditSubjectDialogOpen(true);
+  };
+
+  const handleSubjectUpdated = async (updatedSubject: Subject) => {
+    // Create a more robust update that preserves existing subject data
+    setSubjects((prevSubjects) =>
+      prevSubjects.map((subject) => {
+        // Check if this is the subject being updated
+        const isTargetSubject =
+          (subject._id &&
+            updatedSubject._id &&
+            subject._id === updatedSubject._id) ||
+          (subject.id &&
+            updatedSubject.id &&
+            subject.id === updatedSubject.id) ||
+          // Fallback comparison using multiple possible ID fields
+          subject._id === updatedSubject.id ||
+          subject.id === updatedSubject._id;
+
+        if (isTargetSubject) {
+          // Only update the target subject, preserving topics and other existing data
+          return {
+            ...subject, // Keep existing data (including topics)
+            ...updatedSubject, // Apply updates
+            // Ensure topics are preserved if they exist in the original subject
+            topics: updatedSubject.topics || subject.topics,
+            // Preserve the correct ID structure
+            _id: subject._id || updatedSubject._id,
+            id: subject.id || updatedSubject.id,
+          };
+        }
+
+        // Return other subjects unchanged
+        return subject;
+      })
+    );
+
+    // Only update selectedSubject if it's the one being updated
+    if (selectedSubject) {
+      const isSelectedSubject =
+        (selectedSubject._id &&
+          updatedSubject._id &&
+          selectedSubject._id === updatedSubject._id) ||
+        (selectedSubject.id &&
+          updatedSubject.id &&
+          selectedSubject.id === updatedSubject.id) ||
+        selectedSubject._id === updatedSubject.id ||
+        selectedSubject.id === updatedSubject._id;
+
+      if (isSelectedSubject) {
+        setSelectedSubject({
+          ...selectedSubject,
+          ...updatedSubject,
+          // Preserve topics from the selected subject
+          topics: updatedSubject.topics || selectedSubject.topics,
+          _id: selectedSubject._id || updatedSubject._id,
+          id: selectedSubject.id || updatedSubject.id,
+        });
+      }
+    }
+  };
 
   // Handler for viewing a topic's content
   const handleViewContent = (topic: Topic) => {
@@ -317,60 +388,65 @@ const AdminSubjects: React.FC = () => {
   // Tabs based on the design with categories
   const tabs = [
     { id: "all", label: "All" },
-    { id: "popular", label: "Popular Subjects" },
-    { id: "o-level", label: "O' Level" },
-    { id: "a-level", label: "A' Level" },
-    { id: "tertiary", label: "Tertiary" },
+
+    { id: "O Level", label: "O' Level" }, // Matches enum exactly
+    { id: "A Level", label: "A' Level" }, // Matches enum exactly
+    { id: "Form 1", label: "Form 1" }, // Matches enum exactly
+    { id: "Form 2", label: "Form 2" }, // Matches enum exactly
+    { id: "Form 3", label: "Form 3" }, // Matches enum exactly
+    { id: "Form 4", label: "Form 4" }, // Matches enum exactly
   ];
 
   // Filter subjects based on active tab and search query
   const filteredSubjects = subjects.filter((subject) => {
-    // First filter by tab category
-    const matchesTab =
-      activeTab === "all"
-        ? true
-        : activeTab === "popular"
-        ? subject.isPopular
-        : subject.category === activeTab;
+    // Filter by tab category
+    let matchesTab = false;
 
-    // Then filter by search query if one exists
-    const matchesSearch = searchQuery
-      ? subject.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        subject.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        subject.subjectName
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        subject.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
+    if (activeTab === "all") {
+      matchesTab = true;
+    } else if (activeTab === "popular") {
+      // Since your model doesn't have a popular field, you might want to:
+      // 1. Add logic based on number of topics/students
+      // 2. Add a popular field to your model
+      // 3. Remove this tab for now
+      matchesTab = false; // Temporarily disable until you define popular logic
+    } else {
+      // Filter by Level field (exact match with enum values)
+      matchesTab = subject.Level === activeTab;
+    }
 
-    return matchesTab && matchesSearch;
+    // Filter by search query (only check fields that exist in your model)
+    const matchesSearch =
+      !searchQuery ||
+      (subject.subjectName &&
+        subject.subjectName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Filter by showSubject field
+    const isVisible = subject.showSubject === true;
+
+    return matchesTab && matchesSearch && isVisible;
   });
-
   // Map API subject data to the format expected by the SubjectCard component
+  // Update the mapSubjectToCardProps function to match your model fields
   const mapSubjectToCardProps = (subject: Subject) => {
     const subjectId = subject._id || subject.id || "";
 
     return {
       id: subjectId,
-      title:
-        subject.name ||
-        subject.title ||
-        subject.subjectName ||
-        "Untitled Subject",
-      category: subject.Level || subject.category || "Unknown Category",
+      title: subject.subjectName || "Untitled Subject", // Use subjectName from model
+      category: subject.Level || "Unknown Level", // Use Level from model
       lessons: subject.numberOfLessons || subject.lessons || 0,
       duration: subject.duration || "0h",
       topics: subject.topics || [],
       imageUrl:
         subject.imageUrl ||
         "https://media.istockphoto.com/id/1500285927/photo/young-woman-a-university-student-studying-online.jpg?s=612x612&w=0&k=20&c=yvFDnYMNEJ6WEDYrAaOOLXv-Jhtv6ViBRXSzJhL9S_k=",
-      showSubject:
-        subject.showSubject !== undefined ? subject.showSubject : true,
+      showSubject: subject.showSubject,
       onClickView: () => viewSubjectTopics(subject),
-      onClickDelete: () => handleDeleteSubject(subjectId), // Add delete handler
+      onClickDelete: () => handleDeleteSubject(subjectId),
+      onUpdate: () => handleEditSubject(subject),
     };
   };
-
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Mobile Menu Toggle */}
@@ -657,6 +733,19 @@ const AdminSubjects: React.FC = () => {
           subjectId={deletingSubjectId}
           subjectTitle={deletingSubjectTitle}
           onSubjectDeleted={handleSubjectDeleted}
+        />
+      </Dialog>
+
+      {/* Edit Subject Dialog */}
+      <Dialog
+        open={editSubjectDialogOpen}
+        onOpenChange={setEditSubjectDialogOpen}
+      >
+        <EditSubjectDialog
+          open={editSubjectDialogOpen}
+          onOpenChange={setEditSubjectDialogOpen}
+          subject={editingSubject}
+          onSubjectUpdated={handleSubjectUpdated}
         />
       </Dialog>
     </div>

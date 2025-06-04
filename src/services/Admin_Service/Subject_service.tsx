@@ -69,7 +69,7 @@ const SubjectService = {
   updateSubject: async (id, subjectData) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/updatecourse/${id}`,
+        `${BASE_URL}/update/${id}`,
         subjectData,
         {
           headers: {

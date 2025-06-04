@@ -823,97 +823,100 @@ const StudentDashboard = () => {
                 </div>
 
                 {/* Students Table */}
+                {/* Students Table */}
                 <div className="bg-white p-6 rounded-md shadow-sm">
                   <h3 className="text-lg font-medium mb-4">Students</h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full border-spacing-y-2 border-separate">
-                      <thead>
-                        <tr>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            Name
-                          </th>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            ID
-                          </th>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            Level
-                          </th>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            School
-                          </th>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            Status
-                          </th>
-                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredStudents.length > 0 ? (
-                          filteredStudents.map((student, index) => (
-                            <tr key={index}>
-                              <td className="px-2 py-3 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 flex-shrink-0"></div>
-                                  <div>
-                                    <div className="text-sm font-medium">
-                                      {student.firstName} {student.lastName}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {student.email}
+                  <div className="max-h-96 overflow-y-auto">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border-spacing-y-2 border-separate">
+                        <thead className="sticky top-0 bg-white z-10">
+                          <tr>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              Name
+                            </th>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              ID
+                            </th>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              Level
+                            </th>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              School
+                            </th>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              Status
+                            </th>
+                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredStudents.length > 0 ? (
+                            filteredStudents.map((student, index) => (
+                              <tr key={index}>
+                                <td className="px-2 py-3 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 flex-shrink-0"></div>
+                                    <div>
+                                      <div className="text-sm font-medium">
+                                        {student.firstName} {student.lastName}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {student.email}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </td>
-                              <td className="px-2 py-3 whitespace-nowrap text-sm">
-                                {student.studentId || "N/A"}
-                              </td>
-                              <td className="px-2 py-3 whitespace-nowrap text-sm">
-                                {student.level || "N/A"}
-                              </td>
-                              <td className="px-2 py-3 whitespace-nowrap text-sm">
-                                {student.school || "N/A"}
-                              </td>
-                              <td className="px-2 py-3 whitespace-nowrap">
-                                <span
-                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    student.subscription_status === "active"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                                  }`}
-                                >
-                                  {(
-                                    student.subscription_status || "N/A"
-                                  ).toUpperCase()}
-                                </span>
-                              </td>
-                              <td className="px-2 py-3 whitespace-nowrap text-sm">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-blue-900 border-blue-900 hover:bg-blue-50"
-                                  onClick={() =>
-                                    handleViewStudentDetails(student)
-                                  }
-                                >
-                                  View
-                                </Button>
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                  {student.studentId || "N/A"}
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                  {student.level || "N/A"}
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                  {student.school || "N/A"}
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap">
+                                  <span
+                                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                      student.subscription_status === "active"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {(
+                                      student.subscription_status || "N/A"
+                                    ).toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-3 whitespace-nowrap text-sm">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-blue-900 border-blue-900 hover:bg-blue-50"
+                                    onClick={() =>
+                                      handleViewStudentDetails(student)
+                                    }
+                                  >
+                                    View
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="px-2 py-4 text-center text-gray-500"
+                              >
+                                No students found matching your criteria
                               </td>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              className="px-2 py-4 text-center text-gray-500"
-                            >
-                              No students found matching your criteria
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>

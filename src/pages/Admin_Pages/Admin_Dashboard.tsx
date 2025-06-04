@@ -8,6 +8,7 @@ import StudentService from "../../services/Admin_Service/Student_service";
 import CourseService from "@/services/Admin_Service/Subject_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 import { Link } from "react-router-dom";
+import AdminService from "../../services/Admin_Service/admin_service";
 
 const Admin_Dashboard = () => {
   // Set initial sidebar state based on screen size
@@ -26,6 +27,30 @@ const Admin_Dashboard = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  const [adminData, setAdminData] = useState(null);
+  const [adminLoading, setAdminLoading] = useState(true);
+
+  // Add this useEffect to fetch admin data
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        // Get admin email from localStorage (adjust the key name if different)
+        const adminEmail = localStorage.getItem("adminEmail"); // Changed from "adminId" to "adminEmail"
+
+        if (adminEmail) {
+          const response = await AdminService.getAdminByEmail(adminEmail);
+          setAdminData(response.data || response);
+        }
+        setAdminLoading(false);
+      } catch (err) {
+        console.error("Error fetching admin data:", err);
+        setAdminLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
 
   // Fetch students from backend
   useEffect(() => {
@@ -164,7 +189,13 @@ const Admin_Dashboard = () => {
             {/* Admin Profile */}
             <div className="bg-blue-900 text-white rounded-lg py-2 px-4 flex items-center shadow-md hover:shadow-lg transition-shadow">
               <User className="h-5 w-5 mr-2" />
-              <span className="font-medium">admin name</span>
+              <span className="font-medium">
+                {adminLoading
+                  ? "Loading..."
+                  : adminData
+                  ? `${adminData.firstName} ${adminData.lastName}`
+                  : " Admin"}
+              </span>
             </div>
           </div>
 

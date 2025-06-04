@@ -23,13 +23,17 @@ const Admin_Register = () => {
     email: "",
     contactNumber: "",
     password: "",
+    profilePicture: "",
+    profilePictureFileName: "",
+    profilePictureType: "",
   });
 
-  // State for file upload
+  // State for file upload - now storing base64
   const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureBase64, setProfilePictureBase64] = useState("");
 
   // Handle input changes
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -37,17 +41,63 @@ const Admin_Register = () => {
     }));
   };
 
+  // Convert file to base64
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Handle file input for profile picture
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
-      setProfilePicture(file);
+      try {
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          showMessage("error", "Profile picture must be less than 5MB");
+          return;
+        }
+
+        // Validate file type
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          showMessage(
+            "error",
+            "Profile picture must be a valid image (JPEG, PNG, GIF, or WebP)"
+          );
+          return;
+        }
+
+        setProfilePicture(file);
+        // Convert to base64
+        const base64 = await convertToBase64(file);
+        setProfilePictureBase64(base64);
+
+        // Update formData with profile picture info
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: base64,
+          profilePictureFileName: file.name,
+          profilePictureType: file.type,
+        }));
+      } catch (error) {
+        console.error("Error converting file to base64:", error);
+        showMessage("error", "Error processing image file");
+      }
     }
   };
 
   // Handle form submission
-  // Enhanced form submission handler for your Register component
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -61,6 +111,7 @@ const Admin_Register = () => {
       if (!formData.contactNumber?.trim())
         errors.push("Contact number is required");
       if (!formData.password) errors.push("Password is required");
+      if (!formData.profilePicture) errors.push("Profile picture is required");
 
       // Email format validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,12 +119,12 @@ const Admin_Register = () => {
         errors.push("Please enter a valid email address");
       }
 
-      // Password strength validation (optional)
+      // Password strength validation
       if (formData.password && formData.password.length < 6) {
         errors.push("Password must be at least 6 characters long");
       }
 
-      // Contact number validation (basic)
+      // Contact number validation
       const phoneRegex = /^[\+]?[0-9\s\-\(\)]{7,15}$/;
       if (
         formData.contactNumber &&
@@ -88,53 +139,18 @@ const Admin_Register = () => {
         return;
       }
 
-      // Create FormData with validation
-      const adminData = new FormData();
-
-      // Append fields with trimming and validation
-      adminData.append("firstName", formData.firstName.trim());
-      adminData.append("lastName", formData.lastName.trim());
-      adminData.append("email", formData.email.trim().toLowerCase());
-      adminData.append("contactNumber", formData.contactNumber.trim());
-      adminData.append("password", formData.password);
-
-      // Handle profile picture with validation
-      if (profilePicture) {
-        // Validate file size (max 5MB)
-        if (profilePicture.size > 5 * 1024 * 1024) {
-          showMessage("error", "Profile picture must be less than 5MB");
-          setIsLoading(false);
-          return;
-        }
-
-        // Validate file type
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/gif",
-          "image/webp",
-        ];
-        if (!allowedTypes.includes(profilePicture.type)) {
-          showMessage(
-            "error",
-            "Profile picture must be a valid image (JPEG, PNG, GIF, or WebP)"
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        adminData.append("profilePicture", profilePicture);
-      }
+      // Create JSON object - use formData directly since it now includes all fields
+      const adminData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        contactNumber: formData.contactNumber.trim(),
+        password: formData.password,
+        profilePicture: formData.profilePicture, // This is the base64 string
+      };
 
       // Debug logging
-      console.log("Submitting form with data:");
-      for (const [key, value] of adminData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-        } else {
-          console.log(`${key}: ${value}`);
-        }
-      }
+      console.log("Submitting form with JSON data:", adminData);
 
       // Call the service
       const response = await SignUpAdmin(adminData);
@@ -143,7 +159,7 @@ const Admin_Register = () => {
       showMessage("success", "Registration successful!");
 
       // Navigate to login or dashboard
-      navigate("/Admin_login");
+      navigate("/admin_dashboard");
     } catch (error) {
       console.error("Registration error:", error);
 
@@ -264,6 +280,11 @@ const Admin_Register = () => {
                 accept="image/*"
                 onChange={handleFileChange}
               />
+              {profilePicture && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Selected: {profilePicture.name}
+                </p>
+              )}
 
               {/* Password */}
               <label className="block mb-1 text-m font-bold text-black">

@@ -1,0 +1,53 @@
+import axios from "axios";
+
+const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/admin_route";
+
+/**
+ * Service for handling admin-related API requests
+ */
+const AdminService = {
+  /**
+   * Fetches all admins from the backend
+   * @returns {Promise} Promise containing admin data
+   */
+  getAllAdmins: async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getalladmins`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve admins";
+    }
+  },
+
+  /**
+   * Get a specific admin by email
+   * @param {string} email - Admin email
+   * @returns {Promise} Promise with admin data
+   */
+  getAdminByEmail: async (email) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getadmin/${email}`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve admin";
+    }
+  },
+};
+
+/**
+ * Helper function to get authentication token from local storage
+ * @returns {string} Authentication token
+ */
+const getAuthToken = () => {
+  return localStorage.getItem("adminToken");
+};
+
+export default AdminService;
