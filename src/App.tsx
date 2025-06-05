@@ -75,6 +75,7 @@ import NotFound from "./pages/NotFound";
 
 import ReserourceWalle from "./pages/Walle";
 import AdminSubjects from "./pages/Admin_Pages/Subjects";
+import CreateNewContent from "./pages/Admin_Pages/CreateNewContent";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
             <Route path="/settingspage" element={<SettingsPage />} />
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />
+              <Route path="courses/topics/:id/content/new" element={<CreateNewContent />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminSubjects />} />
@@ -160,8 +162,8 @@ const App = () => (
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/user/profile" element={<Profile />} />
               <Route path="/user/settings" element={<Settings />} />
+              <Route path="/lessonaddtext" element={<Settings />} />
             </Route>
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

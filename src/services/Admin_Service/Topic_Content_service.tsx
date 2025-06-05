@@ -13,20 +13,25 @@ const TopicContentService = {
    * @param {Object} contentData - Data for the new topic content
    * @returns {Promise} Promise with created topic content data
    */
-  createTopicContent: async (contentData: any) => {
-    try {
-      const response = await axios.post(`${BASE_URL}/create`, contentData, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || "Failed to create topic content";
-    }
-  },
-
+ createTopicContent: async (contentData: any) => {
+  try {
+    console.log("Creating topic content with data:", contentData);
+    
+    // Convert contentData to JSON string
+    const jsonData = JSON.stringify(contentData);
+    console.log("JSON data to be sent:", jsonData);
+    const response = await axios.post(`${BASE_URL}/create`, jsonData, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating topic content:", error);
+    throw error.response?.data || "Failed to create topic content";
+  }
+},
   /**
    * Fetches all topic contents
    * @returns {Promise} Promise containing topic content data

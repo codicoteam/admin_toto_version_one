@@ -11,12 +11,20 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
+  build: {
+    assetsDir: 'assets',
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // MathLive assets
+      "/fonts": path.resolve(__dirname, "node_modules/mathlive/fonts"),
+      "/sounds": path.resolve(__dirname, "node_modules/mathlive/sounds"),
     },
   },
+  optimizeDeps: {
+    include: ['mathlive']
+  }
 }));

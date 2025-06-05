@@ -54,6 +54,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/helper/SupabaseClient"; // Import supabase client
 import "mathlive";
+import { MathfieldElement } from "mathlive";
+import { useNavigate } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -61,16 +63,7 @@ declare global {
   }
 }
 
-declare namespace JSX {
-  interface IntrinsicElements {
-    "math-field": React.DetailedHTMLProps<
-      React.HTMLAttributes<HTMLElement>,
-      HTMLElement
-    > & {
-      value?: string;
-    };
-  }
-}
+
 
 interface ContentFormData {
   title: string;
@@ -145,10 +138,11 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   const [tempText, setTempText] = useState("");
 
   //maths
-  const [showMathInput, setShowMathInput] = useState(false);
   const [mathExpression, setMathExpression] = useState("");
-  const mathFieldRef = useRef(null);
-
+const mathFieldRef = useRef<MathfieldElement | null>(null);
+const mathContainerRef = useRef<HTMLDivElement>(null);
+  const [showMathInput, setShowMathInput] = useState(false);
+  const navigate = useNavigate();
   // Add this to your component's imports/dependencies section
   useEffect(() => {
     // Load MathLive dynamically
@@ -166,79 +160,80 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
   }, []);
 
   // Updated math field initialization useEffect
-  useEffect(() => {
-    if (showMathInput && mathFieldRef.current && window.MathLive) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        try {
-          // Clear any existing content
-          mathFieldRef.current.innerHTML = "";
+useEffect(() => {
+  if (!showMathInput || !mathContainerRef.current) return;
 
-          // Create math field
-          const mathField = new window.MathLive.MathfieldElement({
-            defaultMode: "math",
-            keypressSound: null,
-            plonkSound: null,
-            onContentDidChange: (mf) => {
-              setMathExpression(mf.value);
-            },
-          });
+  // Initialize MathField
+  const mf = new MathfieldElement({
+    defaultMode: "math",
+    smartMode: true,
+    virtualKeyboardMode: "onfocus",
+    virtualKeyboards: "all",
+    onContentDidChange: (mf) => {
+      setMathExpression(mf.value);
+    },
+  });
 
-          mathField.style.fontSize = "18px";
-          mathField.style.minHeight = "60px";
-          mathField.style.padding = "8px";
-          mathField.style.border = "1px solid #d1d5db";
-          mathField.style.borderRadius = "6px";
+  // Style the math field
+  mf.style.width = "100%";
+  mf.style.minHeight = "60px";
+  mf.style.padding = "8px";
+  mf.style.border = "1px solid #d1d5db";
+  mf.style.borderRadius = "6px";
 
-          mathFieldRef.current.appendChild(mathField);
-        } catch (error) {
-          console.error("Error initializing MathLive:", error);
-        }
-      }, 100);
+  // Clear container and add math field
+  mathContainerRef.current.innerHTML = "";
+  mathContainerRef.current.appendChild(mf);
+  mf.focus();
 
-      return () => clearTimeout(timer);
-    }
-  }, [showMathInput]);
-  // Updated insertMathExpression function
-  const insertMathExpression = () => {
-    if (mathExpression) {
-      const mathLatex = `\\(${mathExpression}\\)`;
-      const textarea = document.querySelector(
-        "[data-math-textarea]"
-      ) as HTMLTextAreaElement;
+  // Save reference
+  mathFieldRef.current = mf;
 
-      if (textarea) {
-        const start = textarea.selectionStart || 0;
-        const end = textarea.selectionEnd || 0;
-        const newText =
-          tempText.substring(0, start) + mathLatex + tempText.substring(end);
-
-        setTempText(newText);
-
-        // Focus back to textarea and set cursor position
-        setTimeout(() => {
-          textarea.focus();
-          const newCursorPos = start + mathLatex.length;
-          textarea.setSelectionRange(newCursorPos, newCursorPos);
-        }, 0);
-
-        // Reset math field
-        if (mathFieldRef.current?.firstChild) {
-          mathFieldRef.current.firstChild.value = "";
-        }
-        setMathExpression("");
-      }
+  // Cleanup
+  return () => {
+    if (mathFieldRef.current) {
+      mathFieldRef.current.remove();
+      mathFieldRef.current = null;
     }
   };
+}, [showMathInput]);
+  // Updated insertMathExpression function
+const insertMathExpression = () => {
+  if (mathExpression && mathFieldRef.current) {
+    const latex = mathFieldRef.current.value;
+    const textarea = document.querySelector(
+      "[data-math-textarea]"
+    ) as HTMLTextAreaElement;
+
+    if (textarea) {
+      const start = textarea.selectionStart || 0;
+      const end = textarea.selectionEnd || 0;
+      const newText =
+        tempText.substring(0, start) + `\\(${latex}\\)` + tempText.substring(end);
+
+      setTempText(newText);
+
+      // Focus back to textarea
+      setTimeout(() => {
+        textarea.focus();
+        const newCursorPos = start + latex.length + 4; // +4 for \( and \)
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+
+      // Reset math field
+      mathFieldRef.current.value = "";
+      setMathExpression("");
+    }
+  }
+};
 
   // Updated quick symbol insertion function
-  const insertQuickSymbol = (symbol) => {
-    if (mathFieldRef.current?.firstChild && window.MathLive) {
-      const mathField = mathFieldRef.current.firstChild;
-      mathField.executeCommand(["insert", symbol]);
-      mathField.focus();
-    }
-  };
+const insertQuickSymbol = (symbol: string) => {
+  if (mathFieldRef.current) {
+    mathFieldRef.current.executeCommand(["insert", symbol]);
+    mathFieldRef.current.focus();
+  }
+};
 
   // Add this function to handle text button click
   const handleTextButtonClick = (index) => {
@@ -341,6 +336,13 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       setUploadedFilesForUpdate([]);
     }
   }, [contentToUpdate?.file_type]);
+
+  const handleClicks = () => {
+    const myId = topic._id;
+    console.log("Navigating to details with ID:", myId);
+    navigate(`topics/${myId}/content/new`);
+  };
+  ///topics/:topicId/content/new
 
   // Upload files to Supabase
   const uploadFilesToSupabase = async (files: File[]) => {
@@ -797,7 +799,7 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                     )}
                   </Button>
                   <Button
-                    onClick={() => setCreateDialogOpen(true)}
+                    onClick={handleClicks}
                     variant="outline"
                     size="sm"
                     className="bg-blue-400 border-white text-white hover:bg-white hover:text-green-900"
@@ -1740,107 +1742,77 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
             </div>
             {/* Math Input Section */}
 
-            {showMathInput && (
-              <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
-                <div className="space-y-4 flex-1">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                      Mathematical Expression
-                    </label>
-                  </div>
+           {showMathInput && (
+  <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
+    <div className="space-y-4 flex-1">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+          <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+          Mathematical Expression
+        </label>
+      </div>
 
-                  {/* Math Input Field */}
-                  <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
-                    <div
-                      ref={mathFieldRef}
-                      className="math-field-container"
-                      style={{ minHeight: "60px" }}
-                    />
-                  </div>
+      {/* Math Input Field */}
+      <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
+        <div ref={mathContainerRef} className="math-field-container" />
+      </div>
 
-                  {/* Quick Math Symbols */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-600">
-                      Quick Insert:
-                    </h4>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        {
-                          symbol: "\\frac{#0}{#1}",
-                          display: "𝑎/𝑏",
-                          label: "Fraction",
-                        },
-                        { symbol: "#0^{#1}", display: "x²", label: "Power" },
-                        {
-                          symbol: "\\sqrt{#0}",
-                          display: "√x",
-                          label: "Square Root",
-                        },
-                        {
-                          symbol: "\\sum_{#0}^{#1}",
-                          display: "∑",
-                          label: "Sum",
-                        },
-                        {
-                          symbol: "\\int_{#0}^{#1}",
-                          display: "∫",
-                          label: "Integral",
-                        },
-                        { symbol: "\\alpha", display: "α", label: "Alpha" },
-                        { symbol: "\\beta", display: "β", label: "Beta" },
-                        { symbol: "\\pi", display: "π", label: "Pi" },
-                        { symbol: "\\infty", display: "∞", label: "Infinity" },
-                        { symbol: "\\leq", display: "≤", label: "Less Equal" },
-                        {
-                          symbol: "\\geq",
-                          display: "≥",
-                          label: "Greater Equal",
-                        },
-                        { symbol: "\\neq", display: "≠", label: "Not Equal" },
-                      ].map((item, index) => (
-                        <Button
-                          key={index}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-10 text-sm hover:bg-blue-50 border-gray-200"
-                          onClick={() => insertQuickSymbol(item.symbol)}
-                          title={item.label}
-                        >
-                          {item.display}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+      {/* Quick Math Symbols */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-gray-600">Quick Insert:</h4>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { symbol: "\\frac{#@}{#?}", display: "𝑎/𝑏", label: "Fraction" },
+            { symbol: "#@^{#?}", display: "x²", label: "Power" },
+            { symbol: "\\sqrt{#@}", display: "√x", label: "Square Root" },
+            { symbol: "\\sum_{#@}^{#?}", display: "∑", label: "Sum" },
+            { symbol: "\\int_{#@}^{#?}", display: "∫", label: "Integral" },
+            { symbol: "\\alpha", display: "α", label: "Alpha" },
+            { symbol: "\\beta", display: "β", label: "Beta" },
+            { symbol: "\\pi", display: "π", label: "Pi" },
+            { symbol: "\\infty", display: "∞", label: "Infinity" },
+            { symbol: "\\leq", display: "≤", label: "Less Equal" },
+            { symbol: "\\geq", display: "≥", label: "Greater Equal" },
+            { symbol: "\\neq", display: "≠", label: "Not Equal" },
+          ].map((item, index) => (
+            <Button
+              key={index}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-10 text-sm hover:bg-blue-50 border-gray-200"
+              onClick={() => insertQuickSymbol(item.symbol)}
+              title={item.label}
+            >
+              {item.display}
+            </Button>
+          ))}
+        </div>
+      </div>
 
-                  {/* Math Preview */}
-                  {mathExpression && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-600">
-                        Preview:
-                      </h4>
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
-                        <math-field read-only style={{ fontSize: "16px" }}>
-                          {mathExpression}
-                        </math-field>
-                      </div>
-                    </div>
-                  )}
+      {/* Math Preview */}
+      {mathExpression && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-gray-600">Preview:</h4>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
+            <math-field read-only math-mode="math" value={mathExpression} />
+          </div>
+        </div>
+      )}
 
-                  {/* Insert Button */}
-                  <Button
-                    type="button"
-                    onClick={insertMathExpression}
-                    disabled={!mathExpression}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
-                  >
-                    <Plus size={14} className="mr-1" />
-                    Insert Math Expression
-                  </Button>
-                </div>
-              </div>
-            )}
+      {/* Insert Button */}
+      <Button
+        type="button"
+        onClick={insertMathExpression}
+        disabled={!mathExpression}
+        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
+      >
+        <Plus size={14} className="mr-1" />
+        Insert Math Expression
+      </Button>
+    </div>
+  </div>
+)}         
           </div>
 
           {/* Footer */}
