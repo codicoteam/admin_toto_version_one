@@ -110,7 +110,7 @@ const App = () => (
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
             <Route path="/settingspage" element={<SettingsPage />} />
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />
-              <Route path="courses/topics/:id/content/new" element={<CreateNewContent />} />
+              <Route path="courses/topics/:topicId/content/new" element={<CreateNewContent />} />
 
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminSubjects />} />

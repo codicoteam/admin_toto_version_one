@@ -33,14 +33,26 @@ const fileTypeExtensions = {
   document: [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt"],
 };
 
+interface SubHeadingItem {
+  text: string;
+  question: string;
+  subheadingAudioPath: string;
+  expectedAnswer: string;
+  comment: string;
+  hint: string;
+}
+
+interface LessonItem {
+  text: string;
+  subHeading: SubHeadingItem[];
+  audio: string;
+  video: string;
+}
+
 interface ContentFormData {
   title: string;
   description: string;
-  lesson: Array<{
-    text: string;
-    audio: string;
-    video: string;
-  }>;
+  lesson: LessonItem[];
   file_path: string[];
   file_type: "video" | "audio" | "document";
   Topic: string;
@@ -54,7 +66,23 @@ const CreateNewContent: React.FC = () => {
   const [newContent, setNewContent] = useState<ContentFormData>({
     title: "",
     description: "",
-    lesson: [{ text: "", audio: "", video: "" }],
+    lesson: [
+      {
+        text: "",
+        subHeading: [
+          {
+            text: "",
+            question: "",
+            subheadingAudioPath: "",
+            expectedAnswer: "",
+            comment: "",
+            hint: "",
+          },
+        ],
+        audio: "",
+        video: "",
+      },
+    ],
     file_path: [],
     file_type: "document",
     Topic: topicId || "",
@@ -68,22 +96,26 @@ const CreateNewContent: React.FC = () => {
   const [mathExpression, setMathExpression] = useState("");
   const mathFieldRef = useRef<MathfieldElement | null>(null);
   const mathContainerRef = useRef<HTMLDivElement>(null);
-  const [showMathInput, setShowMathInput] = useState(false);
-  const [tempText, setTempText] = useState("");
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [mathInputTarget, setMathInputTarget] = useState<{
+    lessonIndex: number;
+    subHeadingIndex: number;
+    field: string;
+  } | null>(null);
 
-  // Initialize MathLive
+  // Initialize MathLive when mathInputTarget changes
   useEffect(() => {
-    if (!showMathInput || !mathContainerRef.current) return;
+    if (mathInputTarget === null || !mathContainerRef.current) return;
 
-    const mf = new MathfieldElement({
+    const mf = new MathfieldElement();
+    mf.setOptions({
       defaultMode: "math",
       smartMode: true,
       virtualKeyboardMode: "onfocus",
       virtualKeyboards: "all",
-      onContentDidChange: (mf) => {
-        setMathExpression(mf.value);
-      },
+    });
+
+    mf.addEventListener("input", () => {
+      setMathExpression(mf.getValue("latex"));
     });
 
     // Style the math field
@@ -105,31 +137,36 @@ const CreateNewContent: React.FC = () => {
         mathFieldRef.current = null;
       }
     };
-  }, [showMathInput]);
+  }, [mathInputTarget]);
 
   const insertMathExpression = () => {
-    if (mathExpression && mathFieldRef.current) {
+    if (mathExpression && mathFieldRef.current && mathInputTarget) {
       const latex = mathFieldRef.current.value;
-      const textarea = document.querySelector(
-        "[data-math-textarea]"
-      ) as HTMLTextAreaElement;
-
-      if (textarea) {
-        const start = textarea.selectionStart || 0;
-        const end = textarea.selectionEnd || 0;
-        const newText =
-          tempText.substring(0, start) + `\\(${latex}\\)` + tempText.substring(end);
-
-        setTempText(newText);
-
-        setTimeout(() => {
-          textarea.focus();
-          const newCursorPos = start + latex.length + 4;
-          textarea.setSelectionRange(newCursorPos, newCursorPos);
-        }, 0);
-
+      const { lessonIndex, subHeadingIndex, field } = mathInputTarget;
+      
+      const lesson = [...newContent.lesson];
+      const subHeading = [...lesson[lessonIndex].subHeading];
+      const currentText = subHeading[subHeadingIndex][field as keyof SubHeadingItem] as string;
+      const newText = currentText + ` \\(${latex}\\) `;
+      
+      subHeading[subHeadingIndex] = { 
+        ...subHeading[subHeadingIndex],
+        [field]: newText
+      };
+      
+      lesson[lessonIndex] = {
+        ...lesson[lessonIndex],
+        subHeading
+      };
+      
+      setNewContent({
+        ...newContent,
+        lesson
+      });
+      
+      setMathExpression("");
+      if (mathFieldRef.current) {
         mathFieldRef.current.value = "";
-        setMathExpression("");
       }
     }
   };
@@ -141,22 +178,44 @@ const CreateNewContent: React.FC = () => {
     }
   };
 
-  const handleTextButtonClick = (index: number) => {
-    setCurrentTextIndex(index);
-    setTempText(newContent.lesson[index].text);
-    setShowMathInput(true);
-  };
-
-  const handleSaveText = () => {
-    updateLessonItem(currentTextIndex, "text", tempText);
-    setShowMathInput(false);
-    setTempText("");
+  const toggleMathInput = (
+    lessonIndex: number,
+    subHeadingIndex: number,
+    field: string
+  ) => {
+    if (
+      mathInputTarget?.lessonIndex === lessonIndex &&
+      mathInputTarget?.subHeadingIndex === subHeadingIndex &&
+      mathInputTarget?.field === field
+    ) {
+      setMathInputTarget(null);
+    } else {
+      setMathInputTarget({ lessonIndex, subHeadingIndex, field });
+    }
+    setMathExpression("");
   };
 
   const addLessonItem = () => {
     setNewContent((prev) => ({
       ...prev,
-      lesson: [...prev.lesson, { text: "", audio: "", video: "" }],
+      lesson: [
+        ...prev.lesson,
+        {
+          text: "",
+          subHeading: [
+            {
+              text: "",
+              question: "",
+              subheadingAudioPath: "",
+              expectedAnswer: "",
+              comment: "",
+              hint: "",
+            },
+          ],
+          audio: "",
+          video: "",
+        },
+      ],
     }));
   };
 
@@ -169,17 +228,80 @@ const CreateNewContent: React.FC = () => {
     }
   };
 
+  const addSubHeading = (lessonIndex: number) => {
+    const updatedLessons = [...newContent.lesson];
+    updatedLessons[lessonIndex] = {
+      ...updatedLessons[lessonIndex],
+      subHeading: [
+        ...updatedLessons[lessonIndex].subHeading,
+        {
+          text: "",
+          question: "",
+          subheadingAudioPath: "",
+          expectedAnswer: "",
+          comment: "",
+          hint: "",
+        },
+      ],
+    };
+    setNewContent({
+      ...newContent,
+      lesson: updatedLessons,
+    });
+  };
+
+  const removeSubHeading = (lessonIndex: number, subHeadingIndex: number) => {
+    if (newContent.lesson[lessonIndex].subHeading.length > 1) {
+      const updatedLessons = [...newContent.lesson];
+      updatedLessons[lessonIndex] = {
+        ...updatedLessons[lessonIndex],
+        subHeading: updatedLessons[lessonIndex].subHeading.filter(
+          (_, i) => i !== subHeadingIndex
+        ),
+      };
+      setNewContent({
+        ...newContent,
+        lesson: updatedLessons,
+      });
+    }
+  };
+
   const updateLessonItem = (
-    index: number,
-    field: "text" | "audio" | "video",
+    lessonIndex: number,
+    field: keyof LessonItem,
     value: string
   ) => {
-    setNewContent((prev) => ({
-      ...prev,
-      lesson: prev.lesson.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      ),
-    }));
+    const updatedLessons = [...newContent.lesson];
+    updatedLessons[lessonIndex] = {
+      ...updatedLessons[lessonIndex],
+      [field]: value,
+    };
+    setNewContent({
+      ...newContent,
+      lesson: updatedLessons,
+    });
+  };
+
+  const updateSubHeadingItem = (
+    lessonIndex: number,
+    subHeadingIndex: number,
+    field: keyof SubHeadingItem,
+    value: string
+  ) => {
+    const updatedLessons = [...newContent.lesson];
+    const updatedSubHeadings = [...updatedLessons[lessonIndex].subHeading];
+    updatedSubHeadings[subHeadingIndex] = {
+      ...updatedSubHeadings[subHeadingIndex],
+      [field]: value,
+    };
+    updatedLessons[lessonIndex] = {
+      ...updatedLessons[lessonIndex],
+      subHeading: updatedSubHeadings,
+    };
+    setNewContent({
+      ...newContent,
+      lesson: updatedLessons,
+    });
   };
 
   const getAcceptedFileTypes = (fileType: string) => {
@@ -217,17 +339,26 @@ const CreateNewContent: React.FC = () => {
     try {
       setIsSubmitting(true);
 
+      // Validate required fields
+      const isLessonValid = newContent.lesson.every(
+        (lesson) =>
+          lesson.text.trim() !== "" &&
+          lesson.subHeading.every(
+            (sub) => sub.text.trim() !== "" && sub.subheadingAudioPath !== ""
+          )
+      );
+
       if (
         !newContent.title.trim() ||
         !newContent.description.trim() ||
         !uploadedFiles.length ||
-        newContent.lesson.some((item) => !item.text.trim())
+        !isLessonValid
       ) {
         toast({
           variant: "destructive",
           title: "Validation Error",
           description:
-            "Please fill all required fields, add lesson text, and upload at least one file",
+            "Please fill all required fields and upload at least one file",
         });
         return;
       }
@@ -299,8 +430,8 @@ const CreateNewContent: React.FC = () => {
   }, [newContent.file_type]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="min-h-screen w-full bg-gray-100">
+      <div className="container px-2 py-12 w-full">
         {/* Header */}
         <div className="relative p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
           <div className="absolute inset-0 bg-black/10"></div>
@@ -442,23 +573,23 @@ const CreateNewContent: React.FC = () => {
                 className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <Plus size={14} className="mr-2" />
-                Add Lesson Item
+                Add Lesson
               </Button>
             </div>
 
-            <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-              {newContent.lesson.map((lessonItem, index) => (
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+              {newContent.lesson.map((lessonItem, lessonIndex) => (
                 <div
-                  key={index}
+                  key={lessonIndex}
                   className="bg-gradient-to-br from-white via-gray-50 to-blue-50/30 rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 shadow-sm hover:shadow-md"
                 >
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        {index + 1}
+                        {lessonIndex + 1}
                       </div>
                       <span className="text-sm font-semibold text-gray-700">
-                        Lesson Item {index + 1}
+                        Lesson {lessonIndex + 1}
                       </span>
                     </div>
                     {newContent.lesson.length > 1 && (
@@ -467,174 +598,550 @@ const CreateNewContent: React.FC = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
-                        onClick={() => removeLessonItem(index)}
+                        onClick={() => removeLessonItem(lessonIndex)}
                       >
                         <X size={14} />
                       </Button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Text Input (now always visible) */}
-                    <div className="col-span-3">
-                      <label className="text-xs font-medium text-gray-600 mb-2 block">
-                        Text Content
+                  <div className="space-y-4">
+                    {/* Lesson Text */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-gray-600">
+                        Lesson Title
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
-                      <div className="space-y-3">
-                        <Textarea
-                          value={lessonItem.text}
-                          onChange={(e) =>
-                            updateLessonItem(index, "text", e.target.value)
-                          }
-                          placeholder="Enter lesson text..."
-                          className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none min-h-[100px]"
-                        />
+                      <Input
+                        value={lessonItem.text}
+                        onChange={(e) =>
+                          updateLessonItem(lessonIndex, "text", e.target.value)
+                        }
+                        placeholder="Lesson title..."
+                        className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                      />
+                    </div>
+
+                    {/* Lesson Audio/Video */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-gray-600">
+                          Lesson Audio
+                        </label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={lessonItem.audio}
+                            onChange={(e) =>
+                              updateLessonItem(lessonIndex, "audio", e.target.value)
+                            }
+                            placeholder="audio.mp3 or URL"
+                            className="text-sm flex-1 border-2 border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="px-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = "audio/*";
+                              input.onchange = async (e) => {
+                                const file = (e.target as HTMLInputElement)
+                                  .files?.[0];
+                                if (file) {
+                                  try {
+                                    const fileName = `${Date.now()}_${file.name}`;
+                                    const { data, error } = await supabase.storage
+                                      .from("topics")
+                                      .upload(fileName, file);
+
+                                    if (error) throw error;
+
+                                    const { data: publicData } = supabase.storage
+                                      .from("topics")
+                                      .getPublicUrl(fileName);
+
+                                    if (publicData) {
+                                      updateLessonItem(
+                                        lessonIndex,
+                                        "audio",
+                                        publicData.publicUrl
+                                      );
+                                      toast({
+                                        title: "Success",
+                                        description: "Audio uploaded successfully",
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error("Audio upload failed:", error);
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Error",
+                                      description: "Failed to upload audio file",
+                                    });
+                                  }
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            <Upload size={14} />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-gray-600">
+                          Lesson Video
+                        </label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={lessonItem.video}
+                            onChange={(e) =>
+                              updateLessonItem(lessonIndex, "video", e.target.value)
+                            }
+                            placeholder="video.mp4 or URL"
+                            className="text-sm flex-1 border-2 border-gray-200 hover:border-purple-300 focus:border-purple-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="px-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = "video/*";
+                              input.onchange = async (e) => {
+                                const file = (e.target as HTMLInputElement)
+                                  .files?.[0];
+                                if (file) {
+                                  try {
+                                    const fileName = `${Date.now()}_${file.name}`;
+                                    const { data, error } = await supabase.storage
+                                      .from("topics")
+                                      .upload(fileName, file);
+
+                                    if (error) throw error;
+
+                                    const { data: publicData } = supabase.storage
+                                      .from("topics")
+                                      .getPublicUrl(fileName);
+
+                                    if (publicData) {
+                                      updateLessonItem(
+                                        lessonIndex,
+                                        "video",
+                                        publicData.publicUrl
+                                      );
+                                      toast({
+                                        title: "Success",
+                                        description: "Video uploaded successfully",
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error("Video upload failed:", error);
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Error",
+                                      description: "Failed to upload video file",
+                                    });
+                                  }
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            <Upload size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Subheadings */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-gray-600">
+                          Subheadings
+                        </label>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleTextButtonClick(index)}
+                          onClick={() => addSubHeading(lessonIndex)}
                           className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
                         >
-                          <Calculator size={14} className="mr-1" />
-                          Add Math Expression
+                          <Plus size={14} className="mr-1" />
+                          Add Subheading
                         </Button>
                       </div>
-                    </div>
 
-                    {/* Audio Content */}
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-2 block">
-                        Audio Content
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={lessonItem.audio}
-                          onChange={(e) =>
-                            updateLessonItem(index, "audio", e.target.value)
-                          }
-                          placeholder="audio.mp3 or URL"
-                          className="text-sm flex-1 border-2 border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="px-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
-                          onClick={() => {
-                            const input = document.createElement("input");
-                            input.type = "file";
-                            input.accept = "audio/*";
-                            input.onchange = async (e) => {
-                              const file = (e.target as HTMLInputElement)
-                                .files?.[0];
-                              if (file) {
-                                try {
-                                  const fileName = `${Date.now()}_${file.name}`;
-                                  const { data, error } = await supabase.storage
-                                    .from("topics")
-                                    .upload(fileName, file);
+                      <div className="space-y-4">
+                        {lessonItem.subHeading.map(
+                          (subHeadingItem, subHeadingIndex) => (
+                            <div
+                              key={subHeadingIndex}
+                              className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                            >
+                              <div className="flex justify-between items-center mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs">
+                                    {subHeadingIndex + 1}
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-700">
+                                    Subheading {subHeadingIndex + 1}
+                                  </span>
+                                </div>
+                                {lessonItem.subHeading.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                    onClick={() =>
+                                      removeSubHeading(lessonIndex, subHeadingIndex)
+                                    }
+                                  >
+                                    <X size={12} />
+                                  </Button>
+                                )}
+                              </div>
 
-                                  if (error) throw error;
+                              <div className="space-y-3">
+                                {/* Subheading Text */}
+                                <div className="space-y-2">
+                                  <label className="text-xs font-medium text-gray-600">
+                                    Text
+                                    <span className="text-red-500 ml-1">*</span>
+                                  </label>
+                                  {mathInputTarget?.lessonIndex === lessonIndex &&
+                                  mathInputTarget?.subHeadingIndex ===
+                                    subHeadingIndex &&
+                                  mathInputTarget?.field === "text" ? (
+                                    <>
+                                      <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
+                                        <div
+                                          ref={mathContainerRef}
+                                          className="math-field-container"
+                                        />
+                                      </div>
 
-                                  const { data: publicData } = supabase.storage
-                                    .from("topics")
-                                    .getPublicUrl(fileName);
+                                      {/* Quick Math Symbols */}
+                                      <div className="space-y-3">
+                                        <h4 className="text-xs font-medium text-gray-600">
+                                          Quick Insert:
+                                        </h4>
+                                        <div className="grid grid-cols-4 gap-2">
+                                          {[
+                                            {
+                                              symbol: "\\frac{#@}{#?}",
+                                              display: "𝑎/𝑏",
+                                              label: "Fraction",
+                                            },
+                                            {
+                                              symbol: "#@^{#?}",
+                                              display: "x²",
+                                              label: "Power",
+                                            },
+                                            {
+                                              symbol: "\\sqrt{#@}",
+                                              display: "√x",
+                                              label: "Square Root",
+                                            },
+                                            {
+                                              symbol: "\\sum_{#@}^{#?}",
+                                              display: "∑",
+                                              label: "Sum",
+                                            },
+                                            {
+                                              symbol: "\\int_{#@}^{#?}",
+                                              display: "∫",
+                                              label: "Integral",
+                                            },
+                                            {
+                                              symbol: "\\alpha",
+                                              display: "α",
+                                              label: "Alpha",
+                                            },
+                                            {
+                                              symbol: "\\beta",
+                                              display: "β",
+                                              label: "Beta",
+                                            },
+                                            {
+                                              symbol: "\\pi",
+                                              display: "π",
+                                              label: "Pi",
+                                            },
+                                            {
+                                              symbol: "\\infty",
+                                              display: "∞",
+                                              label: "Infinity",
+                                            },
+                                            {
+                                              symbol: "\\leq",
+                                              display: "≤",
+                                              label: "Less Equal",
+                                            },
+                                            {
+                                              symbol: "\\geq",
+                                              display: "≥",
+                                              label: "Greater Equal",
+                                            },
+                                            {
+                                              symbol: "\\neq",
+                                              display: "≠",
+                                              label: "Not Equal",
+                                            },
+                                          ].map((item, index) => (
+                                            <Button
+                                              key={index}
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-8 text-xs hover:bg-blue-50 border-gray-200"
+                                              onClick={() =>
+                                                insertQuickSymbol(item.symbol)
+                                              }
+                                              title={item.label}
+                                            >
+                                              {item.display}
+                                            </Button>
+                                          ))}
+                                        </div>
+                                      </div>
 
-                                  if (publicData) {
-                                    updateLessonItem(
-                                      index,
-                                      "audio",
-                                      publicData.publicUrl
-                                    );
-                                    toast({
-                                      title: "Success",
-                                      description: "Audio uploaded successfully",
-                                    });
-                                  }
-                                } catch (error) {
-                                  console.error("Audio upload failed:", error);
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Error",
-                                    description: "Failed to upload audio file",
-                                  });
-                                }
-                              }
-                            };
-                            input.click();
-                          }}
-                        >
-                          <Upload size={14} />
-                        </Button>
-                      </div>
-                    </div>
+                                      {/* Math Preview */}
+                                      {mathExpression && (
+                                        <div className="space-y-2">
+                                          <h4 className="text-xs font-medium text-gray-600">
+                                            Preview:
+                                          </h4>
+                                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
+                                            <math-field
+                                              read-only
+                                              math-mode="math"
+                                              value={mathExpression}
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
 
-                    {/* Video Content */}
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-2 block">
-                        Video Content
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={lessonItem.video}
-                          onChange={(e) =>
-                            updateLessonItem(index, "video", e.target.value)
-                          }
-                          placeholder="video.mp4 or URL"
-                          className="text-sm flex-1 border-2 border-gray-200 hover:border-purple-300 focus:border-purple-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="px-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg"
-                          onClick={() => {
-                            const input = document.createElement("input");
-                            input.type = "file";
-                            input.accept = "video/*";
-                            input.onchange = async (e) => {
-                              const file = (e.target as HTMLInputElement)
-                                .files?.[0];
-                              if (file) {
-                                try {
-                                  const fileName = `${Date.now()}_${file.name}`;
-                                  const { data, error } = await supabase.storage
-                                    .from("topics")
-                                    .upload(fileName, file);
+                                      <div className="flex gap-2">
+                                        <Button
+                                          type="button"
+                                          onClick={() => setMathInputTarget(null)}
+                                          variant="outline"
+                                          className="flex-1 text-xs h-8"
+                                        >
+                                          Back to Text
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          onClick={insertMathExpression}
+                                          className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 text-xs h-8"
+                                        >
+                                          Insert Math
+                                        </Button>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Textarea
+                                        value={subHeadingItem.text}
+                                        onChange={(e) =>
+                                          updateSubHeadingItem(
+                                            lessonIndex,
+                                            subHeadingIndex,
+                                            "text",
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="Subheading text..."
+                                        className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none min-h-[80px]"
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          toggleMathInput(
+                                            lessonIndex,
+                                            subHeadingIndex,
+                                            "text"
+                                          )
+                                        }
+                                        className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 text-xs"
+                                      >
+                                        <Calculator size={12} className="mr-1" />
+                                        Add Math Expression
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
 
-                                  if (error) throw error;
+                                {/* Subheading Audio */}
+                                <div className="space-y-2">
+                                  <label className="text-xs font-medium text-gray-600">
+                                    Audio
+                                    <span className="text-red-500 ml-1">*</span>
+                                  </label>
+                                  <div className="flex gap-2">
+                                    <Input
+                                      value={subHeadingItem.subheadingAudioPath}
+                                      onChange={(e) =>
+                                        updateSubHeadingItem(
+                                          lessonIndex,
+                                          subHeadingIndex,
+                                          "subheadingAudioPath",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="audio.mp3 or URL"
+                                      className="text-sm flex-1 border-2 border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="px-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                                      onClick={() => {
+                                        const input = document.createElement("input");
+                                        input.type = "file";
+                                        input.accept = "audio/*";
+                                        input.onchange = async (e) => {
+                                          const file = (e.target as HTMLInputElement)
+                                            .files?.[0];
+                                          if (file) {
+                                            try {
+                                              const fileName = `${Date.now()}_${file.name}`;
+                                              const { data, error } =
+                                                await supabase.storage
+                                                  .from("topics")
+                                                  .upload(fileName, file);
 
-                                  const { data: publicData } = supabase.storage
-                                    .from("topics")
-                                    .getPublicUrl(fileName);
+                                              if (error) throw error;
 
-                                  if (publicData) {
-                                    updateLessonItem(
-                                      index,
-                                      "video",
-                                      publicData.publicUrl
-                                    );
-                                    toast({
-                                      title: "Success",
-                                      description: "Video uploaded successfully",
-                                    });
-                                  }
-                                } catch (error) {
-                                  console.error("Video upload failed:", error);
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Error",
-                                    description: "Failed to upload video file",
-                                  });
-                                }
-                              }
-                            };
-                            input.click();
-                          }}
-                        >
-                          <Upload size={14} />
-                        </Button>
+                                              const { data: publicData } =
+                                                supabase.storage
+                                                  .from("topics")
+                                                  .getPublicUrl(fileName);
+
+                                              if (publicData) {
+                                                updateSubHeadingItem(
+                                                  lessonIndex,
+                                                  subHeadingIndex,
+                                                  "subheadingAudioPath",
+                                                  publicData.publicUrl
+                                                );
+                                                toast({
+                                                  title: "Success",
+                                                  description:
+                                                    "Audio uploaded successfully",
+                                                });
+                                              }
+                                            } catch (error) {
+                                              console.error(
+                                                "Audio upload failed:",
+                                                error
+                                              );
+                                              toast({
+                                                variant: "destructive",
+                                                title: "Error",
+                                                description:
+                                                  "Failed to upload audio file",
+                                              });
+                                            }
+                                          }
+                                        };
+                                        input.click();
+                                      }}
+                                    >
+                                      <Upload size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {/* Additional Subheading Fields */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-medium text-gray-600">
+                                      Question
+                                    </label>
+                                    <Input
+                                      value={subHeadingItem.question}
+                                      onChange={(e) =>
+                                        updateSubHeadingItem(
+                                          lessonIndex,
+                                          subHeadingIndex,
+                                          "question",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Question..."
+                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-medium text-gray-600">
+                                      Expected Answer
+                                    </label>
+                                    <Input
+                                      value={subHeadingItem.expectedAnswer}
+                                      onChange={(e) =>
+                                        updateSubHeadingItem(
+                                          lessonIndex,
+                                          subHeadingIndex,
+                                          "expectedAnswer",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Expected answer..."
+                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-medium text-gray-600">
+                                      Comment
+                                    </label>
+                                    <Input
+                                      value={subHeadingItem.comment}
+                                      onChange={(e) =>
+                                        updateSubHeadingItem(
+                                          lessonIndex,
+                                          subHeadingIndex,
+                                          "comment",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Comment..."
+                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-medium text-gray-600">
+                                      Hint
+                                    </label>
+                                    <Input
+                                      value={subHeadingItem.hint}
+                                      onChange={(e) =>
+                                        updateSubHeadingItem(
+                                          lessonIndex,
+                                          subHeadingIndex,
+                                          "hint",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Hint..."
+                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -720,152 +1227,6 @@ const CreateNewContent: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Math Input Section */}
-          {showMathInput && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div className="relative p-6 bg-gradient-to-r from-slate-600 via-gray-600 to-slate-600 text-white">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="relative flex justify-between items-center">
-                    <h2 className="text-xl font-bold tracking-tight flex items-center gap-3">
-                      <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <FileText size={20} className="text-white" />
-                      </div>
-                      Add Mathematical Expression
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white hover:bg-white/20"
-                      onClick={() => setShowMathInput(false)}
-                    >
-                      <X size={20} />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-hidden p-6 flex gap-6">
-                  {/* Text Input Section */}
-                  <div className="w-1/2 flex flex-col">
-                    <div className="space-y-3 flex-1 flex flex-col">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full"></div>
-                        Lesson Text Content
-                      </label>
-                      <Textarea
-                        data-math-textarea
-                        value={tempText}
-                        onChange={(e) => setTempText(e.target.value)}
-                        placeholder="Enter your lesson content here..."
-                        className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none flex-1 min-h-[300px]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Math Input Section */}
-                  <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
-                    <div className="space-y-4 flex-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                          Mathematical Expression
-                        </label>
-                      </div>
-
-                      {/* Math Input Field */}
-                      <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
-                        <div ref={mathContainerRef} className="math-field-container" />
-                      </div>
-
-                      {/* Quick Math Symbols */}
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-medium text-gray-600">
-                          Quick Insert:
-                        </h4>
-                        <div className="grid grid-cols-4 gap-2">
-                          {[
-                            { symbol: "\\frac{#@}{#?}", display: "𝑎/𝑏", label: "Fraction" },
-                            { symbol: "#@^{#?}", display: "x²", label: "Power" },
-                            { symbol: "\\sqrt{#@}", display: "√x", label: "Square Root" },
-                            { symbol: "\\sum_{#@}^{#?}", display: "∑", label: "Sum" },
-                            { symbol: "\\int_{#@}^{#?}", display: "∫", label: "Integral" },
-                            { symbol: "\\alpha", display: "α", label: "Alpha" },
-                            { symbol: "\\beta", display: "β", label: "Beta" },
-                            { symbol: "\\pi", display: "π", label: "Pi" },
-                            { symbol: "\\infty", display: "∞", label: "Infinity" },
-                            { symbol: "\\leq", display: "≤", label: "Less Equal" },
-                            { symbol: "\\geq", display: "≥", label: "Greater Equal" },
-                            { symbol: "\\neq", display: "≠", label: "Not Equal" },
-                          ].map((item, index) => (
-                            <Button
-                              key={index}
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-10 text-sm hover:bg-blue-50 border-gray-200"
-                              onClick={() => insertQuickSymbol(item.symbol)}
-                              title={item.label}
-                            >
-                              {item.display}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Math Preview */}
-                      {mathExpression && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-gray-600">
-                            Preview:
-                          </h4>
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
-                            <math-field read-only math-mode="math" value={mathExpression} />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Insert Button */}
-                      <Button
-                        type="button"
-                        onClick={insertMathExpression}
-                        disabled={!mathExpression}
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
-                      >
-                        <Plus size={14} className="mr-1" />
-                        Insert Math Expression
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0 px-6 py-4 bg-gray-50/80 border-t border-gray-200">
-                  <div className="flex gap-3 w-full">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowMathInput(false);
-                        setTempText("");
-                        setMathExpression("");
-                      }}
-                      className="flex-1 h-10 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSaveText}
-                      className="flex-1 h-10 bg-gradient-to-r from-slate-600 via-gray-600 to-slate-600 text-white border-0 hover:from-slate-700 hover:via-gray-700 hover:to-slate-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FileText size={14} />
-                        Save Text
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
