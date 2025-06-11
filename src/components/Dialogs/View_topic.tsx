@@ -427,6 +427,7 @@ const insertQuickSymbol = (symbol: string) => {
     }
   };
 
+
   const getAcceptedFileTypes = (fileType: string) => {
     return fileTypeExtensions[fileType as keyof typeof fileTypeExtensions].join(
       ","
@@ -440,6 +441,11 @@ const insertQuickSymbol = (symbol: string) => {
       fileInputRef.current?.click();
     }
   };
+    const NavigateToEditContent = (contentId: string) => {
+      console.log("Navigating to edit content with ID:", contentId);
+      navigate(`/admin_dashboard/courses/topics/${topic._id}/content/edit/${contentId}`);
+    };
+
 
   const handleCreateContent = async () => {
     try {
@@ -999,7 +1005,8 @@ const insertQuickSymbol = (symbol: string) => {
                                 variant="outline"
                                 size="sm"
                                 className="text-amber-600 h-7 text-xs"
-                                onClick={() => openUpdateDialog(content)}
+                                onClick={() => NavigateToEditContent(content._id)}
+                                // onClick={() => openUpdateDialog(content)}
                               >
                                 <Edit size={12} className="mr-1" /> Edit
                               </Button>

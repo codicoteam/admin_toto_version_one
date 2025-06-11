@@ -76,6 +76,7 @@ import NotFound from "./pages/NotFound";
 import ReserourceWalle from "./pages/Walle";
 import AdminSubjects from "./pages/Admin_Pages/Subjects";
 import CreateNewContent from "./pages/Admin_Pages/CreateNewContent";
+import EditContent from "./pages/Admin_Pages/editContent";
 
 const queryClient = new QueryClient();
 
@@ -111,7 +112,10 @@ const App = () => (
             <Route path="/settingspage" element={<SettingsPage />} />
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />
               <Route path="courses/topics/:topicId/content/new" element={<CreateNewContent />} />
-
+              <Route 
+        path="/admin_dashboard/courses/topics/:topicId/content/edit/:contentId" 
+        element={<EditContent />} 
+      />
             {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             <Route path="/courses" element={<AdminSubjects />} />
             <Route path="/homepage" element={<Homepage />} />

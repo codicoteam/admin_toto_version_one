@@ -279,7 +279,7 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                     variant="outline"
                     className="border-white text-white hover:bg-white hover:text-green-900"
                   >
-                    <Plus size={16} className="mr-2" /> Add Content
+                    <Plus size={16} className="mr-2" /> 
                   </Button>
                 </div>
               </div>
