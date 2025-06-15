@@ -48,7 +48,6 @@ interface LessonItem {
   audio: string;
   video: string;
 }
-
 interface ContentFormData {
   title: string;
   description: string;
@@ -91,21 +90,27 @@ const CreateNewContent: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [currentQuestionData, setCurrentQuestionData] = useState({
+    lessonIndex: -1,
+    subHeadingIndex: -1,
+  });
+  const [audioUploadStatus, setAudioUploadStatus] = useState<"idle" | "uploading" | "success">("idle");
+  const [audioStatus, setAudioStatus] = useState<"idle" | "uploading" | "success">("idle");
+  const [videoStatus, setVideoStatus] = useState<"idle" | "uploading" | "success">("idle");
 
-  // MathLive state
-  const [mathExpression, setMathExpression] = useState("");
-  const mathFieldRef = useRef<MathfieldElement | null>(null);
-  const mathContainerRef = useRef<HTMLDivElement>(null);
-  const [mathInputTarget, setMathInputTarget] = useState<{
-    lessonIndex: number;
-    subHeadingIndex: number;
-    field: string;
-  } | null>(null);
 
-  // Initialize MathLive when mathInputTarget changes
-  useEffect(() => {
-    if (mathInputTarget === null || !mathContainerRef.current) return;
 
+
+
+
+  
+  // Initialize MathLive for all math fields
+  const initializeMathField = (containerRef: HTMLDivElement | null, initialValue: string, onChange: (value: string) => void) => {
+    if (!containerRef) return;
+
+    containerRef.innerHTML = "";
     const mf = new MathfieldElement();
     mf.setOptions({
       defaultMode: "math",
@@ -114,85 +119,19 @@ const CreateNewContent: React.FC = () => {
       virtualKeyboards: "all",
     });
 
-    mf.addEventListener("input", () => {
-      setMathExpression(mf.getValue("latex"));
-    });
-
-    // Style the math field
+    mf.value = initialValue || "";
     mf.style.width = "100%";
     mf.style.minHeight = "60px";
     mf.style.padding = "8px";
     mf.style.border = "1px solid #d1d5db";
     mf.style.borderRadius = "6px";
 
-    mathContainerRef.current.innerHTML = "";
-    mathContainerRef.current.appendChild(mf);
-    mf.focus();
+    mf.addEventListener("input", (evt) => {
+      onChange((evt.target as MathfieldElement).value);
+    });
 
-    mathFieldRef.current = mf;
-
-    return () => {
-      if (mathFieldRef.current) {
-        mathFieldRef.current.remove();
-        mathFieldRef.current = null;
-      }
-    };
-  }, [mathInputTarget]);
-
-  const insertMathExpression = () => {
-    if (mathExpression && mathFieldRef.current && mathInputTarget) {
-      const latex = mathFieldRef.current.value;
-      const { lessonIndex, subHeadingIndex, field } = mathInputTarget;
-      
-      const lesson = [...newContent.lesson];
-      const subHeading = [...lesson[lessonIndex].subHeading];
-      const currentText = subHeading[subHeadingIndex][field as keyof SubHeadingItem] as string;
-      const newText = currentText + ` \\(${latex}\\) `;
-      
-      subHeading[subHeadingIndex] = { 
-        ...subHeading[subHeadingIndex],
-        [field]: newText
-      };
-      
-      lesson[lessonIndex] = {
-        ...lesson[lessonIndex],
-        subHeading
-      };
-      
-      setNewContent({
-        ...newContent,
-        lesson
-      });
-      
-      // setMathExpression("");
-      if (mathFieldRef.current) {
-        mathFieldRef.current.value = "";
-      }
-    }
-  };
-
-  const insertQuickSymbol = (symbol: string) => {
-    if (mathFieldRef.current) {
-      mathFieldRef.current.executeCommand(["insert", symbol]);
-      mathFieldRef.current.focus();
-    }
-  };
-
-  const toggleMathInput = (
-    lessonIndex: number,
-    subHeadingIndex: number,
-    field: string
-  ) => {
-    if (
-      mathInputTarget?.lessonIndex === lessonIndex &&
-      mathInputTarget?.subHeadingIndex === subHeadingIndex &&
-      mathInputTarget?.field === field
-    ) {
-      setMathInputTarget(null);
-    } else {
-      setMathInputTarget({ lessonIndex, subHeadingIndex, field });
-    }
-    setMathExpression("");
+    containerRef.appendChild(mf);
+    return mf;
   };
 
   const addLessonItem = () => {
@@ -217,6 +156,7 @@ const CreateNewContent: React.FC = () => {
         },
       ],
     }));
+    setActiveLessonIndex(newContent.lesson.length);
   };
 
   const removeLessonItem = (index: number) => {
@@ -225,6 +165,9 @@ const CreateNewContent: React.FC = () => {
         ...prev,
         lesson: prev.lesson.filter((_, i) => i !== index),
       }));
+      if (index === activeLessonIndex) {
+        setActiveLessonIndex(Math.max(0, index - 1));
+      }
     }
   };
 
@@ -338,35 +281,42 @@ const CreateNewContent: React.FC = () => {
   const handleCreateContent = async () => {
     try {
       setIsSubmitting(true);
-
-      // Validate required fields
-      const isLessonValid = newContent.lesson.every(
-        (lesson) =>
-          lesson.text.trim() !== "" &&
-          lesson.subHeading.every(
-            (sub) => sub.text.trim() !== "" && sub.subheadingAudioPath !== ""
-          )
-      );
-
-      if (
-        !newContent.title.trim() ||
-        !newContent.description.trim() ||
-        !uploadedFiles.length ||
-        !isLessonValid
-      ) {
+      if (!newContent.title.trim()) {
         toast({
           variant: "destructive",
           title: "Validation Error",
-          description:
-            "Please fill all required fields and upload at least one file",
+          description: "Title is required",
         });
         return;
       }
 
-      const uploadedUrls = await uploadFilesToSupabase(uploadedFiles);
-      if (!uploadedUrls.length) {
-        throw new Error("Failed to upload files");
+      if (!newContent.description.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Short description is required",
+        });
+        return;
       }
+
+      // Validate lesson titles
+      const lessonErrors: number[] = [];
+      newContent.lesson.forEach((lesson, index) => {
+        if (!lesson.text.trim()) {
+          lessonErrors.push(index + 1);
+        }
+      });
+
+      if (lessonErrors.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: `Lesson titles are required for lessons: ${lessonErrors.join(", ")}`,
+        });
+        return;
+      }
+
+      const uploadedUrls = "N/A"
 
       const contentToCreate = {
         ...newContent,
@@ -380,7 +330,7 @@ const CreateNewContent: React.FC = () => {
         description: "Content created successfully",
       });
 
-      navigate(-1); // Go back to previous page
+      navigate(-1);
     } catch (error) {
       console.error("Failed to create content:", error);
       toast({
@@ -393,6 +343,7 @@ const CreateNewContent: React.FC = () => {
     }
   };
 
+  
   const uploadFilesToSupabase = async (files: File[]) => {
     try {
       const uploadPromises = files.map(async (file) => {
@@ -418,6 +369,15 @@ const CreateNewContent: React.FC = () => {
     }
   };
 
+  const openQuestionModal = (lessonIndex: number, subHeadingIndex: number) => {
+    setCurrentQuestionData({ lessonIndex, subHeadingIndex });
+    setShowQuestionModal(true);
+  };
+
+  const saveQuestion = () => {
+    setShowQuestionModal(false);
+  };
+
   useEffect(() => {
     setNewContent((prev) => ({
       ...prev,
@@ -429,9 +389,15 @@ const CreateNewContent: React.FC = () => {
     setUploadedFiles([]);
   }, [newContent.file_type]);
 
+  // Get the current subheading item for the modal
+  const currentSubHeadingItem = currentQuestionData.lessonIndex !== -1 && 
+    currentQuestionData.subHeadingIndex !== -1
+    ? newContent.lesson[currentQuestionData.lessonIndex].subHeading[currentQuestionData.subHeadingIndex]
+    : null;
+
   return (
-<div className="min-h-screen w-full bg-gray-100">
-  <div className="w-full px-0 py-0">
+    <div className="min-h-screen w-full bg-gray-100">
+      <div className="w-full px-0 py-0">
         {/* Header */}
         <div className="relative p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
           <div className="absolute inset-0 bg-black/10"></div>
@@ -451,561 +417,325 @@ const CreateNewContent: React.FC = () => {
                 </div>
                 Create New Content
               </h1>
-              <p className="text-blue-100 mt-2 text-sm">
-                Add engaging content to your topic
-              </p>
             </div>
-            <div className="w-12"></div> {/* Spacer for alignment */}
           </div>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Content Type Selection */}
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-    {/* Content Type */}
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-        Content Type
-        <span className="text-red-500">*</span>
-      </label>
-      <Select
-        value={newContent.file_type}
-        onValueChange={(value) =>
-          setNewContent({
-            ...newContent,
-            file_type: value as ContentFormData["file_type"],
-          })
-        }
-      >
-        <SelectTrigger className="h-10 border border-gray-200 hover:border-blue-300 transition-all duration-200 bg-white/80 backdrop-blur-sm text-sm">
-          <SelectValue placeholder="Choose type" />
-        </SelectTrigger>
-        <SelectContent className="border-0 shadow-xl">
-          <SelectItem
-            value="document"
-            className="hover:bg-blue-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-2 py-1">
-              <div className="p-1 bg-blue-100 rounded-lg">
-                <File size={14} className="text-blue-600" />
-              </div>
-              Document
-            </div>
-          </SelectItem>
-          <SelectItem
-            value="video"
-            className="hover:bg-purple-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-2 py-1">
-              <div className="p-1 bg-purple-100 rounded-lg">
-                <Video size={14} className="text-purple-600" />
-              </div>
-              Video
-            </div>
-          </SelectItem>
-          <SelectItem
-            value="audio"
-            className="hover:bg-green-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-2 py-1">
-              <div className="p-1 bg-green-100 rounded-lg">
-                <Music size={14} className="text-green-600" />
-              </div>
-              Audio
-            </div>
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-
-    {/* Title */}
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"></div>
-        Title
-        <span className="text-red-500">*</span>
-      </label>
-      <Input
-        value={newContent.title}
-        onChange={(e) =>
-          setNewContent({ ...newContent, title: e.target.value })
-        }
-        placeholder="Catchy title"
-        className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-      />
-    </div>
-
-    {/* Description */}
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-        <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
-        Description
-        <span className="text-red-500">*</span>
-      </label>
-      <Textarea
-        value={newContent.description}
-        onChange={(e) =>
-          setNewContent({
-            ...newContent,
-            description: e.target.value,
-          })
-        }
-        placeholder="Short description..."
-        rows={2}
-        className="text-sm border border-gray-200 hover:border-purple-300 focus:border-purple-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none h-20"
-      />
-    </div>
-  </div>
-
-{/* File Upload Section */}
-<div className="space-y-2"> {/* reduced vertical spacing */}
-  <div className="flex justify-between items-center">
-    <label className="text-xs font-semibold text-gray-700 flex items-center gap-1"> {/* smaller font & gap */}
-      <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
-      Files
-      <span className="text-red-500">*</span>
-    </label>
-    <Button
-      type="button"
-      variant="outline"
-      size="xs"  /* smaller button size */
-      onClick={() => triggerFileInput()}
-      className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 py-1 px-2" /* reduced padding */
-    >
-      <Upload size={12} className="mr-1" /> {/* smaller icon */}
-      Upload Files
-    </Button>
-  </div>
-
-  <input
-    ref={fileInputRef}
-    type="file"
-    className="hidden"
-    onChange={handleFileSelect}
-    accept={getAcceptedFileTypes(newContent.file_type)}
-    multiple
-  />
-
-  {uploadedFiles.length > 0 ? (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-2 max-h-24 overflow-y-auto border-2 border-gray-100"> {/* reduced padding and height */}
-      <div className="space-y-1">
-        {uploadedFiles.map((file, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-center bg-white rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100" /* smaller paddings */
-          >
-            <div className="flex items-center gap-2 text-xs truncate"> {/* smaller text */}
-              <div className="p-1.5 bg-blue-100 rounded-lg"> {/* smaller padding */}
-                <File size={12} className="text-blue-600" /> {/* smaller icon */}
-              </div>
-              <div className="truncate">
-                <p className="font-medium text-gray-800 truncate">{file.name}</p>
-                <p className="text-[10px] text-gray-500">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200 shrink-0" /* smaller button */
-              onClick={() => removeFile(index)}
-            >
-              <X size={12} />
-            </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  ) : (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center transition-all duration-200 hover:border-blue-400 hover:bg-blue-50/50"> {/* reduced padding a bit */}
-      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-2">
-        <Upload size={16} className="text-white" />
-      </div>
-      <p className="text-xs font-medium text-gray-600 mb-1">No files uploaded yet</p> {/* smaller text */}
-      <p className="text-[10px] text-gray-500">Click "Upload Files" to add your content</p>
-    </div>
-  )}
-</div>
-          {/* Lesson Items */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
-                Lesson Content
-                <span className="text-red-500">*</span>
-              </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addLessonItem}
-                className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <Plus size={14} className="mr-2" />
-                Add Lesson
-              </Button>
-            </div>
-
-            <div className="space-y-6 max-h-100 overflow-y-auto pr-2">
-              {newContent.lesson.map((lessonItem, lessonIndex) => (
-                <div
-                  key={lessonIndex}
-                  className="bg-gradient-to-br from-white via-gray-50 to-blue-50/30 rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 shadow-sm hover:shadow-md"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        {lessonIndex + 1}
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">
-                        Lesson {lessonIndex + 1}
-                      </span>
-                    </div>
-                    {newContent.lesson.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
-                        onClick={() => removeLessonItem(lessonIndex)}
-                      >
-                        <X size={14} />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Lesson Text */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-  {/* Lesson Title */}
-  <div className="space-y-1">
-    <label className="text-xs font-medium text-gray-600">
-      Lesson Title<span className="text-red-500 ml-1">*</span>
-    </label>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+  <div className="space-y-2 md:col-span-1">
     <Input
-      value={lessonItem.text}
-      onChange={(e) => updateLessonItem(lessonIndex, "text", e.target.value)}
-      placeholder="Lesson title..."
-      className="text-sm border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm h-9"
+      value={newContent.title}
+      onChange={(e) =>
+        setNewContent({ ...newContent, title: e.target.value })
+      }
+      placeholder="Title"
+      className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
     />
   </div>
-
-  {/* Lesson Audio */}
-  <div className="space-y-1">
-    <label className="text-xs font-medium text-gray-600">Lesson Audio</label>
-    <div className="flex gap-2">
-      <Input
-        value={lessonItem.audio}
-        onChange={(e) => updateLessonItem(lessonIndex, "audio", e.target.value)}
-        placeholder="audio.mp3 or URL"
-        className="text-sm flex-1 border-2 border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm h-9"
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="px-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 h-9"
-        onClick={() => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "audio/*";
-          input.onchange = async (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-              try {
-                const fileName = `${Date.now()}_${file.name}`;
-                const { data, error } = await supabase.storage.from("topics").upload(fileName, file);
-                if (error) throw error;
-                const { data: publicData } = supabase.storage.from("topics").getPublicUrl(fileName);
-                if (publicData) {
-                  updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
-                  toast({ title: "Success", description: "Audio uploaded successfully" });
-                }
-              } catch (error) {
-                console.error("Audio upload failed:", error);
-                toast({ variant: "destructive", title: "Error", description: "Failed to upload audio file" });
-              }
-            }
-          };
-          input.click();
-        }}
-      >
-        <Upload size={14} />
-      </Button>
-    </div>
-  </div>
-
-  {/* Lesson Video */}
-  <div className="space-y-1">
-    <label className="text-xs font-medium text-gray-600">Lesson Video</label>
-    <div className="flex gap-2">
-      <Input
-        value={lessonItem.video}
-        onChange={(e) => updateLessonItem(lessonIndex, "video", e.target.value)}
-        placeholder="video.mp4 or URL"
-        className="text-sm flex-1 border-2 border-gray-200 hover:border-purple-300 focus:border-purple-400 transition-all duration-200 bg-white/80 backdrop-blur-sm h-9"
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="px-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 hover:from-purple-600 hover:to-indigo-600 h-9"
-        onClick={() => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "video/*";
-          input.onchange = async (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-              try {
-                const fileName = `${Date.now()}_${file.name}`;
-                const { data, error } = await supabase.storage.from("topics").upload(fileName, file);
-                if (error) throw error;
-                const { data: publicData } = supabase.storage.from("topics").getPublicUrl(fileName);
-                if (publicData) {
-                  updateLessonItem(lessonIndex, "video", publicData.publicUrl);
-                  toast({ title: "Success", description: "Video uploaded successfully" });
-                }
-              } catch (error) {
-                console.error("Video upload failed:", error);
-                toast({ variant: "destructive", title: "Error", description: "Failed to upload video file" });
-              }
-            }
-          };
-          input.click();
-        }}
-      >
-        <Upload size={14} />
-      </Button>
-    </div>
+  <div className="space-y-2 md:col-span-2">
+    <Input
+      value={newContent.description}
+      onChange={(e) =>
+        setNewContent({
+          ...newContent,
+          description: e.target.value,
+        })
+      }
+      placeholder="Short description..."
+      className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+    />
   </div>
 </div>
 
 
-                    {/* Subheadings */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-medium text-gray-600">
-                          Subheadings
-                        </label>
+          {/* Lesson Tabs */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {newContent.lesson.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveLessonIndex(index)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                  activeLessonIndex === index
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                Lesson {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={addLessonItem}
+              className="px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium text-sm flex items-center gap-1 hover:from-orange-600 hover:to-red-600 transition-all duration-200"
+            >
+              <Plus size={16} /> Add Lesson
+            </button>
+          </div>
+
+          {/* Active Lesson Content */}
+          <div className="space-y-6">
+            {newContent.lesson.map(
+              (lessonItem, lessonIndex) =>
+                lessonIndex === activeLessonIndex && (
+                  <div
+                    key={lessonIndex}
+                    className="bg-gradient-to-br from-white via-gray-50 to-blue-50/30 rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {lessonIndex + 1}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700">
+                          Lesson {lessonIndex + 1}
+                        </span>
+                      </div>
+                      {newContent.lesson.length > 1 && (
                         <Button
                           type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addSubHeading(lessonIndex)}
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                          onClick={() => removeLessonItem(lessonIndex)}
                         >
-                          <Plus size={14} className="mr-1" />
-                          Add Subheading
+                          <X size={14} />
                         </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Lesson Title - Regular Text Input */}
+                        <div className="space-y-1">
+                      
+                          <Input
+                            value={lessonItem.text}
+                            onChange={(e) =>
+                              updateLessonItem(lessonIndex, "text", e.target.value)
+                            }
+                            placeholder="Enter lesson title"
+                            className="text-sm border border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+
+                        {/* Lesson Audio/Video */}
+                        <div className="space-y-1">
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={audioStatus === "uploading"}
+                              className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
+                                audioStatus === "success"
+                                  ? "bg-green-600"
+                                  : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                              }`}
+                              onClick={async () => {
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.accept = "audio/*";
+                                input.onchange = async (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) {
+                                    setAudioStatus("uploading");
+                                    try {
+                                      const fileName = `${Date.now()}_${file.name}`;
+                                      const { error } = await supabase.storage
+                                        .from("topics")
+                                        .upload(fileName, file);
+                                      if (error) throw error;
+
+                                      const { data: publicData } = supabase.storage
+                                        .from("topics")
+                                        .getPublicUrl(fileName);
+                                      if (publicData) {
+                                        updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
+                                        setAudioStatus("success");
+                                        toast({
+                                          title: "Success",
+                                          description: "Audio uploaded successfully",
+                                        });
+                                      }
+                                    } catch (error) {
+                                      console.error("Audio upload failed:", error);
+                                      toast({
+                                        variant: "destructive",
+                                        title: "Error",
+                                        description: "Failed to upload audio file",
+                                      });
+                                      setAudioStatus("idle");
+                                    } finally {
+                                      setTimeout(() => setAudioStatus("idle"), 2000);
+                                    }
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              <Music size={16} />
+                              {audioStatus === "uploading"
+                                ? "Uploading..."
+                                : audioStatus === "success"
+                                ? "Uploaded"
+                                : "Upload Audio"}
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={videoStatus === "uploading"}
+                              className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
+                                videoStatus === "success"
+                                  ? "bg-indigo-600"
+                                  : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+                              }`}
+                              onClick={async () => {
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.accept = "video/*";
+                                input.onchange = async (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) {
+                                    setVideoStatus("uploading");
+                                    try {
+                                      const fileName = `${Date.now()}_${file.name}`;
+                                      const { error } = await supabase.storage
+                                        .from("topics")
+                                        .upload(fileName, file);
+                                      if (error) throw error;
+
+                                      const { data: publicData } = supabase.storage
+                                        .from("topics")
+                                        .getPublicUrl(fileName);
+                                      if (publicData) {
+                                        updateLessonItem(lessonIndex, "video", publicData.publicUrl);
+                                        setVideoStatus("success");
+                                        toast({
+                                          title: "Success",
+                                          description: "Video uploaded successfully",
+                                        });
+                                      }
+                                    } catch (error) {
+                                      console.error("Video upload failed:", error);
+                                      toast({
+                                        variant: "destructive",
+                                        title: "Error",
+                                        description: "Failed to upload video file",
+                                      });
+                                      setVideoStatus("idle");
+                                    } finally {
+                                      setTimeout(() => setVideoStatus("idle"), 2000);
+                                    }
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              <Video size={16} />
+                              {videoStatus === "uploading"
+                                ? "Uploading..."
+                                : videoStatus === "success"
+                                ? "Uploaded"
+                                : "Upload Video"}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
 
+                      {/* Subheadings */}
                       <div className="space-y-4">
-                        {lessonItem.subHeading.map(
-                          (subHeadingItem, subHeadingIndex) => (
-                            <div
-                              key={subHeadingIndex}
-                              className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                            >
-                              <div className="flex justify-between items-center mb-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs">
-                                    {subHeadingIndex + 1}
-                                  </div>
-                                  <span className="text-xs font-medium text-gray-700">
-                                    Subheading {subHeadingIndex + 1}
-                                  </span>
-                                </div>
-                                {lessonItem.subHeading.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
-                                    onClick={() =>
-                                      removeSubHeading(lessonIndex, subHeadingIndex)
-                                    }
-                                  >
-                                    <X size={12} />
-                                  </Button>
-                                )}
-                              </div>
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs font-medium text-gray-600">
+                            Sections
+                          </label>
+                        </div>
 
-                              <div className="space-y-3">
-                                {/* Subheading Text */}
-                                <div className="space-y-2">
-                                  <label className="text-xs font-medium text-gray-600">
-                                    Text
-                                    <span className="text-red-500 ml-1">*</span>
-                                  </label>
-                                  {mathInputTarget?.lessonIndex === lessonIndex &&
-                                  mathInputTarget?.subHeadingIndex ===
-                                    subHeadingIndex &&
-                                  mathInputTarget?.field === "text" ? (
-                                    <>
-                              <div className="bg-white border-2 border-gray-200 rounded-lg p-4" style={{ height: '100%', minHeight: '100px' }}>
-                                  <div
-                                    ref={mathContainerRef}
-                                    className="math-field-container"
-                                    style={{ height: '100%', width: '100%' }}
-                                  />
-                                </div>
-                                      {/* Quick Math Symbols */}
-                                      <div className="space-y-3">
-                                        <h4 className="text-xs font-medium text-gray-600">
-                                          Quick Insert:
-                                        </h4>
-                           <div className="grid grid-cols-6 gap-2">
-                            {[
-                              { symbol: "\\frac{#@}{#?}", display: "𝑎/𝑏", label: "Fraction" },
-                              { symbol: "#@^{#?}", display: "x²", label: "Power" },
-                              { symbol: "\\sqrt{#@}", display: "√x", label: "Square Root" },
-                              { symbol: "\\sum_{#@}^{#?}", display: "∑", label: "Sum" },
-                              { symbol: "\\int_{#@}^{#?}", display: "∫", label: "Integral" },
-                              { symbol: "\\alpha", display: "α", label: "Alpha" },
-                              { symbol: "\\beta", display: "β", label: "Beta" },
-                              { symbol: "\\pi", display: "π", label: "Pi" },
-                              { symbol: "\\infty", display: "∞", label: "Infinity" },
-                              { symbol: "\\leq", display: "≤", label: "Less Equal" },
-                              { symbol: "\\geq", display: "≥", label: "Greater Equal" },
-                              { symbol: "\\neq", display: "≠", label: "Not Equal" },
-                            ].map((item, index) => (
-                              <Button
-                                key={index}
-                                type="button"
-                                variant="outline"
-                                className="h-6 px-2 text-[10px] leading-tight border-gray-200 hover:bg-blue-50"
-                                onClick={() => insertQuickSymbol(item.symbol)}
-                                title={item.label}
+                        <div className="space-y-4">
+                          {lessonItem.subHeading.map(
+                            (subHeadingItem, subHeadingIndex) => (
+                              <div
+                                key={subHeadingIndex}
+                                className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                               >
-                                {item.display}
-                              </Button>
-                            ))}
-                          </div>
-
-                                      </div>
-
-                                      {/* Math Preview */}
-                                      {mathExpression && (
-                                        <div className="space-y-2">
-                                          <h4 className="text-xs font-medium text-gray-600">
-                                            Preview:
-                                          </h4>
-                                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
-                                            <math-field
-                                              read-only
-                                              math-mode="math"
-                                              value={mathExpression}
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
-<div className="flex justify-between">
-  <Button
-    type="button"
-    onClick={() => setMathInputTarget(null)}
-    variant="outline"
-    className="text-xs h-8 px-3"
-  >
-    Back
-  </Button>
-  <Button
-    type="button"
-    onClick={insertMathExpression}
-    className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 text-xs h-8 px-4"
-  >
-    Insert
-  </Button>
-</div>
-
-
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Textarea
-                                        value={subHeadingItem.text}
-                                        onChange={(e) =>
-                                          updateSubHeadingItem(
-                                            lessonIndex,
-                                            subHeadingIndex,
-                                            "text",
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="Subheading text..."
-                                        className="border-2 border-gray-200 hover:border-slate-300 focus:border-slate-400 transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none min-h-[80px]"
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          toggleMathInput(
-                                            lessonIndex,
-                                            subHeadingIndex,
-                                            "text"
-                                          )
-                                        }
-                                        className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200 text-xs"
-                                      >
-                                        <Calculator size={12} className="mr-1" />
-                                        Add Math Expression
-                                      </Button>
-                                    </>
+                                <div className="flex justify-between items-center mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs">
+                                      {subHeadingIndex + 1}
+                                    </div>
+                                    <span className="text-xs font-medium text-gray-700">
+                                      Section {subHeadingIndex + 1}
+                                    </span>
+                                  </div>
+                                  {lessonItem.subHeading.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                      onClick={() =>
+                                        removeSubHeading(lessonIndex, subHeadingIndex)
+                                      }
+                                    >
+                                      <X size={12} />
+                                    </Button>
                                   )}
                                 </div>
 
-                                {/* Subheading Audio */}
-                                <div className="space-y-2">
-                                  <label className="text-xs font-medium text-gray-600">
-                                    Audio
-                                    <span className="text-red-500 ml-1">*</span>
-                                  </label>
-                                  <div className="flex gap-2">
-                                    <Input
-                                      value={subHeadingItem.subheadingAudioPath}
-                                      onChange={(e) =>
-                                        updateSubHeadingItem(
-                                          lessonIndex,
-                                          subHeadingIndex,
-                                          "subheadingAudioPath",
-                                          e.target.value
+                                <div className="space-y-3">
+                                  {/* Subheading Text - Math Input */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-medium text-gray-600">
+                                      Section Content
+                                    </label>
+                                    <div 
+                                      ref={(el) => initializeMathField(
+                                        el, 
+                                        subHeadingItem.text, 
+                                        (value) => updateSubHeadingItem(
+                                          lessonIndex, 
+                                          subHeadingIndex, 
+                                          "text", 
+                                          `\\(${value}\\)`
                                         )
-                                      }
-                                      placeholder="audio.mp3 or URL"
-                                      className="text-sm flex-1 border-2 border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                      )}
+                                      className="math-field-container"
                                     />
+                                  </div>
+
+                                  {/* Audio Upload */}
+                                  <div className="flex items-center gap-2 w-full">
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      className="px-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
-                                      onClick={() => {
+                                      disabled={audioUploadStatus === "uploading"}
+                                      className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
+                                        audioUploadStatus === "success"
+                                          ? "bg-green-600"
+                                          : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                                      }`}
+                                      onClick={async () => {
                                         const input = document.createElement("input");
                                         input.type = "file";
                                         input.accept = "audio/*";
                                         input.onchange = async (e) => {
-                                          const file = (e.target as HTMLInputElement)
-                                            .files?.[0];
+                                          const file = (e.target as HTMLInputElement).files?.[0];
                                           if (file) {
+                                            setAudioUploadStatus("uploading");
                                             try {
                                               const fileName = `${Date.now()}_${file.name}`;
-                                              const { data, error } =
-                                                await supabase.storage
-                                                  .from("topics")
-                                                  .upload(fileName, file);
-
+                                              const { error } = await supabase.storage
+                                                .from("topics")
+                                                .upload(fileName, file);
                                               if (error) throw error;
 
-                                              const { data: publicData } =
-                                                supabase.storage
-                                                  .from("topics")
-                                                  .getPublicUrl(fileName);
-
+                                              const { data: publicData } = supabase.storage
+                                                .from("topics")
+                                                .getPublicUrl(fileName);
                                               if (publicData) {
                                                 updateSubHeadingItem(
                                                   lessonIndex,
@@ -1013,143 +743,146 @@ const CreateNewContent: React.FC = () => {
                                                   "subheadingAudioPath",
                                                   publicData.publicUrl
                                                 );
+                                                setAudioUploadStatus("success");
                                                 toast({
                                                   title: "Success",
-                                                  description:
-                                                    "Audio uploaded successfully",
+                                                  description: "Audio uploaded successfully",
                                                 });
                                               }
                                             } catch (error) {
-                                              console.error(
-                                                "Audio upload failed:",
-                                                error
-                                              );
+                                              console.error("Audio upload failed:", error);
                                               toast({
                                                 variant: "destructive",
                                                 title: "Error",
-                                                description:
-                                                  "Failed to upload audio file",
+                                                description: "Failed to upload audio file",
                                               });
+                                              setAudioUploadStatus("idle");
+                                            } finally {
+                                              setTimeout(() => setAudioUploadStatus("idle"), 2000);
                                             }
                                           }
                                         };
                                         input.click();
                                       }}
                                     >
-                                      <Upload size={14} />
+                                      <Music size={16} />
+                                      {audioUploadStatus === "uploading"
+                                        ? "Uploading Audio..."
+                                        : audioUploadStatus === "success"
+                                        ? "Audio Uploaded"
+                                        : "Upload Audio"}
                                     </Button>
                                   </div>
-                                </div>
 
-                                {/* Additional Subheading Fields */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-medium text-gray-600">
-                                      Question
-                                    </label>
-                                    <Input
-                                      value={subHeadingItem.question}
-                                      onChange={(e) =>
-                                        updateSubHeadingItem(
-                                          lessonIndex,
-                                          subHeadingIndex,
-                                          "question",
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="Question..."
-                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-medium text-gray-600">
-                                      Expected Answer
-                                    </label>
-                                    <Input
-                                      value={subHeadingItem.expectedAnswer}
-                                      onChange={(e) =>
-                                        updateSubHeadingItem(
-                                          lessonIndex,
-                                          subHeadingIndex,
-                                          "expectedAnswer",
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="Expected answer..."
-                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                    />
-                                  </div>
+                                  {/* Comment Field - Math Input */}
                                   <div className="space-y-2">
                                     <label className="text-xs font-medium text-gray-600">
                                       Comment
                                     </label>
-                                    <Input
-                                      value={subHeadingItem.comment}
-                                      onChange={(e) =>
-                                        updateSubHeadingItem(
-                                          lessonIndex,
-                                          subHeadingIndex,
-                                          "comment",
-                                          e.target.value
+                                    <div 
+                                      ref={(el) => initializeMathField(
+                                        el, 
+                                        extractLatexFromText(subHeadingItem.comment), 
+                                        (value) => updateSubHeadingItem(
+                                          lessonIndex, 
+                                          subHeadingIndex, 
+                                          "comment", 
+                                          `\\(${value}\\)`
                                         )
-                                      }
-                                      placeholder="Comment..."
-                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                      )}
+                                      className="math-field-container"
                                     />
                                   </div>
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-medium text-gray-600">
-                                      Hint
-                                    </label>
-                                    <Input
-                                      value={subHeadingItem.hint}
-                                      onChange={(e) =>
-                                        updateSubHeadingItem(
-                                          lessonIndex,
-                                          subHeadingIndex,
-                                          "hint",
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="Hint..."
-                                      className="text-sm border-2 border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                                    />
-                                  </div>
+
+                                  {/* Question Button */}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      openQuestionModal(
+                                        lessonIndex,
+                                        subHeadingIndex
+                                      )
+                                    }
+                                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                                  >
+                                    <Plus size={14} className="mr-1" />
+                                    Add Question
+                                  </Button>
+
+                                  {/* Show question if it exists */}
+                                  {subHeadingItem.question && (
+                                    <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
+                                      <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                          <h4 className="text-xs font-medium text-blue-800">
+                                            Question:
+                                          </h4>
+                                          <math-field read-only math-mode="math" value={extractLatexFromText(subHeadingItem.question) || ""} />
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 text-blue-400 hover:text-blue-600"
+                                          onClick={() =>
+                                            openQuestionModal(
+                                              lessonIndex,
+                                              subHeadingIndex
+                                            )
+                                          }
+                                        >
+                                          <FileText size={14} />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            </div>
-                          )
-                        )}
+                            )
+                          )}
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addSubHeading(lessonIndex)}
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                          >
+                            <Plus size={14} className="mr-1" />
+                            Add Section
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )
+            )}
           </div>
-
-   
         </div>
 
         {/* Footer */}
         <div className="flex-shrink-0 px-6 py-4 bg-gray-50/80 border-t border-gray-200">
-          <div className="flex gap-3 w-full">
+          <div className="flex justify-between w-full items-center">
             <Button
               variant="outline"
               onClick={() => navigate(-1)}
-              className="flex-1 h-12 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+              className="h-12 px-6 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
             >
               Cancel
             </Button>
+
             <Button
               onClick={handleCreateContent}
               disabled={isSubmitting}
-              className="flex-1 h-12 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none disabled:hover:shadow-lg"
+              className="h-12 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none disabled:hover:shadow-lg"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white animate-spin" />
-                  Creating Content...
+                  Creating...
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -1161,8 +894,111 @@ const CreateNewContent: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Question Modal */}
+      {showQuestionModal && currentSubHeadingItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Add Question</h3>
+              <button
+                onClick={() => setShowQuestionModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Question Field - Math Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Question
+                </label>
+                <div 
+                  ref={(el) => initializeMathField(
+                    el, 
+                    extractLatexFromText(currentSubHeadingItem.question), 
+                    (value) => updateSubHeadingItem(
+                      currentQuestionData.lessonIndex,
+                      currentQuestionData.subHeadingIndex,
+                      "question",
+                      `\\(${value}\\)`
+                    )
+                  )}
+                  className="math-field-container"
+                />
+              </div>
+
+              {/* Expected Answer Field - Math Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Expected Answer
+                </label>
+                <div 
+                  ref={(el) => initializeMathField(
+                    el, 
+                    extractLatexFromText(currentSubHeadingItem.expectedAnswer), 
+                    (value) => updateSubHeadingItem(
+                      currentQuestionData.lessonIndex,
+                      currentQuestionData.subHeadingIndex,
+                      "expectedAnswer",
+                      `\\(${value}\\)`
+                    )
+                  )}
+                  className="math-field-container"
+                />
+              </div>
+
+              {/* Hint Field - Math Input */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Hint
+                </label>
+                <div 
+                  ref={(el) => initializeMathField(
+                    el, 
+                    extractLatexFromText(currentSubHeadingItem.hint), 
+                    (value) => updateSubHeadingItem(
+                      currentQuestionData.lessonIndex,
+                      currentQuestionData.subHeadingIndex,
+                      "hint",
+                      `\\(${value}\\)`
+                    )
+                  )}
+                  className="math-field-container"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowQuestionModal(false)}
+                  className="border-2 border-gray-300 hover:border-gray-400"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveQuestion}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600"
+                >
+                  Save Question
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+// Helper function to extract LaTeX from text
+function extractLatexFromText(text: string): string {
+  if (!text) return "";
+  const regex = /\\\((.*?)\\\)/;
+  const match = text.match(regex);
+  return match ? match[1] : "";
+}
 
 export default CreateNewContent;
