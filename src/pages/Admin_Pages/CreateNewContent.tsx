@@ -99,24 +99,30 @@ const CreateNewContent: React.FC = () => {
   const [audioUploadStatus, setAudioUploadStatus] = useState<"idle" | "uploading" | "success">("idle");
   const [audioStatus, setAudioStatus] = useState<"idle" | "uploading" | "success">("idle");
   const [videoStatus, setVideoStatus] = useState<"idle" | "uploading" | "success">("idle");
+  const mathfieldRefs = useRef<{[key: string]: MathfieldElement | null}>({});
 
-
-
-
-
-
-  
   // Initialize MathLive for all math fields
-  const initializeMathField = (containerRef: HTMLDivElement | null, initialValue: string, onChange: (value: string) => void) => {
-    if (!containerRef) return;
+const initializeMathField = (
+  containerRef: HTMLDivElement | null,
+  key: string,
+  initialValue: string,
+  onChange: (value: string) => void
+) => {
+  if (!containerRef) return null;
 
-    containerRef.innerHTML = "";
+  if (!mathfieldRefs.current[key]) {
     const mf = new MathfieldElement();
+    mathfieldRefs.current[key] = mf;
+
     mf.setOptions({
-      defaultMode: "math",
+      defaultMode: "text",
       smartMode: true,
       virtualKeyboardMode: "onfocus",
       virtualKeyboards: "all",
+      inlineShortcuts: {
+        "++": "\\plus",
+        "->": "\\rightarrow",
+      },
     });
 
     mf.value = initialValue || "";
@@ -131,8 +137,16 @@ const CreateNewContent: React.FC = () => {
     });
 
     containerRef.appendChild(mf);
-    return mf;
-  };
+  } else {
+    // If already exists, just update the value if needed
+    const existingMF = mathfieldRefs.current[key]!;
+    if (existingMF.value !== initialValue) {
+      existingMF.value = initialValue;
+    }
+  }
+
+  return mathfieldRefs.current[key];
+};
 
   const addLessonItem = () => {
     setNewContent((prev) => ({
@@ -694,7 +708,8 @@ const CreateNewContent: React.FC = () => {
                                     <div 
                                       ref={(el) => initializeMathField(
                                         el, 
-                                        subHeadingItem.text, 
+                                        `text-${lessonIndex}-${subHeadingIndex}`, 
+                                        extractLatexFromText(subHeadingItem.text), 
                                         (value) => updateSubHeadingItem(
                                           lessonIndex, 
                                           subHeadingIndex, 
@@ -782,6 +797,7 @@ const CreateNewContent: React.FC = () => {
                                     <div 
                                       ref={(el) => initializeMathField(
                                         el, 
+                                        `comment-${lessonIndex}-${subHeadingIndex}`, 
                                         extractLatexFromText(subHeadingItem.comment), 
                                         (value) => updateSubHeadingItem(
                                           lessonIndex, 
@@ -918,6 +934,7 @@ const CreateNewContent: React.FC = () => {
                 <div 
                   ref={(el) => initializeMathField(
                     el, 
+                    "question-modal", 
                     extractLatexFromText(currentSubHeadingItem.question), 
                     (value) => updateSubHeadingItem(
                       currentQuestionData.lessonIndex,
@@ -938,6 +955,7 @@ const CreateNewContent: React.FC = () => {
                 <div 
                   ref={(el) => initializeMathField(
                     el, 
+                    "expected-answer-modal", 
                     extractLatexFromText(currentSubHeadingItem.expectedAnswer), 
                     (value) => updateSubHeadingItem(
                       currentQuestionData.lessonIndex,
@@ -958,6 +976,7 @@ const CreateNewContent: React.FC = () => {
                 <div 
                   ref={(el) => initializeMathField(
                     el, 
+                    "hint-modal", 
                     extractLatexFromText(currentSubHeadingItem.hint), 
                     (value) => updateSubHeadingItem(
                       currentQuestionData.lessonIndex,
