@@ -9,20 +9,14 @@ import {
   FileText,
   Music,
   Video,
-  Calculator,
   ChevronLeft,
+  Edit,
+  Check,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import TopicContentService from "@/services/Admin_Service/Topic_Content_service";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { supabase } from "@/helper/SupabaseClient";
 import { MathfieldElement } from "mathlive";
 
@@ -56,6 +50,145 @@ interface ContentFormData {
   file_type: "video" | "audio" | "document";
   Topic: string;
 }
+
+// Helper function to extract LaTeX from text
+const extractLatexFromText = (text: string): string => {
+  if (!text) return "";
+  if (text.startsWith("\\(") && text.endsWith("\\)")) {
+    return text.substring(2, text.length - 2);
+  }
+  return text;
+};
+
+// Reusable Math Input Component
+interface MathInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSave?: () => void;
+  onCancel?: () => void;
+  editing: boolean;
+  placeholder?: string;
+  className?: string;
+}
+
+const MathInput: React.FC<MathInputProps> = ({
+  value,
+  onChange,
+  onSave,
+  onCancel,
+  editing,
+  placeholder = "",
+  className = "",
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mathfieldRef = useRef<MathfieldElement | null>(null);
+  const ignoreNextChange = useRef(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    if (!mathfieldRef.current) {
+      const mf = new MathfieldElement();
+      mathfieldRef.current = mf;
+
+      mf.setOptions({
+        defaultMode: "math",
+        smartMode: true,
+        virtualKeyboardMode: "onfocus",
+        virtualKeyboards: "all",
+        inlineShortcuts: {
+          "++": "\\plus",
+          "->": "\\rightarrow",
+        },
+        readOnly: !editing,
+      });
+
+      mf.style.width = "100%";
+      mf.style.minHeight = !editing ? "auto" : "60px";
+      mf.style.padding = !editing ? "0" : "8px";
+      mf.style.border = !editing ? "none" : "1px solid #d1d5db";
+      mf.style.borderRadius = "6px";
+      mf.style.backgroundColor = !editing ? "transparent" : "#fff";
+
+      if (!editing) {
+        mf.style.pointerEvents = "none";
+        mf.style.cursor = "default";
+      }
+
+      mf.addEventListener("input", (evt) => {
+        if (!editing) return;
+        ignoreNextChange.current = true;
+        onChange(`\\(${(evt.target as MathfieldElement).value}\\)`);
+      });
+
+      containerRef.current.appendChild(mf);
+    }
+
+    // Set initial value
+    const unwrappedValue = extractLatexFromText(value || "");
+    if (mathfieldRef.current.value !== unwrappedValue) {
+      mathfieldRef.current.value = unwrappedValue;
+    }
+
+    // Update readOnly state
+    mathfieldRef.current.setOptions({ readOnly: !editing });
+    mathfieldRef.current.style.pointerEvents = editing ? "auto" : "none";
+    mathfieldRef.current.style.backgroundColor = editing ? "#fff" : "transparent";
+    mathfieldRef.current.style.minHeight = editing ? "60px" : "auto";
+    mathfieldRef.current.style.padding = editing ? "8px" : "0";
+    mathfieldRef.current.style.border = editing ? "1px solid #d1d5db" : "none";
+
+    return () => {
+      if (mathfieldRef.current) {
+        mathfieldRef.current.remove();
+        mathfieldRef.current = null;
+      }
+    };
+  }, [editing]);
+
+  useEffect(() => {
+    if (!mathfieldRef.current || ignoreNextChange.current) {
+      ignoreNextChange.current = false;
+      return;
+    }
+
+    const unwrappedValue = extractLatexFromText(value || "");
+    if (mathfieldRef.current.value !== unwrappedValue) {
+      mathfieldRef.current.value = unwrappedValue;
+    }
+  }, [value]);
+
+  return (
+    <div className={`relative ${className}`}>
+      <div ref={containerRef} />
+      {editing && (
+        <div className="flex justify-end gap-2 mt-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onCancel}
+            className="h-8 px-3"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSave}
+            className="h-8 px-3 bg-green-500 hover:bg-green-600 text-white"
+          >
+            <Check size={14} className="mr-1" />
+            Save
+          </Button>
+        </div>
+      )}
+      {!value && !editing && (
+        <div className="text-gray-400 italic text-sm">{placeholder}</div>
+      )}
+    </div>
+  );
+};
 
 const CreateNewContent: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -99,54 +232,43 @@ const CreateNewContent: React.FC = () => {
   const [audioUploadStatus, setAudioUploadStatus] = useState<"idle" | "uploading" | "success">("idle");
   const [audioStatus, setAudioStatus] = useState<"idle" | "uploading" | "success">("idle");
   const [videoStatus, setVideoStatus] = useState<"idle" | "uploading" | "success">("idle");
-  const mathfieldRefs = useRef<{[key: string]: MathfieldElement | null}>({});
+  
+  // Track editing state for each math field
+  const [editingStates, setEditingStates] = useState<{
+    [key: string]: boolean;
+  }>({});
 
-  // Initialize MathLive for all math fields
-const initializeMathField = (
-  containerRef: HTMLDivElement | null,
-  key: string,
-  initialValue: string,
-  onChange: (value: string) => void
-) => {
-  if (!containerRef) return null;
+  // Toggle editing state for a specific field
+  const toggleEditing = (fieldPath: string) => {
+    setEditingStates(prev => ({
+      ...prev,
+      [fieldPath]: !prev[fieldPath]
+    }));
+  };
 
-  if (!mathfieldRefs.current[key]) {
-    const mf = new MathfieldElement();
-    mathfieldRefs.current[key] = mf;
+  // Save value for a specific field
+  const saveMathValue = (fieldPath: string) => {
+    setEditingStates(prev => ({
+      ...prev,
+      [fieldPath]: false
+    }));
+  };
 
-    mf.setOptions({
-      defaultMode: "text",
-      smartMode: true,
-      virtualKeyboardMode: "onfocus",
-      virtualKeyboards: "all",
-      inlineShortcuts: {
-        "++": "\\plus",
-        "->": "\\rightarrow",
-      },
-    });
+  // Cancel editing for a specific field
+  const cancelEditing = (fieldPath: string) => {
+    setEditingStates(prev => ({
+      ...prev,
+      [fieldPath]: false
+    }));
+  };
 
-    mf.value = initialValue || "";
-    mf.style.width = "100%";
-    mf.style.minHeight = "60px";
-    mf.style.padding = "8px";
-    mf.style.border = "1px solid #d1d5db";
-    mf.style.borderRadius = "6px";
-
-    mf.addEventListener("input", (evt) => {
-      onChange((evt.target as MathfieldElement).value);
-    });
-
-    containerRef.appendChild(mf);
-  } else {
-    // If already exists, just update the value if needed
-    const existingMF = mathfieldRefs.current[key]!;
-    if (existingMF.value !== initialValue) {
-      existingMF.value = initialValue;
+  // Get field path for editing state tracking
+  const getFieldPath = (lessonIndex: number, subHeadingIndex: number | null, fieldName: string) => {
+    if (subHeadingIndex === null) {
+      return `lesson_${lessonIndex}_${fieldName}`;
     }
-  }
-
-  return mathfieldRefs.current[key];
-};
+    return `lesson_${lessonIndex}_subheading_${subHeadingIndex}_${fieldName}`;
+  };
 
   const addLessonItem = () => {
     setNewContent((prev) => ({
@@ -292,9 +414,36 @@ const initializeMathField = (
     }));
   };
 
+  const uploadFilesToSupabase = async (files: File[]) => {
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const fileName = `${Date.now()}_${file.name}`;
+        const { data, error } = await supabase.storage
+          .from("topics")
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: publicData } = supabase.storage
+          .from("topics")
+          .getPublicUrl(fileName);
+
+        return publicData?.publicUrl || null;
+      });
+
+      const results = await Promise.all(uploadPromises);
+      return results.filter((url) => url !== null) as string[];
+    } catch (error) {
+      console.error("Error in file upload:", error);
+      throw error;
+    }
+  };
+
   const handleCreateContent = async () => {
     try {
       setIsSubmitting(true);
+      
+      // Validate main fields
       if (!newContent.title.trim()) {
         toast({
           variant: "destructive",
@@ -313,7 +462,7 @@ const initializeMathField = (
         return;
       }
 
-      // Validate lesson titles
+      // Validate lessons
       const lessonErrors: number[] = [];
       newContent.lesson.forEach((lesson, index) => {
         if (!lesson.text.trim()) {
@@ -330,7 +479,36 @@ const initializeMathField = (
         return;
       }
 
-      const uploadedUrls = "N/A"
+      // Validate subheadings
+      const subHeadingErrors: { lesson: number; section: number }[] = [];
+      newContent.lesson.forEach((lesson, lessonIndex) => {
+        lesson.subHeading.forEach((subHeading, subHeadingIndex) => {
+          if (!subHeading.text.trim()) {
+            subHeadingErrors.push({
+              lesson: lessonIndex + 1,
+              section: subHeadingIndex + 1,
+            });
+          }
+        });
+      });
+
+      if (subHeadingErrors.length > 0) {
+        const errorList = subHeadingErrors
+          .map((err) => `Lesson ${err.lesson} Section ${err.section}`)
+          .join(", ");
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: `Section content is required for: ${errorList}`,
+        });
+        return;
+      }
+
+      // Upload files to Supabase
+      let uploadedUrls: string[] = [];
+      if (uploadedFiles.length > 0) {
+        uploadedUrls = await uploadFilesToSupabase(uploadedFiles);
+      }
 
       const contentToCreate = {
         ...newContent,
@@ -354,32 +532,6 @@ const initializeMathField = (
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  
-  const uploadFilesToSupabase = async (files: File[]) => {
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const fileName = `${Date.now()}_${file.name}`;
-        const { data, error } = await supabase.storage
-          .from("topics")
-          .upload(fileName, file);
-
-        if (error) throw error;
-
-        const { data: publicData } = supabase.storage
-          .from("topics")
-          .getPublicUrl(fileName);
-
-        return publicData?.publicUrl || null;
-      });
-
-      const results = await Promise.all(uploadPromises);
-      return results.filter((url) => url !== null) as string[];
-    } catch (error) {
-      console.error("Error in file upload:", error);
-      throw error;
     }
   };
 
@@ -438,32 +590,31 @@ const initializeMathField = (
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Content Type Selection */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-  <div className="space-y-2 md:col-span-1">
-    <Input
-      value={newContent.title}
-      onChange={(e) =>
-        setNewContent({ ...newContent, title: e.target.value })
-      }
-      placeholder="Title"
-      className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-    />
-  </div>
-  <div className="space-y-2 md:col-span-2">
-    <Input
-      value={newContent.description}
-      onChange={(e) =>
-        setNewContent({
-          ...newContent,
-          description: e.target.value,
-        })
-      }
-      placeholder="Short description..."
-      className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-    />
-  </div>
-</div>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div className="space-y-2 md:col-span-1">
+              <Input
+                value={newContent.title}
+                onChange={(e) =>
+                  setNewContent({ ...newContent, title: e.target.value })
+                }
+                placeholder="Title"
+                className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Input
+                value={newContent.description}
+                onChange={(e) =>
+                  setNewContent({
+                    ...newContent,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Short description..."
+                className="h-10 text-sm border border-gray-200 hover:border-green-300 focus:border-green-400 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+          </div>
 
           {/* Lesson Tabs */}
           <div className="flex flex-wrap gap-2 mb-4">
@@ -521,9 +672,8 @@ const initializeMathField = (
 
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Lesson Title - Regular Text Input */}
+                        {/* Lesson Title */}
                         <div className="space-y-1">
-                      
                           <Input
                             value={lessonItem.text}
                             onChange={(e) =>
@@ -705,20 +855,43 @@ const initializeMathField = (
                                     <label className="text-xs font-medium text-gray-600">
                                       Section Content
                                     </label>
-                                    <div 
-                                      ref={(el) => initializeMathField(
-                                        el, 
-                                        `text-${lessonIndex}-${subHeadingIndex}`, 
-                                        extractLatexFromText(subHeadingItem.text), 
-                                        (value) => updateSubHeadingItem(
-                                          lessonIndex, 
-                                          subHeadingIndex, 
-                                          "text", 
-                                          `\\(${value}\\)`
-                                        )
+                                    <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                                      {editingStates[getFieldPath(lessonIndex, subHeadingIndex, "text")] ? (
+                                        <MathInput
+                                          value={subHeadingItem.text}
+                                          onChange={(value) => 
+                                            updateSubHeadingItem(
+                                              lessonIndex, 
+                                              subHeadingIndex, 
+                                              "text", 
+                                              value
+                                            )
+                                          }
+                                          editing={true}
+                                          onSave={() => saveMathValue(getFieldPath(lessonIndex, subHeadingIndex, "text"))}
+                                          onCancel={() => cancelEditing(getFieldPath(lessonIndex, subHeadingIndex, "text"))}
+                                        />
+                                      ) : (
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1">
+                                            <MathInput
+                                              value={subHeadingItem.text}
+                                              editing={false}
+                                              placeholder="Click edit to add content"
+                                            />
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                                            onClick={() => toggleEditing(getFieldPath(lessonIndex, subHeadingIndex, "text"))}
+                                          >
+                                            <Edit size={14} />
+                                          </Button>
+                                        </div>
                                       )}
-                                      className="math-field-container"
-                                    />
+                                    </div>
                                   </div>
 
                                   {/* Audio Upload */}
@@ -794,20 +967,43 @@ const initializeMathField = (
                                     <label className="text-xs font-medium text-gray-600">
                                       Comment
                                     </label>
-                                    <div 
-                                      ref={(el) => initializeMathField(
-                                        el, 
-                                        `comment-${lessonIndex}-${subHeadingIndex}`, 
-                                        extractLatexFromText(subHeadingItem.comment), 
-                                        (value) => updateSubHeadingItem(
-                                          lessonIndex, 
-                                          subHeadingIndex, 
-                                          "comment", 
-                                          `\\(${value}\\)`
-                                        )
+                                    <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                                      {editingStates[getFieldPath(lessonIndex, subHeadingIndex, "comment")] ? (
+                                        <MathInput
+                                          value={subHeadingItem.comment}
+                                          onChange={(value) => 
+                                            updateSubHeadingItem(
+                                              lessonIndex, 
+                                              subHeadingIndex, 
+                                              "comment", 
+                                              value
+                                            )
+                                          }
+                                          editing={true}
+                                          onSave={() => saveMathValue(getFieldPath(lessonIndex, subHeadingIndex, "comment"))}
+                                          onCancel={() => cancelEditing(getFieldPath(lessonIndex, subHeadingIndex, "comment"))}
+                                        />
+                                      ) : (
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1">
+                                            <MathInput
+                                              value={subHeadingItem.comment}
+                                              editing={false}
+                                              placeholder="Click edit to add comment"
+                                            />
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                                            onClick={() => toggleEditing(getFieldPath(lessonIndex, subHeadingIndex, "comment"))}
+                                          >
+                                            <Edit size={14} />
+                                          </Button>
+                                        </div>
                                       )}
-                                      className="math-field-container"
-                                    />
+                                    </div>
                                   </div>
 
                                   {/* Question Button */}
@@ -831,26 +1027,31 @@ const initializeMathField = (
                                   {subHeadingItem.question && (
                                     <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
                                       <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
+                                        <div className="space-y-1 w-full">
                                           <h4 className="text-xs font-medium text-blue-800">
                                             Question:
                                           </h4>
-                                          <math-field read-only math-mode="math" value={extractLatexFromText(subHeadingItem.question) || ""} />
+                                          <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                                            <div className="flex items-start justify-between">
+                                              <div className="flex-1">
+                                                <MathInput
+                                                  value={subHeadingItem.question}
+                                                  editing={false}
+                                                  placeholder="No question added"
+                                                />
+                                              </div>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                                                onClick={() => openQuestionModal(lessonIndex, subHeadingIndex)}
+                                              >
+                                                <Edit size={14} />
+                                              </Button>
+                                            </div>
+                                          </div>
                                         </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-6 w-6 text-blue-400 hover:text-blue-600"
-                                          onClick={() =>
-                                            openQuestionModal(
-                                              lessonIndex,
-                                              subHeadingIndex
-                                            )
-                                          }
-                                        >
-                                          <FileText size={14} />
-                                        </Button>
                                       </div>
                                     </div>
                                   )}
@@ -931,20 +1132,56 @@ const initializeMathField = (
                 <label className="text-xs font-medium text-gray-600">
                   Question
                 </label>
-                <div 
-                  ref={(el) => initializeMathField(
-                    el, 
-                    "question-modal", 
-                    extractLatexFromText(currentSubHeadingItem.question), 
-                    (value) => updateSubHeadingItem(
-                      currentQuestionData.lessonIndex,
-                      currentQuestionData.subHeadingIndex,
-                      "question",
-                      `\\(${value}\\)`
-                    )
+                <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                  {editingStates[`question_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
+                    <MathInput
+                      value={currentSubHeadingItem.question}
+                      onChange={(value) => 
+                        updateSubHeadingItem(
+                          currentQuestionData.lessonIndex,
+                          currentQuestionData.subHeadingIndex,
+                          "question",
+                          value
+                        )
+                      }
+                      editing={true}
+                      onSave={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`question_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                      onCancel={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`question_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <MathInput
+                          value={currentSubHeadingItem.question}
+                          editing={false}
+                          placeholder="Click edit to add question"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                        onClick={() => setEditingStates(prev => ({
+                          ...prev,
+                          [`question_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: true
+                        }))}
+                      >
+                        <Edit size={14} />
+                      </Button>
+                    </div>
                   )}
-                  className="math-field-container"
-                />
+                </div>
               </div>
 
               {/* Expected Answer Field - Math Input */}
@@ -952,20 +1189,56 @@ const initializeMathField = (
                 <label className="text-xs font-medium text-gray-600">
                   Expected Answer
                 </label>
-                <div 
-                  ref={(el) => initializeMathField(
-                    el, 
-                    "expected-answer-modal", 
-                    extractLatexFromText(currentSubHeadingItem.expectedAnswer), 
-                    (value) => updateSubHeadingItem(
-                      currentQuestionData.lessonIndex,
-                      currentQuestionData.subHeadingIndex,
-                      "expectedAnswer",
-                      `\\(${value}\\)`
-                    )
+                <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                  {editingStates[`expectedAnswer_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
+                    <MathInput
+                      value={currentSubHeadingItem.expectedAnswer}
+                      onChange={(value) => 
+                        updateSubHeadingItem(
+                          currentQuestionData.lessonIndex,
+                          currentQuestionData.subHeadingIndex,
+                          "expectedAnswer",
+                          value
+                        )
+                      }
+                      editing={true}
+                      onSave={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`expectedAnswer_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                      onCancel={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`expectedAnswer_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <MathInput
+                          value={currentSubHeadingItem.expectedAnswer}
+                          editing={false}
+                          placeholder="Click edit to add expected answer"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                        onClick={() => setEditingStates(prev => ({
+                          ...prev,
+                          [`expectedAnswer_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: true
+                        }))}
+                      >
+                        <Edit size={14} />
+                      </Button>
+                    </div>
                   )}
-                  className="math-field-container"
-                />
+                </div>
               </div>
 
               {/* Hint Field - Math Input */}
@@ -973,20 +1246,56 @@ const initializeMathField = (
                 <label className="text-xs font-medium text-gray-600">
                   Hint
                 </label>
-                <div 
-                  ref={(el) => initializeMathField(
-                    el, 
-                    "hint-modal", 
-                    extractLatexFromText(currentSubHeadingItem.hint), 
-                    (value) => updateSubHeadingItem(
-                      currentQuestionData.lessonIndex,
-                      currentQuestionData.subHeadingIndex,
-                      "hint",
-                      `\\(${value}\\)`
-                    )
+                <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                  {editingStates[`hint_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
+                    <MathInput
+                      value={currentSubHeadingItem.hint}
+                      onChange={(value) => 
+                        updateSubHeadingItem(
+                          currentQuestionData.lessonIndex,
+                          currentQuestionData.subHeadingIndex,
+                          "hint",
+                          value
+                        )
+                      }
+                      editing={true}
+                      onSave={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`hint_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                      onCancel={() => {
+                        setEditingStates(prev => ({
+                          ...prev,
+                          [`hint_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: false
+                        }));
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <MathInput
+                          value={currentSubHeadingItem.hint}
+                          editing={false}
+                          placeholder="Click edit to add hint"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                        onClick={() => setEditingStates(prev => ({
+                          ...prev,
+                          [`hint_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`]: true
+                        }))}
+                      >
+                        <Edit size={14} />
+                      </Button>
+                    </div>
                   )}
-                  className="math-field-container"
-                />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -1009,15 +1318,7 @@ const initializeMathField = (
         </div>
       )}
     </div>
-  );
+  );  
 };
-
-// Helper function to extract LaTeX from text
-function extractLatexFromText(text: string): string {
-  if (!text) return "";
-  const regex = /\\\((.*?)\\\)/;
-  const match = text.match(regex);
-  return match ? match[1] : "";
-}
 
 export default CreateNewContent;
