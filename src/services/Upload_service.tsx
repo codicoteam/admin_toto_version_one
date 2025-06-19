@@ -14,54 +14,47 @@ const UploadService = {
    * @returns {Promise} Promise with upload result
    */
   // Upload_service.tsx
-  uploadBook: async (formData) => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
+uploadBook: async (bookData) => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error("Authentication token not found. Please login again.");
+    }
 
-      // Convert FormData to object for debugging
-      const formDataObj: Record<string, any> = {};
-      formData.forEach((value, key) => {
-        formDataObj[key] = value;
-      });
-      console.log("Request payload:", formDataObj);
+    console.log("Request payload:", bookData);
 
-      const response = await axios.post(`${BASE_URL}/create`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 30000,
-      });
+    const response = await axios.post(`${BASE_URL}/create`, bookData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      timeout: 30000,
+    });
 
-      return response.data;
-    } catch (error: any) {
-      console.error("Full error object:", error);
+    return response.data;
+  } catch (error: any) {
+    console.error("Full error object:", error);
 
-      // Handle axios errors
-      if (error.isAxiosError) {
-        const serverMessage = error.response?.data?.message || "Server error";
-        const validationErrors =
-          error.response?.data?.error || "Validation failed";
+    if (error.isAxiosError) {
+      const serverMessage = error.response?.data?.message || "Server error";
+      const validationErrors = error.response?.data?.error || "Validation failed";
 
-        throw {
-          message: serverMessage,
-          error: validationErrors,
-          details: error.response?.data,
-          status: error.response?.status,
-        };
-      }
-
-      // Handle other errors
       throw {
-        message: "Upload failed",
-        error: error.message,
-        details: error.stack,
+        message: serverMessage,
+        error: validationErrors,
+        details: error.response?.data,
+        status: error.response?.status,
       };
     }
-  },
+
+    throw {
+      message: "Upload failed",
+      error: error.message,
+      details: error.stack,
+    };
+  }
+}
+,
   /**
    * Update an existing book
    * @param {string} id - Book ID to update

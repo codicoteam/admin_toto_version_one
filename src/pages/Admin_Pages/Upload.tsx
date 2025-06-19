@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Upload, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import UploadService from "@/services/Upload_service";
 import LibraryService from "@/services/Library_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/helper/SupabaseClient";
 
 export default function BookUploadForm() {
   const [isDragging, setIsDragging] = useState(false);
@@ -17,6 +17,7 @@ export default function BookUploadForm() {
   const [groupSubject, setGroupSubject] = useState("");
   const [authorFullName, setAuthorFullName] = useState("");
   const [description, setDescription] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // New state for subjects
   const [subjects, setSubjects] = useState([]);
@@ -37,7 +38,6 @@ export default function BookUploadForm() {
       try {
         setIsLoadingSubjects(true);
         const data = await SubjectService.getAllSubjects();
-        console.log("Raw API Response:", data); // Debug log
 
         // Handle different response structures
         let subjectsArray = [];
@@ -52,18 +52,10 @@ export default function BookUploadForm() {
           subjectsArray = [];
         }
 
-        console.log("Processed subjects array:", subjectsArray);
-
-        // Log the structure of the first subject for debugging
-        if (subjectsArray.length > 0) {
-          console.log("First subject structure:", subjectsArray[0]);
-          console.log("Subject fields:", Object.keys(subjectsArray[0]));
-        }
-
         setSubjects(subjectsArray);
       } catch (error) {
         console.error("Error fetching subjects:", error);
-        setSubjects([]); // Set empty array on error
+        setSubjects([]);
       } finally {
         setIsLoadingSubjects(false);
       }
@@ -117,7 +109,8 @@ export default function BookUploadForm() {
 
     setFile(selectedFile);
     setBookTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
-    setError(null); // Clear any previous errors
+    setError(null);
+    setUploadProgress(0);
   };
 
   const handleBrowseClick = () => {
@@ -155,6 +148,7 @@ export default function BookUploadForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setUploadProgress(0);
 
     try {
       // Pre-validation before starting upload
@@ -169,80 +163,78 @@ export default function BookUploadForm() {
       );
       const cleanedLevel = validateAndCleanString(groupLevel, "Level");
       const cleanedSubject = validateObjectId(groupSubject, "Subject");
-      const cleanedDescription = description.trim(); // Description is optional
+      const cleanedDescription = description.trim();
 
-      console.log("Pre-validation passed:");
-      console.log("- Author:", cleanedAuthor);
-      console.log("- Level:", cleanedLevel);
-      console.log("- Subject ID:", cleanedSubject);
-      console.log("- Description:", cleanedDescription);
+      console.log("Pre-validation passed:", {
+        author: cleanedAuthor,
+        level: cleanedLevel,
+        subject: cleanedSubject,
+      });
     } catch (validationError) {
       setError(validationError.message);
       return;
     }
 
     setIsLoading(true);
+    let filePath = "";
 
     try {
-      // 1. First upload the file to get the file path
-      const formData = new FormData();
-      formData.append("file", file);
+      // Upload file to Supabase
+      const fileName = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+      console.log("Uploading to Supabase:", fileName);
 
-      console.log("Starting file upload...");
-      console.log("File details:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
+      const { error: uploadError } = await supabase.storage
+        .from("topics")  // Fixed bucket name (was "topics")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+          onProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded / progressEvent.total) * 100
+            );
+            setUploadProgress(progress);
+          },
+        });
 
-      const uploadResponse = await UploadService.uploadBook(formData);
-      console.log("Upload response:", uploadResponse);
-
-      if (!uploadResponse?.success) {
-        throw new Error(uploadResponse?.message || "File upload failed");
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError);
+        throw new Error(`File upload failed: ${uploadError.message}`);
       }
 
-      if (
-        !uploadResponse.filePath ||
-        uploadResponse.filePath.trim().length === 0
-      ) {
-        throw new Error("File upload did not return a valid file path");
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("books")
+        .getPublicUrl(fileName);
+
+      if (!publicUrlData?.publicUrl) {
+        throw new Error("Failed to get file URL after upload");
       }
 
-      console.log(
-        "File uploaded successfully, file path:",
-        uploadResponse.filePath
-      );
+      filePath = publicUrlData.publicUrl;
+      console.log("File uploaded successfully. URL:", filePath);
 
-      // 2. Prepare book data with cleaned values and the file path from upload
+      // Prepare book data for JSON submission
       const bookData = {
         level: groupLevel.trim(),
         subject: groupSubject.trim(),
         authorFullName: authorFullName.trim(),
-        filePath: uploadResponse.filePath.trim(),
+        filePath: filePath,
         description: description.trim(),
+        showBook: true,
       };
 
-      // Final validation of the book data object
-      console.log("Final book data being sent:", bookData);
-      console.log("Book data JSON:", JSON.stringify(bookData, null, 2));
+      console.log("Submitting book data:", bookData);
 
-      // Validate that required fields are not empty after trimming
-      const requiredFields = ["level", "subject", "authorFullName", "filePath"];
-      requiredFields.forEach((field) => {
-        if (!bookData[field] || bookData[field].length === 0) {
-          throw new Error(`${field} is required and cannot be empty`);
-        }
-      });
-
-      // 3. Create the book record with the file path
-      console.log("Creating book record...");
+      // Create book record
       const createResponse = await LibraryService.createBook(bookData);
-      console.log("Create book response:", createResponse);
+      console.log("Book creation response:", createResponse);
 
-      if (!createResponse?.success) {
+      // FIXED: Changed success condition to match service response
+      if (!createResponse || createResponse.error) {
+        const errorMsg = createResponse?.message || "Book creation failed";
         console.error("Book creation failed:", createResponse);
-        throw new Error(createResponse?.message || "Book creation failed");
+        throw new Error(errorMsg);
       }
 
       // Reset form on success
@@ -251,7 +243,8 @@ export default function BookUploadForm() {
       setAuthorFullName("");
       setDescription("");
       setGroupSubject("");
-      setGroupLevel("Form 4"); // Reset to default
+      setGroupLevel("Form 4");
+      setUploadProgress(0);
 
       // Reset file input
       if (fileInputRef.current) {
@@ -264,20 +257,13 @@ export default function BookUploadForm() {
         variant: "default",
       });
     } catch (err) {
-      console.error("Upload error details:", err);
+      console.error("Upload error:", err);
 
-      // More detailed error logging
-      if (err.response) {
-        console.error("Error response:", err.response);
-        console.error("Error response data:", err.response.data);
-        console.error("Error response status:", err.response.status);
-      }
-
-      const errorMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        "Upload failed. Please try again.";
+      // Detailed error handling
+      let errorMsg = "Upload failed. Please try again.";
+      if (err.message) errorMsg = err.message;
+      if (err.response?.data?.error) errorMsg = err.response.data.error;
+      if (err.response?.data?.message) errorMsg = err.response.data.message;
 
       setError(errorMsg);
       toast({
@@ -345,6 +331,19 @@ export default function BookUploadForm() {
                     {getFileTypeDisplay(file)} •{" "}
                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
+                  
+                  {/* Upload progress indicator */}
+                  {isLoading && uploadProgress > 0 && (
+                    <div className="mt-3 w-full bg-gray-200 rounded-full h-2.5">
+                      <div 
+                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Uploading: {uploadProgress}%
+                      </p>
+                    </div>
+                  )}
                 </>
               ) : isDragging ? (
                 <p className="text-blue-600 font-medium">Drop your file here</p>
@@ -472,10 +471,7 @@ export default function BookUploadForm() {
                 id="subject"
                 name="subject"
                 value={groupSubject}
-                onChange={(e) => {
-                  console.log("Subject changed to:", e.target.value);
-                  setGroupSubject(e.target.value);
-                }}
+                onChange={(e) => setGroupSubject(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 disabled={isLoadingSubjects}
                 required
@@ -495,12 +491,6 @@ export default function BookUploadForm() {
                     );
                   })}
               </select>
-              {/* Debug info for subject selection */}
-              {groupSubject && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Selected: {groupSubject}
-                </p>
-              )}
             </div>
 
             <div>
@@ -582,7 +572,7 @@ export default function BookUploadForm() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  UPLOADING...
+                  {uploadProgress > 0 ? `UPLOADING (${uploadProgress}%)` : "PROCESSING..."}
                 </span>
               ) : isLoadingSubjects ? (
                 "LOADING SUBJECTS..."
