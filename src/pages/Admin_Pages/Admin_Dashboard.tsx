@@ -240,7 +240,7 @@ const Admin_Dashboard = () => {
                       {loading ? "..." : course.length}
                     </div>
                     <div className="text-sm font-medium text-blue-900">
-                      Courses
+                      Subjects
                     </div>
                   </div>
                 </div>
@@ -401,52 +401,7 @@ const Admin_Dashboard = () => {
               </div>
 
               {/* Calendar Widget */}
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h2 className="text-sm font-medium text-gray-700 mb-2">
-                  Select date:
-                </h2>
-                <div className="font-medium mb-2 text-blue-900">
-                  Mon, Aug 17
-                </div>
 
-                <div className="border-t border-b py-2 mb-2">
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500">
-                    <div>S</div>
-                    <div>M</div>
-                    <div>T</div>
-                    <div>W</div>
-                    <div>T</div>
-                    <div>F</div>
-                    <div>S</div>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs mt-2">
-                    {/* Calendar days - would be dynamically generated in real app */}
-                    {Array.from({ length: 31 }, (_, i) => (
-                      <div
-                        key={i}
-                        className={`h-6 w-6 flex items-center justify-center rounded-full mx-auto
-                        ${
-                          i === 16
-                            ? "bg-blue-900 text-white font-bold"
-                            : "hover:bg-blue-50 hover:text-blue-900 cursor-pointer"
-                        }`}
-                      >
-                        {i + 1}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <button className="text-xs text-gray-500 hover:text-blue-900 transition-colors px-2 py-1 rounded">
-                    Cancel
-                  </button>
-                  <button className="text-xs text-blue-900 hover:bg-blue-50 transition-colors px-2 py-1 rounded font-medium">
-                    OK
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -42,6 +42,22 @@ const StudentService = {
     }
   },
 
+   deleteStudent: async (id) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_URL}/deletestudent/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      return response.data;  // Returns { message: "Student deleted successfully" }
+    } catch (error) {
+      throw error.response?.data || "Failed to delete student";
+    }
+  },
+
   // Commented out as per your code but kept for future implementation
   /*
   postStudent: async (studentData) => {

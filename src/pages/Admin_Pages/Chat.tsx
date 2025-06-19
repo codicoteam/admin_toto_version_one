@@ -412,10 +412,10 @@ const ChatApp = (ChatServiceData: any) => {
   // };
   const handleSendMessage = async () => {
     // Add detailed logging to debug the issue
-    console.log("handleSendMessage called");
-    console.log("newMessage:", newMessage);
-    console.log("isSending:", isSending);
-    console.log("activeGroup:", activeGroup);
+    // console.log("handleSendMessage called");
+    // console.log("newMessage:", newMessage);
+    // console.log("isSending:", isSending);
+    // console.log("activeGroup:", activeGroup);
     console.log("user:", user);
 
     if (!newMessage.trim() || isSending || !activeGroup || !user?._id) {

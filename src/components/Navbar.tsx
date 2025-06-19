@@ -56,7 +56,7 @@ const Navrbar = () => {
               <li className="mx-2 hover:text-blue-500 transition">
                 <Link to="/aboutpage">About Us</Link>
               </li>
-              <li className="mx-2 hover:text-blue-500 transition">Courses</li>
+              <li className="mx-2 hover:text-blue-500 transition">S</li>
               <li className="mx-2 hover:text-blue-500 transition">Library</li>
               <li className="mx-2 hover:text-blue-500 transition">Chat</li>
               <li className="mx-2 hover:text-blue-500 transition">Contact</li>

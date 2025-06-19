@@ -13,6 +13,7 @@ import {
   Home,
   Users,
   AlertCircle,
+  Trash, // Added trash icon
 } from "lucide-react";
 import {
   BarChart,
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import logo from "@/assets/logo2.png";
 import Sidebar from "@/components/Sidebar";
-import StudentService from "../../services/Admin_Service/Student_service"; // Adjust path as needed
+import StudentService from "../../services/Admin_Service/Student_service";
 
 // Dropdown component for reusability
 const Dropdown = ({ options, value, onChange, placeholder }) => {
@@ -262,6 +263,64 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
   );
 };
 
+// Delete Confirmation Dialog Component
+const DeleteConfirmationDialog = ({ 
+  isOpen, 
+  onClose, 
+  student, 
+  onConfirm 
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-blue-600 flex items-center">
+            <Trash className="h-5 w-5 mr-2" />
+            Delete Student
+          </DialogTitle>
+   <DialogDescription className="pt-4 text-black">
+  Are you sure you want to delete this student?
+</DialogDescription>
+
+        </DialogHeader>
+        
+        <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+          <div className="font-medium text-gray-800">
+            {student?.firstName} {student?.lastName}
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            ID: {student?.studentId || "N/A"}
+          </div>
+          <div className="text-sm text-gray-600">
+            Level: {student?.level || "N/A"}
+          </div>
+        </div>
+        
+        <p className="text-red-500 text-sm mt-2">
+          This action cannot be undone. All student data will be permanently removed.
+        </p>
+        
+        <DialogFooter className="pt-6">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="border-gray-300 hover:bg-gray-50"
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="destructive"
+            onClick={onConfirm}
+            className="bg-red-600 hover:bg-red-700 ml-2"
+          >
+            Yes, Delete Student
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const StudentDashboard = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -276,11 +335,16 @@ const StudentDashboard = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [studentProfiles, setStudentProfiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [adminName, setAdminName] = useState("Admin User"); // Added admin name state
+  const [adminName, setAdminName] = useState("Admin User");
 
   // State for student details modal
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // State for delete confirmation
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Available options for dropdowns
   const yearOptions = ["2022", "2023", "2024", "2025", "All years"];
@@ -297,13 +361,48 @@ const StudentDashboard = () => {
     setIsModalOpen(true);
   };
 
+  // Handle opening delete confirmation dialog
+  const handleOpenDeleteDialog = (student) => {
+    setStudentToDelete(student);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Handle closing delete confirmation dialog
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setStudentToDelete(null);
+  };
+
+  // Handle actual student deletion
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await StudentService.deleteStudent(studentToDelete._id);
+      
+      // Remove deleted student from state
+      setStudents(prevStudents => 
+        prevStudents.filter(student => student._id !== studentToDelete._id)
+      );
+      
+      // Close dialog and show success message
+      handleCloseDeleteDialog();
+      console.log("Student deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete student:", error);
+      alert(`Failed to delete student: ${error.message || "Please try again"}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Fetch all students on component mount
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
         const response = await StudentService.getAllStudents();
-        // Check if response and response.data are valid
         if (response && Array.isArray(response.data)) {
           setStudents(response.data);
           processStudentData(response.data);
@@ -313,7 +412,6 @@ const StudentDashboard = () => {
       } catch (err) {
         setError(err.message || "Error fetching students");
         console.error("Error fetching students:", err);
-        // Set empty arrays to prevent errors in the UI
         setStudents([]);
         setFilteredStudents([]);
         setExamData([
@@ -326,11 +424,9 @@ const StudentDashboard = () => {
       }
     };
 
-    // Also fetch admin name if needed
     const fetchAdminName = async () => {
       try {
-        // Add your admin name fetching logic here if needed
-        // For now using default value
+        // Admin name fetching logic here
       } catch (err) {
         console.error("Error fetching admin info:", err);
       }
@@ -343,7 +439,6 @@ const StudentDashboard = () => {
   // Process student data to extract relevant statistics
   const processStudentData = (data) => {
     if (!data || data.length === 0) {
-      // Set default values for empty data
       setTotalStudents(0);
       setStudentLevelData([]);
       setExamData([
@@ -382,10 +477,8 @@ const StudentDashboard = () => {
       return;
     }
 
-    // Calculate total students
     setTotalStudents(data.length);
 
-    // Calculate student level breakdown
     const levelCounts = data.reduce((acc, student) => {
       const level = student.level || "Unknown";
       acc[level] = (acc[level] || 0) + 1;
@@ -398,7 +491,6 @@ const StudentDashboard = () => {
     }));
     setStudentLevelData(levelData);
 
-    // Create exam results data grouped by year and level
     const examResults = {};
 
     data.forEach((student) => {
@@ -418,13 +510,11 @@ const StudentDashboard = () => {
         examResults[year].count[level] = 0;
       }
 
-      // Add student marks to total
       examResults[year][level] =
         (examResults[year][level] || 0) + (student.overallMark || 0);
       examResults[year].count[level]++;
     });
 
-    // Calculate averages
     const formattedExamData = Object.keys(examResults).map((year) => {
       const result = { name: `Year ${year}` };
 
@@ -444,7 +534,6 @@ const StudentDashboard = () => {
         : [{ name: "No Data", "O' Level": 0, "A' Level": 0, Tertiary: 0 }]
     );
 
-    // Find top-performing students for display cards
     const topStudents = {
       marks: getTopStudent(data, "overallMark"),
       attendance: getTopStudent(data, "attendance"),
@@ -494,30 +583,24 @@ const StudentDashboard = () => {
     setStudentProfiles(profiles);
   };
 
-  // Helper function to safely get top student by a metric
   const getTopStudent = (data, metricField) => {
     if (!data || data.length === 0) return null;
 
-    // Filter out students with undefined or null metric values
     const validStudents = data.filter(
       (student) => student && typeof student[metricField] === "number"
     );
 
     if (validStudents.length === 0) return null;
 
-    // Sort and return the top student
     return [...validStudents].sort(
       (a, b) => (b[metricField] || 0) - (a[metricField] || 0)
     )[0];
   };
 
-  // Helper function to safely format student name
   const formatStudentName = (student) => {
     if (!student) return "N/A";
     const firstName = student.firstName || "";
     const lastName = student.lastName || "";
-
-    if (!firstName && !lastName) return "N/A";
     return `${firstName} ${lastName}`.trim();
   };
 
@@ -553,7 +636,6 @@ const StudentDashboard = () => {
     setFilteredStudents(filtered);
   }, [selectedYear, selectedLevel, students, searchQuery]);
 
-  // Calculate average attendance from the data
   const calculateAverageAttendance = () => {
     if (!students || students.length === 0) return 0;
 
@@ -572,20 +654,15 @@ const StudentDashboard = () => {
 
   // Update screen size state and handle sidebar visibility
   useEffect(() => {
-    // Check initial screen size
     const checkScreenSize = () => {
       const isLarge = window.innerWidth >= 768;
       setIsLargeScreen(isLarge);
       setSidebarOpen(isLarge);
     };
 
-    // Run on initial load
     checkScreenSize();
-
-    // Add event listener for window resize
     window.addEventListener("resize", checkScreenSize);
 
-    // Cleanup
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
@@ -599,7 +676,7 @@ const StudentDashboard = () => {
         {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar - Mobile: overlay, Desktop: static */}
+      {/* Sidebar */}
       <div
         className={`
           ${
@@ -823,7 +900,6 @@ const StudentDashboard = () => {
                 </div>
 
                 {/* Students Table */}
-                {/* Students Table */}
                 <div className="bg-white p-6 rounded-md shadow-sm">
                   <h3 className="text-lg font-medium mb-4">Students</h3>
                   <div className="max-h-96 overflow-y-auto">
@@ -891,16 +967,28 @@ const StudentDashboard = () => {
                                   </span>
                                 </td>
                                 <td className="px-2 py-3 whitespace-nowrap text-sm">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-blue-900 border-blue-900 hover:bg-blue-50"
-                                    onClick={() =>
-                                      handleViewStudentDetails(student)
-                                    }
-                                  >
-                                    View
-                                  </Button>
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-blue-900 border-blue-900 hover:bg-blue-50"
+                                      onClick={() =>
+                                        handleViewStudentDetails(student)
+                                      }
+                                    >
+                                      View
+                                    </Button>
+                                    <Button
+                                      // variant="destructive"
+                                      size="sm"
+                                      className="text-white border-blue hover:bg-blue-50"
+                                      onClick={() => handleOpenDeleteDialog(student)}
+                                      disabled={isDeleting}
+                                    >
+                                      <Trash className="h-4 w-4 mr-1" />
+                                      Delete
+                                    </Button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -930,6 +1018,14 @@ const StudentDashboard = () => {
         student={selectedStudent}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        student={studentToDelete}
+        onConfirm={handleDeleteStudent}
       />
     </div>
   );
