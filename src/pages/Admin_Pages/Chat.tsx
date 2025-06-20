@@ -18,11 +18,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import CommunityMessageService from "@/services/Admin_Service/message_service";
-import { useAuth } from "../../context/AuthContext"; // Import your auth context
+import { useAuth } from "../../context/AuthContext";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ChatApp = (ChatServiceData: any) => {
-  const { user } = useAuth(); // Get the authenticated user
+  const { user } = useAuth();
   const [activeGroup, setActiveGroup] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -63,22 +63,19 @@ const ChatApp = (ChatServiceData: any) => {
   const [groups, setGroups] = useState([]);
   const [isSending, setIsSending] = useState(false);
 
-  // Add these state variables near the other state declarations
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updatedGroupName, setUpdatedGroupName] = useState("");
   const [updatedGroupSubject, setUpdatedGroupSubject] = useState("");
   const [updatedGroupLevel, setUpdatedGroupLevel] = useState("");
 
-  // inside your component:
   const messageInputRef = useRef<HTMLInputElement>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef(null);
   const [subjects, setSubjects] = useState([]);
 
-  const currentUserId = user?._id; // Get the current user ID
+  const currentUserId = user?._id;
+  const ADMIN_ID = "680a450e0493d5f6686d6956"; // Define admin ID constant
 
-  //fecth messages by communityid
-  // Add this useEffect to fetch messages when activeGroup changes
   useEffect(() => {
     const fetchMessages = async () => {
       if (!activeGroup?._id) {
@@ -92,7 +89,6 @@ const ChatApp = (ChatServiceData: any) => {
           activeGroup._id
         );
 
-        // Transform the backend data to match your component's expected format
         const transformedMessages =
           response.data?.map((msg) => ({
             id: msg._id,
@@ -102,18 +98,20 @@ const ChatApp = (ChatServiceData: any) => {
               minute: "2-digit",
               hour12: false,
             }),
-            // Fixed: use msg.sender._id since sender is an object in your API response
-            sender: msg.sender._id === currentUserId ? "user" : "other",
+            sender: msg.sender._id === ADMIN_ID ? "user" : "other",
             senderInfo: {
               id: msg.sender._id,
               name: `${msg.sender.firstName} ${msg.sender.lastName}`,
               firstName: msg.sender.firstName,
               lastName: msg.sender.lastName,
             },
-            // Handle images from your API response
             images: msg.imagePath || [],
+            createdAt: new Date(msg.createdAt), // Add createdAt for sorting
           })) || [];
 
+        // Sort messages by createdAt in ascending order (oldest first)
+        transformedMessages.sort((a, b) => a.createdAt - b.createdAt);
+        
         setMessages(transformedMessages);
       } catch (error) {
         console.error("Failed to fetch messages:", error);
@@ -124,17 +122,15 @@ const ChatApp = (ChatServiceData: any) => {
     };
 
     fetchMessages();
-  }, [activeGroup?._id, currentUserId]); // Add currentUserId to dependencies
+  }, [activeGroup?._id]);
 
-  //fecth subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
         setLoading(true);
         const data = await SubjectService.getAllSubjects();
-        console.log("API Response:", data); // Debug log
+        console.log("API Response:", data);
 
-        // Handle different response structures
         if (Array.isArray(data)) {
           setSubjects(data);
         } else if (data && Array.isArray(data.subjects)) {
@@ -147,7 +143,7 @@ const ChatApp = (ChatServiceData: any) => {
         }
       } catch (error) {
         console.error("Error fetching subjects:", error);
-        setSubjects([]); // Set empty array on error
+        setSubjects([]);
       } finally {
         setLoading(false);
       }
@@ -181,7 +177,6 @@ const ChatApp = (ChatServiceData: any) => {
     return favorites.includes(groupId);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateCommunities = (data: any) => {
     setCommunities(data);
   };
@@ -207,7 +202,6 @@ const ChatApp = (ChatServiceData: any) => {
   };
 
   const handleCreateGroup = async () => {
-    // Validation checks
     if (!newGroupName.trim()) {
       toast({
         variant: "destructive",
@@ -238,20 +232,17 @@ const ChatApp = (ChatServiceData: any) => {
     setIsSubmitting(true);
 
     try {
-      // Handle profile picture upload first if there's a file
       let profilePictureUrl = "";
       if (profilePic) {
-        // You'll need to implement file upload logic here
-        // For now, we'll use a placeholder or skip if no upload service
-        profilePictureUrl = ""; // Replace with actual upload result
+        profilePictureUrl = "";
       }
 
       const apiGroupData = {
         name: newGroupName.trim(),
-        profilePicture: profilePictureUrl || "default-group-avatar.png", // Provide default or uploaded URL
-        Level: selectedLevel, // Use the selected level from dropdown
-        subject: selectedSubject, // Use the selected subject from dropdown
-        students: [], // Empty array for now, or add logic to include selected students
+        profilePicture: profilePictureUrl || "default-group-avatar.png",
+        Level: selectedLevel,
+        subject: selectedSubject,
+        students: [],
       };
 
       console.log("Sending group data to API:", apiGroupData);
@@ -265,12 +256,11 @@ const ChatApp = (ChatServiceData: any) => {
           description: "Group created successfully",
         });
 
-        // Reset form fields
         setNewGroupName("");
-        setSelectedSubject(""); // Reset the correct state variable
-        setSelectedLevel(""); // Reset the correct state variable
-        setProfilePic(null); // Reset file input
-        setSelectedStudent(""); // Reset student selection
+        setSelectedSubject("");
+        setSelectedLevel("");
+        setProfilePic(null);
+        setSelectedStudent("");
 
         setShowNewGroupModal(false);
         fetchChatGroups();
@@ -292,7 +282,7 @@ const ChatApp = (ChatServiceData: any) => {
       setIsSubmitting(false);
     }
   };
-  // Add this function with the other handler functions
+
   const handleUpdateGroup = async () => {
     if (!activeGroup?._id) {
       toast({
@@ -343,133 +333,71 @@ const ChatApp = (ChatServiceData: any) => {
     }
   };
 
-  // Fixed handleCreateMessage function
-  // const handleCreateMessage = async () => {
-  //   console.log("--------------message called");
-  //   if (!newMessage.trim()) return;
-
-  //   if (!activeGroup || !activeGroup._id) {
-  //     console.error("activeGroup is missing or invalid:", activeGroup);
-  //     toast({
-  //       variant: "destructive",
-  //       title: "Error",
-  //       description: "No group is selected to send the message to.",
-  //     });
-  //     return;
-  //   }
-
-  //   if (isSending) return;
-
-  //   setIsSending(true);
-
-  //   const messageData = {
-  //     message: newMessage.trim(),
-  //     senderId: user._id,
-  //   };
-
-  //   const response = await CommunityMessageService.createMessage(
-  //     activeGroup._id,
-  //     messageData
-  //   );
-  //   console.log("-----------------------callled", response);
-
-  //   const newMessageObj = {
-  //     id: response._id || Date.now(),
-  //     text: newMessage,
-  //     time: getCurrentTime(),
-  //     sender: "user",
-  //     senderId: user._id,
-  //     senderName: `${user.firstName} ${user.lastName}`,
-  //   };
-  //   console.log("-------------------------------newMessageObj", newMessageObj);
-
-  //   setMessages((prev) => [...prev, newMessageObj]);
-  //   setNewMessage("");
-  //   if (setReplyingTo) setReplyingTo(null);
-
-  //   setTimeout(() => {
-  //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  //   }, 100);
-
-  //   toast({
-  //     title: "Success",
-  //     description: "Message sent successfully",
-  //   });
-  //   // } catch (error) {
-  //   //   console.error("Failed to send message:", error);
-  //   //   const errorMessage =
-  //   //     error?.response?.data?.message ||
-  //   //     error?.message ||
-  //   //     "Failed to send message. Please try again.";
-  //   //   toast({
-  //   //     variant: "destructive",
-  //   //     title: "Error",
-  //   //     description: errorMessage,
-  //   //   });
-  //   // } finally {
-  //   //   setIsSending(false);
-  //   // }
-  // };
   const handleSendMessage = async () => {
-    // Add detailed logging to debug the issue
-    // console.log("handleSendMessage called");
-    // console.log("newMessage:", newMessage);
-    // console.log("isSending:", isSending);
-    // console.log("activeGroup:", activeGroup);
-    console.log("user:", user);
-
-    if (!newMessage.trim() || isSending || !activeGroup || !user?._id) {
-      console.log("Early return - conditions not met");
-      console.log("newMessage.trim():", newMessage.trim());
-      console.log("isSending:", isSending);
-      console.log("activeGroup:", activeGroup);
-      console.log("user._id:", user?._id);
+    if (!newMessage.trim() || isSending || !activeGroup) {
       return;
     }
 
     try {
       setIsSending(true);
-      console.log("Sending message...");
-
-      // Match your Postman body structure exactly
+      
       const messageData = {
-        community: activeGroup._id, // Changed from senderId to community
-        sender: user._id, // Changed from senderId to sender
+        community: activeGroup._id,
+        sender: user?._id?.trim() ? user._id : ADMIN_ID,
         message: newMessage.trim(),
-        imagePath: [], // Keep this as empty array for now
+        imagePath: [],
       };
-
-      console.log("messageData:", messageData);
 
       const response = await CommunityMessageService.createMessage(
         activeGroup._id,
         messageData
       );
 
-      console.log("Response received:", response);
+      // Create the new message object with proper alignment
+      const newMessageObj = {
+        id: response._id || Date.now(),
+        text: newMessage.trim(),
+        time: new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+        sender: (user?._id?.trim() ? user._id : ADMIN_ID) === ADMIN_ID ? "user" : "other",
+        senderInfo: {
+          id: user?._id || ADMIN_ID,
+          name: user ? `${user.firstName} ${user.lastName}` : "Admin",
+          firstName: user?.firstName || "Admin",
+          lastName: user?.lastName || "",
+        },
+        images: [],
+        createdAt: new Date(),
+      };
 
-      // Update messages in state
-      setMessages((prev) => [...prev, response]);
-
-      // Clear input
+      // Update messages state with the new message
+      setMessages((prev) => [...prev, newMessageObj]);
       setNewMessage("");
-      if (messageInputRef.current) {
-        messageInputRef.current.focus();
-      }
 
-      console.log("Message sent successfully");
+      // Scroll to bottom after state update
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
+      });
     } catch (error) {
       console.error("Failed to send message:", error);
-      console.error("Error details:", error.response?.data || error.message);
-      // Show user-friendly error feedback
-      alert("Failed to send message. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+      });
     } finally {
       setIsSending(false);
-      console.log("isSending set to false");
     }
   };
 
-  // Add this function to open the update modal
   const openUpdateModal = (group) => {
     setUpdatedGroupName(group.name);
     setUpdatedGroupSubject(group.subject?.subjectName || "");
@@ -487,10 +415,6 @@ const ChatApp = (ChatServiceData: any) => {
 
     try {
       const result = await ChatService.deletegroup(groupToDelete._id);
-      console.log(
-        "---deleted code--------deleted code----------------",
-        result?.message
-      );
 
       if (result?.message == "Community deleted successfully") {
         toast({
@@ -741,7 +665,6 @@ const ChatApp = (ChatServiceData: any) => {
                                 alt={`${community.name} profile`}
                                 className="h-8 w-8 rounded-full object-cover"
                                 onError={(e) => {
-                                  // Fallback to initials if image fails to load
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = "none";
                                   const nextSibling =
@@ -801,13 +724,13 @@ const ChatApp = (ChatServiceData: any) => {
         {/* Chat Area */}
         <div
           className={`
-    flex-1 flex flex-col bg-gray-50 h-full
-    ${
-      (groupsListOpen && !isMediumScreen) || (infoSidebarOpen && !isLargeScreen)
-        ? "hidden md:flex"
-        : "flex"
-    }
-  `}
+            flex-1 flex flex-col bg-gray-50 h-full
+            ${
+              (groupsListOpen && !isMediumScreen) || (infoSidebarOpen && !isLargeScreen)
+                ? "hidden md:flex"
+                : "flex"
+            }
+          `}
         >
           <div className="hidden md:flex text-xl font-semibold p-4 border-b bg-white">
             <div className="flex-1">
@@ -879,7 +802,7 @@ const ChatApp = (ChatServiceData: any) => {
               <div ref={messagesEndRef} />
             </div>
           </div>
-          {/* Message Input */}
+
           {/* Message Input */}
           <div className="p-3 bg-white border-t">
             <div className="relative flex items-center">
@@ -918,6 +841,7 @@ const ChatApp = (ChatServiceData: any) => {
             )}
           </div>
         </div>
+
         {/* Right Sidebar - Group Info */}
         <div
           className={`
@@ -998,7 +922,6 @@ const ChatApp = (ChatServiceData: any) => {
               {expandedSections.photos && (
                 <div className="p-2 bg-white">
                   <div className="grid grid-cols-3 gap-2">
-                    {/* This would be populated with photos from the chat */}
                     <p className="text-sm text-gray-500 col-span-3">
                       No photos shared
                     </p>
@@ -1169,7 +1092,6 @@ const ChatApp = (ChatServiceData: any) => {
       </div>
 
       {/* New Group Modal */}
-
       {showNewGroupModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">

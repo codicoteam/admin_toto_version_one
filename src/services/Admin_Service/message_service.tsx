@@ -17,7 +17,7 @@ const CommunityMessageService = {
     try {
       const payload = {
         community: communityId,
-        sender: messageData.senderId, // This maps to 'sender' field in your schema
+        sender: messageData.sender, // This maps to 'sender' field in your schema
         message: messageData.message, // This maps to 'message' field in your schema
         // imagePath: messageData.imagePath || [] // Add if you need image support
       };
@@ -25,8 +25,13 @@ const CommunityMessageService = {
       console.log("Payload being sent to backend:", payload);
 
       const response = await axios.post(
-        `${BASE_URL}/message_community_route/create`,
-        payload
+        `${BASE_URL}/create`,
+        payload, {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       return response.data;

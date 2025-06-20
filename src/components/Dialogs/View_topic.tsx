@@ -780,30 +780,10 @@ const insertQuickSymbol = (symbol: string) => {
                   <DialogTitle className="text-2xl font-bold tracking-tight">
                     {topic.title || topic.name}
                   </DialogTitle>
-                  <div className="flex items-center mt-2 text-green-100">
-                    <BookOpen size={16} className="mr-2" />
-                    <span className="text-sm">Topic Overview</span>
-                  </div>
+              
                 </div>
                 <div className="flex space-x-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-orange-400 border-white text-white hover:bg-orange-300 hover:text-green-900"
-                    onClick={handleExportTopic}
-                    disabled={isExporting || contents.length === 0}
-                  >
-                    {isExporting ? (
-                      <div className="flex items-center">
-                        <div className="h-3 w-3 rounded-full border-2 border-t-transparent border-white animate-spin mr-1" />
-                        Exporting...
-                      </div>
-                    ) : (
-                      <>
-                        <Download size={14} className="mr-1" /> Export
-                      </>
-                    )}
-                  </Button>
+                 
                   <Button
                     onClick={handleClicks}
                     variant="outline"
@@ -1043,13 +1023,7 @@ const insertQuickSymbol = (symbol: string) => {
                   >
                     Close
                   </Button>
-                  <Button
-                    size="sm"
-                    className="bg-blue-900 hover:bg-blue-400 text-white"
-                    onClick={() => setCreateDialogOpen(true)}
-                  >
-                    <Plus size={14} className="mr-1" /> Add Content
-                  </Button>
+            
                 </div>
               </div>
             </div>

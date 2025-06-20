@@ -11,7 +11,6 @@ function Resourcewalle() {
   const [dashboardData, setDashboardData] = useState({
     totalDeposits: 0,
     totalWithdrawals: 0,
-    totalTransactions: 0,
     walletCount: 0,
     latestWallets: []
   });
@@ -21,6 +20,9 @@ function Resourcewalle() {
   
   // State for error messages
   const [error, setError] = useState(null);
+
+  // Calculate amount left (deposits - withdrawals)
+  const amountLeft = dashboardData.totalDeposits - dashboardData.totalWithdrawals;
 
   // Toggle sidebar function
   const toggleSidebar = () => {
@@ -120,11 +122,15 @@ function Resourcewalle() {
             </p>
           </div>
 
-          {/* Total Transactions Card */}
+          {/* Amount Left Card (New Card) */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm">Total Transactions</h3>
-            <p className="text-2xl font-bold text-blue-500">
-              {isLoading ? "Loading..." : dashboardData.totalTransactions}
+            <h3 className="text-gray-500 text-sm">Amount Left</h3>
+            <p 
+              className={`text-2xl font-bold ${
+                amountLeft >= 0 ? 'text-blue-500' : 'text-orange-500'
+              }`}
+            >
+              {isLoading ? "Loading..." : formatCurrency(amountLeft)}
             </p>
           </div>
 

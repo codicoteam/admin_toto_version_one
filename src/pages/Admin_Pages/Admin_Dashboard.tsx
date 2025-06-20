@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import { BookOpen, Calendar, Menu, Search, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import student from "@/assets/home1.png";
+import { useNavigate } from "react-router-dom";
+
 import StudentService from "../../services/Admin_Service/Student_service";
 import CourseService from "@/services/Admin_Service/Subject_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
@@ -19,6 +21,7 @@ const Admin_Dashboard = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   //course data
   const [course, setCourse] = useState([]);
@@ -51,6 +54,12 @@ const Admin_Dashboard = () => {
 
     fetchAdminData();
   }, []);
+
+
+    const handleLogout = () => {
+    // optionally clear tokens or session
+    navigate("/admin_login");
+  };
 
   // Fetch students from backend
   useEffect(() => {
@@ -172,31 +181,16 @@ const Admin_Dashboard = () => {
             </h1>
 
             {/* Search Bar */}
-            <div className="relative w-full md:w-1/3">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all duration-300 hover:shadow-md"
-                placeholder="Search..."
-              />
-              <button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <span className="text-xl text-gray-400">+</span>
-              </button>
-            </div>
+        
 
             {/* Admin Profile */}
-            <div className="bg-blue-900 text-white rounded-lg py-2 px-4 flex items-center shadow-md hover:shadow-lg transition-shadow">
-              <User className="h-5 w-5 mr-2" />
-              <span className="font-medium">
-                {adminLoading
-                  ? "Loading..."
-                  : adminData
-                  ? `${adminData.firstName} ${adminData.lastName}`
-                  : " Admin"}
-              </span>
-            </div>
+    <div
+      onClick={handleLogout}
+      className="bg-blue-900 text-white rounded-lg py-2 px-4 flex items-center shadow-md hover:shadow-lg transition-shadow"
+    >
+      <User className="h-5 w-5 mr-2" />
+      <span className="font-medium">Logout</span>
+    </div>
           </div>
 
           {/* Stats Section */}

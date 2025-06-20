@@ -4,12 +4,12 @@ import { NavLink } from "react-router-dom";
 const Sidebar = () => {
   const navItems = [
     { label: "DASHBOARD", path: "/admin_dashboard" },
-    { label: "COURSES", path: "/courses" },
+    { label: "SUBJECTS", path: "/courses" },
     { label: "STUDENTS", path: "/students_dashboard" },
     { label: "CHAT", path: "/chat" },
     { label: "LIBRARY", path: "/library" },
     { label: "WALLET", path: "/reserourcewalle" },
-    { label: "SETTINGS", path: "/settingspage" },
+    // { label: "SETTINGS", path: "/settingspage" },
   ];
 
   return (

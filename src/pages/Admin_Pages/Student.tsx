@@ -13,7 +13,7 @@ import {
   Home,
   Users,
   AlertCircle,
-  Trash, // Added trash icon
+  Trash,
 } from "lucide-react";
 import {
   BarChart,
@@ -278,10 +278,9 @@ const DeleteConfirmationDialog = ({
             <Trash className="h-5 w-5 mr-2" />
             Delete Student
           </DialogTitle>
-   <DialogDescription className="pt-4 text-black">
-  Are you sure you want to delete this student?
-</DialogDescription>
-
+          <DialogDescription className="pt-4 text-black">
+            Are you sure you want to delete this student?
+          </DialogDescription>
         </DialogHeader>
         
         <div className="bg-red-50 p-4 rounded-lg border border-red-100">
@@ -348,7 +347,7 @@ const StudentDashboard = () => {
 
   // Available options for dropdowns
   const yearOptions = ["2022", "2023", "2024", "2025", "All years"];
-  const levelOptions = ["O' Level", "A' Level", "Tertiary", "All Levels"];
+  const levelOptions = ["All Levels", "O Level", "A Level", "Form 1", "Form 2", "Form 3", "Form 4"];
 
   // Toggle sidebar function
   const toggleSidebar = () => {
@@ -613,7 +612,7 @@ const StudentDashboard = () => {
 
     let filtered = [...students];
 
-    if (selectedYear) {
+    if (selectedYear && selectedYear !== "All years") {
       filtered = filtered.filter(
         (student) => student.academicYear === selectedYear
       );
@@ -744,14 +743,7 @@ const StudentDashboard = () => {
               <div className="col-span-1 lg:col-span-5 space-y-6">
                 <div className="mb-4 flex flex-col sm:flex-row gap-4">
                   {/* Year Dropdown */}
-                  <div className="w-full sm:w-1/2">
-                    <Dropdown
-                      options={yearOptions}
-                      value={selectedYear}
-                      onChange={setSelectedYear}
-                      placeholder="Select Year"
-                    />
-                  </div>
+            
 
                   {/* Level Dropdown */}
                   <div className="w-full sm:w-1/2">
@@ -817,7 +809,7 @@ const StudentDashboard = () => {
                 </div>
 
                 {/* Examination Results */}
-                <div className="bg-white p-6 rounded-md shadow-sm">
+                {/* <div className="bg-white p-6 rounded-md shadow-sm">
                   <h3 className="text-lg font-medium mb-4">
                     Examination Results
                   </h3>
@@ -851,13 +843,13 @@ const StudentDashboard = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Right Section - Student Profile Cards */}
               <div className="col-span-1 lg:col-span-7 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Student Cards */}
+                  {/* Student Cards
                   {studentProfiles.map((student, index) => (
                     <div
                       key={index}
@@ -896,7 +888,7 @@ const StudentDashboard = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))} */}
                 </div>
 
                 {/* Students Table */}
@@ -979,9 +971,9 @@ const StudentDashboard = () => {
                                       View
                                     </Button>
                                     <Button
-                                      // variant="destructive"
+                                      variant="destructive"
                                       size="sm"
-                                      className="text-white border-blue hover:bg-blue-50"
+                                      className="text-white hover:bg-red-700"
                                       onClick={() => handleOpenDeleteDialog(student)}
                                       disabled={isDeleting}
                                     >
