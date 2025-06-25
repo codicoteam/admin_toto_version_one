@@ -1,0 +1,69 @@
+import axios from "axios";
+
+const BASE_URL = "https://toto-academy-backend.onrender.com/api/v1/exam";
+
+/**
+ * Service for handling exam-related API requests
+ */
+const ExamService = {
+  /**
+   * Fetches all exams from the backend
+   * @returns {Promise} Promise containing exam data
+   */
+  getAllExams: async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getall`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve exams";
+    }
+  },
+
+  /**
+   * Creates a new exam
+   * @param {Object} examData - Data for the new exam
+   * @returns {Promise} Promise containing created exam data
+   */
+  createExam: async (examData) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/create`, examData, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to create exam";
+    }
+  },
+
+   getExamById: async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/get/${id}`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve exam by ID";
+    }
+  },
+};
+
+
+
+/**
+ * Helper function to get authentication token from local storage
+ * @returns {string} Authentication token
+ */
+const getAuthToken = () => {
+  return localStorage.getItem("adminToken");
+};
+
+export default ExamService;

@@ -77,6 +77,9 @@ import ReserourceWalle from "./pages/Walle";
 import AdminSubjects from "./pages/Admin_Pages/Subjects";
 import CreateNewContent from "./pages/Admin_Pages/CreateNewContent";
 import EditContent from "./pages/Admin_Pages/editContent";
+import Exams from "./pages/Admin_Pages/exams";
+import CreateExam from "./pages/Admin_Pages/add_exams";
+import EditExam from "./pages/Admin_Pages/edit_exam";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +111,9 @@ const App = () => (
             <Route path="/students_dashboard" element={<StudentDashboard />} />
             <Route path="/chat" element={<ChatApp />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/createExam" element={<CreateExam />} />
+            <Route path="/exam/:examId/" element={<EditExam />} />
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
             <Route path="/settingspage" element={<SettingsPage />} />
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />

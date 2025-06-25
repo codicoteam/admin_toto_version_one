@@ -9,6 +9,8 @@ const Sidebar = () => {
     { label: "CHAT", path: "/chat" },
     { label: "LIBRARY", path: "/library" },
     { label: "WALLET", path: "/reserourcewalle" },
+    { label: "EXAMS", path: "/exams" },
+
     // { label: "SETTINGS", path: "/settingspage" },
   ];
 

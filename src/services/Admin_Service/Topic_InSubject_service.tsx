@@ -12,7 +12,7 @@ const TopicInSubjectService = {
    * Fetches all topics
    * @returns {Promise} Promise containing topic data
    */
-  getAllTopics: async (subjectId: string) => {
+  getAllTopics: async () => {
     try {
       const response = await axios.get(`${BASE_URL}/getall`, {
         headers: {
