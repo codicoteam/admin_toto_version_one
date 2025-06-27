@@ -80,6 +80,7 @@ import EditContent from "./pages/Admin_Pages/editContent";
 import Exams from "./pages/Admin_Pages/exams";
 import CreateExam from "./pages/Admin_Pages/add_exams";
 import EditExam from "./pages/Admin_Pages/edit_exam";
+import ViewStudentMarks from "./pages/Admin_Pages/view_student";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/exams" element={<Exams />} />
             <Route path="/createExam" element={<CreateExam />} />
             <Route path="/exam/:examId/" element={<EditExam />} />
+            <Route path="/exam/view/:examId/" element={<ViewStudentMarks />} />
             <Route path="/reserourceupload" element={<ReserourceUpload />} />
             <Route path="/settingspage" element={<SettingsPage />} />
             <Route path="/admin/courses/:id" element={<CourseDetailPage />} />

@@ -22,7 +22,6 @@ const ExamService = {
       throw error.response?.data || "Failed to retrieve exams";
     }
   },
-
   /**
    * Creates a new exam
    * @param {Object} examData - Data for the new exam
@@ -54,10 +53,44 @@ const ExamService = {
       throw error.response?.data || "Failed to retrieve exam by ID";
     }
   },
+
+
+    getStudentsMarksByExamId: async (examId) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL.replace('/exam', '')}/record_exam/exam/${examId}/top-students`, 
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve student marks";
+    }
+  },
+
+
+
+  updateExam: async (id: string, examData) => {
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/update/${id}`,
+        examData,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to update exam";
+    }
+  },
 };
-
-
-
 /**
  * Helper function to get authentication token from local storage
  * @returns {string} Authentication token

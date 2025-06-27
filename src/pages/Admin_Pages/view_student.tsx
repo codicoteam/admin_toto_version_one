@@ -1,0 +1,436 @@
+// src/pages/ViewStudentMarks.tsx
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Users, Trophy, Calendar, MessageSquare, User, Mail, Award, Percent, Menu, X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import ExamService from "@/services/Admin_Service/exams_services";
+import Sidebar from "@/components/Sidebar";
+
+interface StudentInfo {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
+interface StudentMark {
+    _id: string;
+    comment: string;
+    percentange: string;
+    results: string;
+    studentId: StudentInfo;
+    ExamId: string;
+    showComment: boolean;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
+interface ApiResponse {
+    message: string;
+    data: StudentMark[];
+}
+
+const ViewStudentMarks: React.FC = () => {
+    const { examId } = useParams<{ examId: string }>();
+    const navigate = useNavigate();
+    const { toast } = useToast();
+
+    const [studentMarks, setStudentMarks] = useState<StudentMark[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [examTitle, setExamTitle] = useState<string>("");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+    // Toggle sidebar function
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
+
+    // Update screen size state and handle sidebar visibility
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const isLarge = window.innerWidth >= 768;
+            setIsLargeScreen(isLarge);
+            setSidebarOpen(isLarge);
+        };
+
+        checkScreenSize();
+        window.addEventListener("resize", checkScreenSize);
+
+        return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
+
+    useEffect(() => {
+        const fetchStudentMarks = async () => {
+            if (!examId) {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Exam ID is required",
+                });
+                navigate(-1);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                
+                // Fetch student marks
+                const response: ApiResponse = await ExamService.getStudentsMarksByExamId(examId);
+                setStudentMarks(response.data);
+
+                // Optionally fetch exam details for title
+                try {
+                    const examResponse = await ExamService.getExamById(examId);
+                    setExamTitle(examResponse.data.title);
+                } catch (examError) {
+                    console.warn("Could not fetch exam details:", examError);
+                    setExamTitle("Exam Results");
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch student marks:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to fetch student marks. Please try again.",
+                });
+                navigate(-1);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudentMarks();
+    }, [examId, toast, navigate]);
+
+    const getGradeColor = (grade: string): string => {
+        switch (grade.toUpperCase()) {
+            case 'A+':
+            case 'A':
+                return 'bg-green-100 text-green-800 border-green-200';
+            case 'B+':
+            case 'B':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'C+':
+            case 'C':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'D+':
+            case 'D':
+                return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'F':
+                return 'bg-red-100 text-red-800 border-red-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getPercentageColor = (percentage: string): string => {
+        const numericPercentage = parseInt(percentage.replace('%', ''));
+        if (numericPercentage >= 90) return 'text-green-600';
+        if (numericPercentage >= 80) return 'text-blue-600';
+        if (numericPercentage >= 70) return 'text-yellow-600';
+        if (numericPercentage >= 60) return 'text-orange-600';
+        return 'text-red-600';
+    };
+
+    const formatDate = (dateString: string): string => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const getTopPerformer = (): StudentMark | null => {
+        if (studentMarks.length === 0) return null;
+        return studentMarks.reduce((top, current) => {
+            const topPercentage = parseInt(top.percentange.replace('%', ''));
+            const currentPercentage = parseInt(current.percentange.replace('%', ''));
+            return currentPercentage > topPercentage ? current : top;
+        });
+    };
+
+    const getAverageScore = (): number => {
+        if (studentMarks.length === 0) return 0;
+        const total = studentMarks.reduce((sum, mark) => {
+            return sum + parseInt(mark.percentange.replace('%', ''));
+        }, 0);
+        return Math.round(total / studentMarks.length);
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+                {/* Mobile Menu Toggle */}
+                <button
+                    className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-md"
+                    onClick={toggleSidebar}
+                >
+                    {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+
+                {/* Sidebar */}
+                <div
+                    className={`
+                        ${
+                            sidebarOpen
+                                ? "translate-x-0 opacity-100"
+                                : "-translate-x-full opacity-0"
+                        } 
+                        transition-all duration-300 ease-in-out 
+                        fixed md:relative z-40 md:z-auto w-64
+                    `}
+                >
+                    <Sidebar />
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-1 w-full min-h-screen flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading student marks...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const topPerformer = getTopPerformer();
+    const averageScore = getAverageScore();
+
+    return (
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+            {/* Mobile Menu Toggle */}
+            <button
+                className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-md"
+                onClick={toggleSidebar}
+            >
+                {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            {/* Sidebar */}
+            <div
+                className={`
+                    ${
+                        sidebarOpen
+                            ? "translate-x-0 opacity-100"
+                            : "-translate-x-full opacity-0"
+                    } 
+                    transition-all duration-300 ease-in-out 
+                    fixed md:relative z-40 md:z-auto w-64
+                `}
+            >
+                <Sidebar />
+            </div>
+
+            {/* Backdrop Overlay for Mobile */}
+            {sidebarOpen && !isLargeScreen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+                    onClick={toggleSidebar}
+                />
+            )}
+
+            {/* Main Content */}
+            <div className="flex-1 w-full">
+                <div className="w-full min-h-screen">
+                    {/* Header */}
+                    <div className="relative p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
+                        <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="relative flex items-center justify-between">
+                            <Button
+                                variant="ghost"
+                                onClick={() => navigate(-1)}
+                                className="text-white hover:bg-white/20"
+                            >
+                                <ChevronLeft size={20} className="mr-2" />
+                                Back
+                            </Button>
+                            <div className="text-center flex-1">
+                                <h1 className="text-2xl font-bold tracking-tight flex items-center justify-center gap-3">
+                                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <Users size={24} className="text-white" />
+                                    </div>
+                                    Student Results
+                                </h1>
+                                {examTitle && (
+                                    <p className="text-white/90 mt-2 text-lg">{examTitle}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                        {/* Statistics Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-100 rounded-lg">
+                                        <Users size={24} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Total Students</p>
+                                        <p className="text-2xl font-bold text-gray-800">{studentMarks.length}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-green-100 rounded-lg">
+                                        <Percent size={24} className="text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Average Score</p>
+                                        <p className="text-2xl font-bold text-gray-800">{averageScore}%</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-yellow-100 rounded-lg">
+                                        <Trophy size={24} className="text-yellow-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600 text-sm">Top Score</p>
+                                        <p className="text-2xl font-bold text-gray-800">
+                                            {topPerformer ? topPerformer.percentange : '0%'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Top Performer Highlight */}
+                        {topPerformer && (
+                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-yellow-100 rounded-lg">
+                                        <Trophy size={24} className="text-yellow-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-800">Top Performer</h3>
+                                        <p className="text-gray-600">Congratulations to our highest scorer!</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-gray-100 rounded-full">
+                                                <User size={20} className="text-gray-600" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-800">
+                                                    {topPerformer.studentId.firstName} {topPerformer.studentId.lastName}
+                                                </p>
+                                                <p className="text-gray-600 text-sm">{topPerformer.studentId.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getGradeColor(topPerformer.results)}`}>
+                                                {topPerformer.results}
+                                            </div>
+                                            <p className={`text-lg font-bold ${getPercentageColor(topPerformer.percentange)}`}>
+                                                {topPerformer.percentange}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Student Results List */}
+                        <div className="mt-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-semibold text-gray-800">All Student Results</h2>
+                                <p className="text-gray-600">{studentMarks.length} student{studentMarks.length !== 1 ? 's' : ''}</p>
+                            </div>
+
+                            {studentMarks.length === 0 ? (
+                                <div className="bg-white rounded-xl p-12 border border-gray-200 shadow-sm text-center">
+                                    <div className="p-4 bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                        <Users size={32} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">No Results Found</h3>
+                                    <p className="text-gray-600">No students have taken this exam yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {studentMarks.map((mark, index) => (
+                                        <div
+                                            key={mark._id}
+                                            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-start gap-4 flex-1">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                                            {index + 1}
+                                                        </div>
+                                                        <div className="p-2 bg-gray-100 rounded-full">
+                                                            <User size={20} className="text-gray-600" />
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <h3 className="text-lg font-semibold text-gray-800">
+                                                                {mark.studentId.firstName} {mark.studentId.lastName}
+                                                            </h3>
+                                                            {index === 0 && topPerformer?._id === mark._id && (
+                                                                <div className="p-1 bg-yellow-100 rounded">
+                                                                    <Trophy size={16} className="text-yellow-600" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center gap-2 text-gray-600 mb-3">
+                                                            <Mail size={16} />
+                                                            <span className="text-sm">{mark.studentId.email}</span>
+                                                        </div>
+
+                                                        {mark.showComment && mark.comment && (
+                                                            <div className="flex items-start gap-2 bg-gray-50 rounded-lg p-3 mb-3">
+                                                                <MessageSquare size={16} className="text-gray-600 mt-0.5 flex-shrink-0" />
+                                                                <p className="text-gray-700 text-sm">{mark.comment}</p>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar size={14} />
+                                                                <span>Submitted: {formatDate(mark.createdAt)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-right ml-4">
+                                                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mb-2 ${getGradeColor(mark.results)}`}>
+                                                        <Award size={14} className="mr-1" />
+                                                        {mark.results}
+                                                    </div>
+                                                    <p className={`text-2xl font-bold ${getPercentageColor(mark.percentange)}`}>
+                                                        {mark.percentange}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ViewStudentMarks;

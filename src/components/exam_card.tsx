@@ -60,11 +60,14 @@ const ExamCard = ({
         </div>
       </CardContent>
       <CardFooter className="pt-0">
-        <Button asChild variant="outline" className="w-full">
-          <Link to={`/exam/${id}`}>
-            Edit Exam
-          </Link>
-        </Button>
+        <div className="flex gap-2 w-full">
+          <Button asChild variant="outline" className="w-full">
+            <Link to={`/exam/${id}`}>Edit Exam</Link>
+          </Button>
+          <Button asChild variant="secondary" className="w-full">
+            <Link to={`/exam/view/${id}`}>View Results</Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
