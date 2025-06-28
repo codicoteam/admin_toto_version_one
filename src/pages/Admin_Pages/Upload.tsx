@@ -204,7 +204,7 @@ export default function BookUploadForm() {
 
       // Get public URL
       const { data: publicUrlData } = supabase.storage
-        .from("books")
+        .from("topics")
         .getPublicUrl(fileName);
 
       if (!publicUrlData?.publicUrl) {

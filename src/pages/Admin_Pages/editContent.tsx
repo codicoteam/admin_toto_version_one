@@ -13,6 +13,7 @@ import {
   Edit,
   Check,
   ChevronDown,
+  Image as ImageIcon
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ const fileTypeExtensions = {
   video: [".mp4", ".avi", ".mov", ".wmv", ".mkv", ".webm"],
   audio: [".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac"],
   document: [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt"],
+  image: [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp"]
 };
 
 interface SubHeadingItem {
@@ -41,6 +43,7 @@ interface SubHeadingItem {
   expectedAnswer: string;
   comment: string;
   hint: string;
+  imagePath: string;
   _id?: string;
 }
 
@@ -49,6 +52,7 @@ interface LessonItem {
   subHeading: SubHeadingItem[];
   audio: string;
   video: string;
+  image: string;
   _id?: string;
 }
 
@@ -58,7 +62,7 @@ interface ContentFormData {
   description: string;
   lesson: LessonItem[];
   file_path: string[];
-  file_type: "video" | "audio" | "document";
+  file_type: "video" | "audio" | "document" | "image";
   Topic: string;
 }
 
@@ -75,18 +79,14 @@ const extractLatexFromText = (text: string): string => {
 const extractFilenameFromUrl = (url: string): string => {
   if (!url) return "";
   try {
-    // Decode URI to handle encoded characters like %20
     const decodedUrl = decodeURIComponent(url);
-    // Extract the part after the last slash
     const filenameWithParams = decodedUrl.split('/').pop() || '';
-    // Remove any query parameters
     const filename = filenameWithParams.split('?')[0];
-    // Remove the timestamp prefix if it exists (format: 123456789_filename.ext)
     const timestampRegex = /^\d+_/;
     return filename.replace(timestampRegex, '');
   } catch (e) {
     console.error("Error extracting filename:", e);
-    return url; // fallback to original URL if error occurs
+    return url;
   }
 };
 
@@ -248,9 +248,11 @@ const EditContent: React.FC = () => {
         expectedAnswer: "",
         comment: "",
         hint: "",
+        imagePath: ""
       }],
       audio: "",
       video: "",
+      image: ""
     }],
     file_path: [],
     file_type: "document",
@@ -266,18 +268,20 @@ const EditContent: React.FC = () => {
     lessonIndex: -1,
     subHeadingIndex: -1,
   });
-  const [selectedFileType, setSelectedFileType] = useState<"audio" | "video" | "document">("audio");
+  const [selectedFileType, setSelectedFileType] = useState<"audio" | "video" | "document" | "image">("audio");
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
-  const [uploadedAudioName, setUploadedAudioName] = useState<string | null>(null);
-  const [uploadedVideoName, setUploadedVideoName] = useState<string | null>(null);
+  const [initialExistingFileCount, setInitialExistingFileCount] = useState(0);
+
+  // Lesson media states
   const [audioStatuses, setAudioStatuses] = useState<("idle" | "uploading" | "success")[]>([]);
   const [videoStatuses, setVideoStatuses] = useState<("idle" | "uploading" | "success")[]>([]);
+  const [imageStatuses, setImageStatuses] = useState<("idle" | "uploading" | "success")[]>([]);
   const [uploadedAudioNames, setUploadedAudioNames] = useState<(string | null)[]>([]);
   const [uploadedVideoNames, setUploadedVideoNames] = useState<(string | null)[]>([]);
-  const [initialExistingFileCount, setInitialExistingFileCount] = useState(0);
+  const [uploadedImageNames, setUploadedImageNames] = useState<(string | null)[]>([]);
 
   // Get field path for editing state tracking
   const getFieldPath = (lessonIndex: number, subHeadingIndex: number | null, fieldName: string) => {
@@ -344,6 +348,22 @@ const EditContent: React.FC = () => {
     }
   };
 
+  const updateImageState = (lessonIndex: number, status: "idle" | "uploading" | "success", fileName?: string) => {
+    setImageStatuses(prev => {
+      const newStatuses = [...prev];
+      newStatuses[lessonIndex] = status;
+      return newStatuses;
+    });
+    
+    if (fileName !== undefined) {
+      setUploadedImageNames(prev => {
+        const newNames = [...prev];
+        newNames[lessonIndex] = fileName;
+        return newNames;
+      });
+    }
+  };
+
   // Fetch content data
   useEffect(() => {
     const fetchContent = async () => {
@@ -352,7 +372,6 @@ const EditContent: React.FC = () => {
         
         const response = await TopicContentService.getTopicContentById(contentId);
         const contentData = response.data;
-        console.log(contentData)
   
         const updatedContent = {
           _id: contentData._id,
@@ -363,10 +382,12 @@ const EditContent: React.FC = () => {
             text: lessonItem.text,
             audio: lessonItem.audio,
             video: lessonItem.video,
+            image: lessonItem.image || "",
             subHeading: lessonItem.subHeading?.map((subItem: any) => ({
               _id: subItem._id,
               text: subItem.text,
               subheadingAudioPath: subItem.subheadingAudioPath,
+              imagePath: subItem.imagePath || "",
               question: subItem.question,
               expectedAnswer: subItem.expectedAnswer,
               comment: subItem.comment,
@@ -381,14 +402,18 @@ const EditContent: React.FC = () => {
         setContent(updatedContent);
         setInitialExistingFileCount(contentData.file_path.length);
         
-        // Initialize audio and video states with shortened filenames
+        // Initialize media states
         setAudioStatuses(updatedContent.lesson.map(lesson => lesson.audio ? "success" : "idle"));
         setVideoStatuses(updatedContent.lesson.map(lesson => lesson.video ? "success" : "idle"));
+        setImageStatuses(updatedContent.lesson.map(lesson => lesson.image ? "success" : "idle"));
         setUploadedAudioNames(updatedContent.lesson.map(lesson => 
           lesson.audio ? shortenFilename(extractFilenameFromUrl(lesson.audio)) : null
         ));
         setUploadedVideoNames(updatedContent.lesson.map(lesson => 
           lesson.video ? shortenFilename(extractFilenameFromUrl(lesson.video)) : null
+        ));
+        setUploadedImageNames(updatedContent.lesson.map(lesson => 
+          lesson.image ? shortenFilename(extractFilenameFromUrl(lesson.image)) : null
         ));
       } catch (error) {
         console.error("Failed to fetch content:", error);
@@ -413,18 +438,18 @@ const EditContent: React.FC = () => {
         ...prev.lesson,
         {
           text: "",
-          subHeading: [
-            {
-              text: "",
-              question: "",
-              subheadingAudioPath: "",
-              expectedAnswer: "",
-              comment: "",
-              hint: "",
-            },
-          ],
+          subHeading: [{
+            text: "",
+            question: "",
+            subheadingAudioPath: "",
+            expectedAnswer: "",
+            comment: "",
+            hint: "",
+            imagePath: ""
+          }],
           audio: "",
           video: "",
+          image: ""
         },
       ],
     }));
@@ -432,8 +457,10 @@ const EditContent: React.FC = () => {
     // Add new states for the new lesson
     setAudioStatuses(prev => [...prev, "idle"]);
     setVideoStatuses(prev => [...prev, "idle"]);
+    setImageStatuses(prev => [...prev, "idle"]);
     setUploadedAudioNames(prev => [...prev, null]);
     setUploadedVideoNames(prev => [...prev, null]);
+    setUploadedImageNames(prev => [...prev, null]);
     
     setActiveLessonIndex(content.lesson.length);
   };
@@ -447,8 +474,10 @@ const EditContent: React.FC = () => {
       
       setAudioStatuses(prev => prev.filter((_, i) => i !== index));
       setVideoStatuses(prev => prev.filter((_, i) => i !== index));
+      setImageStatuses(prev => prev.filter((_, i) => i !== index));
       setUploadedAudioNames(prev => prev.filter((_, i) => i !== index));
       setUploadedVideoNames(prev => prev.filter((_, i) => i !== index));
+      setUploadedImageNames(prev => prev.filter((_, i) => i !== index));
       
       if (index === activeLessonIndex) {
         setActiveLessonIndex(Math.max(0, index - 1));
@@ -469,6 +498,7 @@ const EditContent: React.FC = () => {
           expectedAnswer: "",
           comment: "",
           hint: "",
+          imagePath: ""
         },
       ],
     };
@@ -809,144 +839,6 @@ const EditContent: React.FC = () => {
                             className="text-sm border border-gray-200 hover:border-blue-300 focus:border-blue-400 transition-all duration-200"
                           />
                         </div>
-
-                        {/* Lesson Audio/Video */}
-                        <div className="flex gap-2 md:col-span-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={audioStatuses[lessonIndex] === "uploading"}
-                            className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
-                              audioStatuses[lessonIndex] === "success"
-                                ? "bg-green-600"
-                                : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                            }`}
-                            onClick={async () => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.accept = "audio/*";
-                              input.onchange = async (e) => {
-                                const file = (e.target as HTMLInputElement).files?.[0];
-                                if (file) {
-                                  updateAudioState(lessonIndex, "uploading", file.name);
-                                  
-                                  try {
-                                    const fileName = `${Date.now()}_${file.name}`;
-                                    const { error } = await supabase.storage
-                                      .from("topics")
-                                      .upload(fileName, file);
-                                    
-                                    if (error) throw error;
-
-                                    const { data: publicData } = supabase.storage
-                                      .from("topics")
-                                      .getPublicUrl(fileName);
-                                    
-                                    if (publicData) {
-                                      updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
-                                      updateAudioState(lessonIndex, "success", shortenFilename(file.name));
-                                      
-                                      toast({
-                                        title: "Success",
-                                        description: "Audio uploaded successfully",
-                                        duration: 5000,
-                                      });
-                                    }
-                                  } catch (error) {
-                                    console.error("Audio upload failed:", error);
-                                    updateAudioState(lessonIndex, "idle", null);
-                                    toast({
-                                      variant: "destructive",
-                                      title: "Error",
-                                      description: "Failed to upload audio file",
-                                    });
-                                  }
-                                }
-                              };
-                              input.click();
-                            }}
-                          >
-                            <Music size={16} />
-                            {audioStatuses[lessonIndex] === "uploading"
-                              ? `Uploading ${uploadedAudioNames[lessonIndex]}...`
-                              : audioStatuses[lessonIndex] === "success"
-                              ? (
-                                <span className="max-w-[100px] truncate">
-                                  {uploadedAudioNames[lessonIndex] || "Uploaded"}
-                                </span>
-                              )
-                              : "Upload Audio"}
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={videoStatuses[lessonIndex] === "uploading"}
-                            className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
-                              videoStatuses[lessonIndex] === "success"
-                                ? "bg-indigo-600"
-                                : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-                            }`}
-                            onClick={async () => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.accept = "video/*";
-                              input.onchange = async (e) => {
-                                const file = (e.target as HTMLInputElement).files?.[0];
-                                if (file) {
-                                  updateVideoState(lessonIndex, "uploading", file.name);
-                                  
-                                  try {
-                                    const fileName = `${Date.now()}_${file.name}`;
-                                    const { error } = await supabase.storage
-                                      .from("topics")
-                                      .upload(fileName, file);
-                                    
-                                    if (error) throw error;
-
-                                    const { data: publicData } = supabase.storage
-                                      .from("topics")
-                                      .getPublicUrl(fileName);
-                                    
-                                    if (publicData) {
-                                      updateLessonItem(lessonIndex, "video", publicData.publicUrl);
-                                      updateVideoState(lessonIndex, "success", shortenFilename(file.name));
-                                      
-                                      toast({
-                                        title: "Success",
-                                        description: "Video uploaded successfully",
-                                        duration: 3000,
-                                      });
-                                    }
-                                  } catch (error) {
-                                    console.error("Video upload failed:", error);
-                                    updateVideoState(lessonIndex, "idle", null);
-                                    toast({
-                                      variant: "destructive",
-                                      title: "Error",
-                                      description: "Failed to upload video file",
-                                      duration: 5000,
-                                    });
-                                  }
-                                }
-                              };
-                              input.click();
-                            }}
-                          >
-                            <Video size={16} />
-                            {videoStatuses[lessonIndex] === "uploading"
-                              ? `Uploading ${uploadedVideoNames[lessonIndex]}...`
-                              : videoStatuses[lessonIndex] === "success"
-                              ? (
-                                <span className="max-w-[100px] truncate">
-                                  {uploadedVideoNames[lessonIndex] || "Uploaded"}
-                                </span>
-                              )
-                              : "Upload Video"}
-                          </Button>
-                        </div>
                       </div>
 
                       {/* Subheadings */}
@@ -1100,7 +992,7 @@ const EditContent: React.FC = () => {
                                             variant="outline"
                                             size="sm"
                                             className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
-                                              subHeadingItem.subheadingAudioPath
+                                              subHeadingItem.subheadingAudioPath || subHeadingItem.imagePath
                                                 ? "bg-green-600"
                                                 : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                                             }`}
@@ -1108,13 +1000,12 @@ const EditContent: React.FC = () => {
                                             {selectedFileType === "audio" && <Music size={16} />}
                                             {selectedFileType === "video" && <Video size={16} />}
                                             {selectedFileType === "document" && <FileText size={16} />}
+                                            {selectedFileType === "image" && <ImageIcon size={16} />}
                                             {subHeadingItem.subheadingAudioPath 
-                                              ? (
-                                                <span className="max-w-[80px] truncate">
-                                                  {shortenFilename(extractFilenameFromUrl(subHeadingItem.subheadingAudioPath))}
-                                                </span>
-                                              )
-                                              : `Upload ${selectedFileType}`}
+                                              ? shortenFilename(extractFilenameFromUrl(subHeadingItem.subheadingAudioPath))
+                                              : subHeadingItem.imagePath
+                                                ? shortenFilename(extractFilenameFromUrl(subHeadingItem.imagePath))
+                                                : `Upload ${selectedFileType}`}
                                             <ChevronDown size={14} className="ml-1" />
                                           </Button>
                                         </DropdownMenuTrigger>
@@ -1136,6 +1027,12 @@ const EditContent: React.FC = () => {
                                             className="flex items-center gap-2"
                                           >
                                             <FileText size={14} /> Document
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setSelectedFileType("image")}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <ImageIcon size={14} /> Image
                                           </DropdownMenuItem>
                                         </DropdownMenuContent>
                                       </DropdownMenu>
@@ -1169,12 +1066,21 @@ const EditContent: React.FC = () => {
                                                   .getPublicUrl(fileName);
                                                 
                                                 if (publicData) {
-                                                  updateSubHeadingItem(
-                                                    lessonIndex,
-                                                    subHeadingIndex,
-                                                    "subheadingAudioPath",
-                                                    publicData.publicUrl
-                                                  );
+                                                  if (selectedFileType === "image") {
+                                                    updateSubHeadingItem(
+                                                      lessonIndex,
+                                                      subHeadingIndex,
+                                                      "imagePath",
+                                                      publicData.publicUrl
+                                                    );
+                                                  } else {
+                                                    updateSubHeadingItem(
+                                                      lessonIndex,
+                                                      subHeadingIndex,
+                                                      "subheadingAudioPath",
+                                                      publicData.publicUrl
+                                                    );
+                                                  }
                                                   
                                                   toast({
                                                     title: "Success",
@@ -1264,6 +1170,212 @@ const EditContent: React.FC = () => {
                           </Button>
                         </div>
                       </div>
+
+                      {/* Lesson media upload buttons */}
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={audioStatuses[lessonIndex] === "uploading"}
+                          className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
+                            audioStatuses[lessonIndex] === "success"
+                              ? "bg-green-600"
+                              : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                          }`}
+                          onClick={async () => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "audio/*";
+                            input.onchange = async (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (file) {
+                                updateAudioState(lessonIndex, "uploading", file.name);
+                                
+                                try {
+                                  const fileName = `${Date.now()}_${file.name}`;
+                                  const { error } = await supabase.storage
+                                    .from("topics")
+                                    .upload(fileName, file);
+                                  
+                                  if (error) throw error;
+
+                                  const { data: publicData } = supabase.storage
+                                    .from("topics")
+                                    .getPublicUrl(fileName);
+                                  
+                                  if (publicData) {
+                                    updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
+                                    updateAudioState(lessonIndex, "success", shortenFilename(file.name));
+                                    
+                                    toast({
+                                      title: "Success",
+                                      description: "Audio uploaded successfully",
+                                      duration: 5000,
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error("Audio upload failed:", error);
+                                  updateAudioState(lessonIndex, "idle", null);
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Error",
+                                    description: "Failed to upload audio file",
+                                  });
+                                }
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Music size={16} />
+                          {audioStatuses[lessonIndex] === "uploading"
+                            ? `Uploading ${uploadedAudioNames[lessonIndex]}...`
+                            : audioStatuses[lessonIndex] === "success"
+                            ? (
+                              <span className="max-w-[100px] truncate">
+                                {uploadedAudioNames[lessonIndex] || "Uploaded"}
+                              </span>
+                            )
+                            : "Upload Audio"}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={videoStatuses[lessonIndex] === "uploading"}
+                          className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
+                            videoStatuses[lessonIndex] === "success"
+                              ? "bg-indigo-600"
+                              : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+                          }`}
+                          onClick={async () => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "video/*";
+                            input.onchange = async (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (file) {
+                                updateVideoState(lessonIndex, "uploading", file.name);
+                                
+                                try {
+                                  const fileName = `${Date.now()}_${file.name}`;
+                                  const { error } = await supabase.storage
+                                    .from("topics")
+                                    .upload(fileName, file);
+                                  
+                                  if (error) throw error;
+
+                                  const { data: publicData } = supabase.storage
+                                    .from("topics")
+                                    .getPublicUrl(fileName);
+                                  
+                                  if (publicData) {
+                                    updateLessonItem(lessonIndex, "video", publicData.publicUrl);
+                                    updateVideoState(lessonIndex, "success", shortenFilename(file.name));
+                                    
+                                    toast({
+                                      title: "Success",
+                                      description: "Video uploaded successfully",
+                                      duration: 3000,
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error("Video upload failed:", error);
+                                  updateVideoState(lessonIndex, "idle", null);
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Error",
+                                    description: "Failed to upload video file",
+                                    duration: 5000,
+                                  });
+                                }
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Video size={16} />
+                          {videoStatuses[lessonIndex] === "uploading"
+                            ? `Uploading ${uploadedVideoNames[lessonIndex]}...`
+                            : videoStatuses[lessonIndex] === "success"
+                            ? (
+                              <span className="max-w-[100px] truncate">
+                                {uploadedVideoNames[lessonIndex] || "Uploaded"}
+                              </span>
+                            )
+                            : "Upload Video"}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={imageStatuses[lessonIndex] === "uploading"}
+                          className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
+                            imageStatuses[lessonIndex] === "success"
+                              ? "bg-yellow-600"
+                              : "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
+                          }`}
+                          onClick={async () => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
+                            input.onchange = async (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (file) {
+                                updateImageState(lessonIndex, "uploading", file.name);
+                                
+                                try {
+                                  const fileName = `${Date.now()}_${file.name}`;
+                                  const { error } = await supabase.storage
+                                    .from("topics")
+                                    .upload(fileName, file);
+                                  
+                                  if (error) throw error;
+
+                                  const { data: publicData } = supabase.storage
+                                    .from("topics")
+                                    .getPublicUrl(fileName);
+                                  
+                                  if (publicData) {
+                                    updateLessonItem(lessonIndex, "image", publicData.publicUrl);
+                                    updateImageState(lessonIndex, "success", shortenFilename(file.name));
+                                    
+                                    toast({
+                                      title: "Success",
+                                      description: "Image uploaded successfully",
+                                      duration: 3000,
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error("Image upload failed:", error);
+                                  updateImageState(lessonIndex, "idle", null);
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Error",
+                                    description: "Failed to upload image file",
+                                    duration: 5000,
+                                  });
+                                }
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <ImageIcon size={16} />
+                          {imageStatuses[lessonIndex] === "uploading"
+                            ? `Uploading ${uploadedImageNames[lessonIndex]}...`
+                            : imageStatuses[lessonIndex] === "success"
+                            ? (
+                              <span className="max-w-[100px] truncate">
+                                {uploadedImageNames[lessonIndex] || "Uploaded"}
+                              </span>
+                            )
+                            : "Upload Image"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -1294,7 +1406,6 @@ const EditContent: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  {/* <Save size={16} /> */}
                   Update Content
                 </div>
               )}

@@ -221,14 +221,14 @@ const EditExam: React.FC = () => {
             try {
                 setLoadingTopics(true);
                 setLoadingExam(true);
-                
+
                 const topicsResponse = await TopicInSubjectService.getAllTopics();
                 setTopics(topicsResponse.data);
 
                 if (examId) {
                     const examResponse = await ExamService.getExamById(examId);
                     const exam = examResponse.data;
-                    
+
                     const formattedExam = {
                         _id: exam._id,
                         subject: exam.subject._id,
@@ -246,7 +246,7 @@ const EditExam: React.FC = () => {
                     };
 
                     setExamData(formattedExam);
-                    
+
                     const topic = topicsResponse.data.find(t => t._id === exam.Topic._id);
                     if (topic) {
                         setSelectedTopic(topic);

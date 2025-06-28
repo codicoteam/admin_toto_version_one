@@ -99,6 +99,29 @@ const AdminSubjects: React.FC = () => {
   const [editSubjectDialogOpen, setEditSubjectDialogOpen] =
     useState<boolean>(false);
 
+  // State for viewing a specific subject's topics
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [loadingTopics, setLoadingTopics] = useState<boolean>(false);
+
+  // Get unique levels from subjects
+  const getUniqueLevels = (subjects: Subject[]): string[] => {
+    const levels = subjects
+      .map((subject) => subject.Level)
+      .filter((level): level is string => !!level); // Filter out undefined/null/empty
+    return Array.from(new Set(levels)); // Remove duplicates
+  };
+
+  // Generate tabs based on unique levels
+  const generateTabs = (subjects: Subject[]) => {
+    const uniqueLevels = getUniqueLevels(subjects);
+    const baseTabs = [{ id: "all", label: "All" }];
+    const levelTabs = uniqueLevels.map((level) => ({
+      id: level,
+      label: level,
+    }));
+    return [...baseTabs, ...levelTabs];
+  };
+
   // Add these handler functions in your AdminSubjects component
   const handleEditSubject = (subject: Subject) => {
     setEditingSubject(subject);
@@ -245,10 +268,6 @@ const AdminSubjects: React.FC = () => {
     await handleTopicUpdated();
   };
 
-  // State for viewing a specific subject's topics
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [loadingTopics, setLoadingTopics] = useState<boolean>(false);
-
   // Fetch topics for a specific subject
   const fetchTopicsForSubject = async (subjectId: string): Promise<Topic[]> => {
     try {
@@ -385,18 +404,6 @@ const AdminSubjects: React.FC = () => {
     setSelectedSubject(null);
   };
 
-  // Tabs based on the design with categories
-  const tabs = [
-    { id: "all", label: "All" },
-
-    { id: "O Level", label: "O' Level" }, // Matches enum exactly
-    { id: "A Level", label: "A' Level" }, // Matches enum exactly
-    { id: "Form 1", label: "Form 1" }, // Matches enum exactly
-    { id: "Form 2", label: "Form 2" }, // Matches enum exactly
-    { id: "Form 3", label: "Form 3" }, // Matches enum exactly
-    { id: "Form 4", label: "Form 4" }, // Matches enum exactly
-  ];
-
   // Filter subjects based on active tab and search query
   const filteredSubjects = subjects.filter((subject) => {
     // Filter by tab category
@@ -404,14 +411,8 @@ const AdminSubjects: React.FC = () => {
 
     if (activeTab === "all") {
       matchesTab = true;
-    } else if (activeTab === "popular") {
-      // Since your model doesn't have a popular field, you might want to:
-      // 1. Add logic based on number of topics/students
-      // 2. Add a popular field to your model
-      // 3. Remove this tab for now
-      matchesTab = false; // Temporarily disable until you define popular logic
     } else {
-      // Filter by Level field (exact match with enum values)
+      // Filter by Level field (exact match)
       matchesTab = subject.Level === activeTab;
     }
 
@@ -426,8 +427,8 @@ const AdminSubjects: React.FC = () => {
 
     return matchesTab && matchesSearch && isVisible;
   });
+
   // Map API subject data to the format expected by the SubjectCard component
-  // Update the mapSubjectToCardProps function to match your model fields
   const mapSubjectToCardProps = (subject: Subject) => {
     const subjectId = subject._id || subject.id || "";
 
@@ -447,6 +448,7 @@ const AdminSubjects: React.FC = () => {
       onUpdate: () => handleEditSubject(subject),
     };
   };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Mobile Menu Toggle */}
@@ -646,7 +648,7 @@ const AdminSubjects: React.FC = () => {
               {/* Tabs - Scrollable on mobile */}
               <div className="mb-8 overflow-x-auto pb-2">
                 <ul className="flex space-x-6 border-b border-gray-200 whitespace-nowrap min-w-max md:min-w-0">
-                  {tabs.map((tab) => (
+                  {generateTabs(subjects).map((tab) => (
                     <li key={tab.id}>
                       <button
                         className={`py-2 ${

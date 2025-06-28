@@ -723,10 +723,10 @@ const StudentDashboard = () => {
             </div>
 
             {/* Admin Profile */}
-            <div className="bg-blue-900 text-white rounded-md py-2 px-4 flex items-center">
+            {/* <div className="bg-blue-900 text-white rounded-md py-2 px-4 flex items-center">
               <User className="h-5 w-5 mr-2" />
               <span className="font-medium">{adminName}</span>
-            </div>
+            </div> */}
           </div>
 
           {loading ? (
