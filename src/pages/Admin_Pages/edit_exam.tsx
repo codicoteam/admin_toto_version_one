@@ -36,6 +36,7 @@ interface Question {
     questionText: string;
     options: string[];
     correctAnswer: string;
+    correctAnswerExplanation: string;
     _id?: string;
 }
 
@@ -206,9 +207,10 @@ const EditExam: React.FC = () => {
                 questionText: "",
                 options: [""],
                 correctAnswer: "",
+                correctAnswerExplanation: "",
             },
         ],
-        isPublished: false, // Changed default to false
+        isPublished: false,
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,9 +242,10 @@ const EditExam: React.FC = () => {
                             questionText: q.questionText,
                             options: q.options,
                             correctAnswer: q.correctAnswer,
+                            correctAnswerExplanation: q.correctAnswerExplanation || "", // Add explanation
                             _id: q._id
                         })),
-                        isPublished: exam.isPublished || false // Ensure boolean value
+                        isPublished: exam.isPublished || false
                     };
 
                     setExamData(formattedExam);
@@ -323,6 +326,7 @@ const EditExam: React.FC = () => {
                     questionText: "",
                     options: [""],
                     correctAnswer: "",
+                    correctAnswerExplanation: "",
                 },
             ],
         }));
@@ -897,7 +901,7 @@ const EditExam: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div className="mb-5">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Correct Answer
                                         </label>
@@ -953,6 +957,74 @@ const EditExam: React.FC = () => {
                                                                     questionIndex,
                                                                     null,
                                                                     "correctAnswer"
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+                                                        <Edit size={16} />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* New Section: Correct Answer Explanation */}
+                                    <div className="mt-5">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Explanation for Correct Answer
+                                        </label>
+                                        <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                            {editingStates[
+                                                getFieldPath(questionIndex, null, "correctAnswerExplanation")
+                                            ] ? (
+                                                <MathInput
+                                                    value={question.correctAnswerExplanation}
+                                                    onChange={(value) =>
+                                                        updateQuestionField(
+                                                            questionIndex,
+                                                            "correctAnswerExplanation",
+                                                            value
+                                                        )
+                                                    }
+                                                    editing={true}
+                                                    onSave={() =>
+                                                        saveMathValue(
+                                                            getFieldPath(
+                                                                questionIndex,
+                                                                null,
+                                                                "correctAnswerExplanation"
+                                                            )
+                                                        )
+                                                    }
+                                                    onCancel={() =>
+                                                        cancelEditing(
+                                                            getFieldPath(
+                                                                questionIndex,
+                                                                null,
+                                                                "correctAnswerExplanation"
+                                                            )
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <MathInput
+                                                            value={question.correctAnswerExplanation}
+                                                            editing={false}
+                                                            placeholder="Click edit to add explanation"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-gray-400 hover:text-blue-500"
+                                                        onClick={() =>
+                                                            toggleEditing(
+                                                                getFieldPath(
+                                                                    questionIndex,
+                                                                    null,
+                                                                    "correctAnswerExplanation"
                                                                 )
                                                             )
                                                         }
