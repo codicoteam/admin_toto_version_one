@@ -74,7 +74,7 @@ const ChatApp = (ChatServiceData: any) => {
   const [subjects, setSubjects] = useState([]);
 
   const currentUserId = user?._id;
-  const ADMIN_ID = "680a450e0493d5f6686d6956"; // Define admin ID constant
+  const ADMIN_ID = "686377b7514b572d2d7ce7f2"; // Define admin ID constant
 
   useEffect(() => {
     const fetchMessages = async () => {

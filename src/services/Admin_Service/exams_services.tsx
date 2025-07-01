@@ -41,7 +41,7 @@ const ExamService = {
     }
   },
 
-   getExamById: async (id) => {
+  getExamById: async (id) => {
     try {
       const response = await axios.get(`${BASE_URL}/get/${id}`, {
         headers: {
@@ -55,10 +55,10 @@ const ExamService = {
   },
 
 
-    getStudentsMarksByExamId: async (examId) => {
+  getStudentsMarksByExamId: async (examId) => {
     try {
       const response = await axios.get(
-        `${BASE_URL.replace('/exam', '')}/record_exam/exam/${examId}/top-students`, 
+        `${BASE_URL.replace('/exam', '')}/record_exam/exam/${examId}/top-students`,
         {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
@@ -70,6 +70,19 @@ const ExamService = {
       throw error.response?.data || "Failed to retrieve student marks";
     }
   },
+  deleteExamById: async (id: string): Promise<any> => {
+    try {
+      const response = await axios.delete(`${BASE_URL}/delete/${id}`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || "Failed to delete exam";
+    }
+  },
+
 
 
 

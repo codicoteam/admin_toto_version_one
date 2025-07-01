@@ -146,13 +146,25 @@ const ViewStudentMarks: React.FC = () => {
         });
     };
 
-    const getTopPerformer = (): StudentMark | null => {
-        if (studentMarks.length === 0) return null;
-        return studentMarks.reduce((top, current) => {
-            const topPercentage = parseInt(top.percentange.replace('%', ''));
-            const currentPercentage = parseInt(current.percentange.replace('%', ''));
-            return currentPercentage > topPercentage ? current : top;
+    const formatDateMobile = (dateString: string): string => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
+    };
+
+    const getTopPerformers = (): StudentMark[] => {
+        if (studentMarks.length === 0) return [];
+        
+        const maxPercentage = Math.max(...studentMarks.map(mark => 
+            parseInt(mark.percentange.replace('%', ''))
+        ));
+        
+        return studentMarks.filter(mark => 
+            parseInt(mark.percentange.replace('%', '')) === maxPercentage
+        );
     };
 
     const getAverageScore = (): number => {
@@ -162,6 +174,13 @@ const ViewStudentMarks: React.FC = () => {
         }, 0);
         return Math.round(total / studentMarks.length);
     };
+
+    // Sort students by percentage (highest first)
+    const sortedStudentMarks = [...studentMarks].sort((a, b) => {
+        const percentageA = parseInt(a.percentange.replace('%', ''));
+        const percentageB = parseInt(b.percentange.replace('%', ''));
+        return percentageB - percentageA;
+    });
 
     if (loading) {
         return (
@@ -200,7 +219,7 @@ const ViewStudentMarks: React.FC = () => {
         );
     }
 
-    const topPerformer = getTopPerformer();
+    const topPerformers = getTopPerformers();
     const averageScore = getAverageScore();
 
     return (
@@ -240,7 +259,7 @@ const ViewStudentMarks: React.FC = () => {
             <div className="flex-1 w-full">
                 <div className="w-full min-h-screen">
                     {/* Header */}
-                    <div className="relative p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
+                    <div className="relative p-4 md:p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
                         <div className="absolute inset-0 bg-black/10"></div>
                         <div className="relative flex items-center justify-between">
                             <Button
@@ -249,180 +268,231 @@ const ViewStudentMarks: React.FC = () => {
                                 className="text-white hover:bg-white/20"
                             >
                                 <ChevronLeft size={20} className="mr-2" />
-                                Back
+                                <span className="sr-only md:not-sr-only">Back</span>
                             </Button>
                             <div className="text-center flex-1">
-                                <h1 className="text-2xl font-bold tracking-tight flex items-center justify-center gap-3">
+                                <h1 className="text-xl md:text-2xl font-bold tracking-tight flex flex-col md:flex-row items-center justify-center gap-3">
                                     <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                        <Users size={24} className="text-white" />
+                                        <Users size={20} className="text-white" />
                                     </div>
                                     Student Results
                                 </h1>
                                 {examTitle && (
-                                    <p className="text-white/90 mt-2 text-lg">{examTitle}</p>
+                                    <p className="text-white/90 mt-1 md:mt-2 text-sm md:text-lg truncate px-2 max-w-[90vw] mx-auto">
+                                        {examTitle}
+                                    </p>
                                 )}
                             </div>
+                            <div className="w-10"></div> {/* Spacer for alignment */}
                         </div>
                     </div>
 
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 md:p-6 space-y-6">
                         {/* Statistics Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-blue-100 rounded-lg">
-                                        <Users size={24} className="text-blue-600" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                            <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 bg-blue-100 rounded-lg">
+                                        <Users size={20} className="text-blue-600" />
                                     </div>
                                     <div>
-                                        <p className="text-gray-600 text-sm">Total Students</p>
-                                        <p className="text-2xl font-bold text-gray-800">{studentMarks.length}</p>
+                                        <p className="text-xs md:text-sm text-gray-600">Total Students</p>
+                                        <p className="text-xl md:text-2xl font-bold text-gray-800">{studentMarks.length}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-green-100 rounded-lg">
-                                        <Percent size={24} className="text-green-600" />
+                            <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 bg-green-100 rounded-lg">
+                                        <Percent size={20} className="text-green-600" />
                                     </div>
                                     <div>
-                                        <p className="text-gray-600 text-sm">Average Score</p>
-                                        <p className="text-2xl font-bold text-gray-800">{averageScore}%</p>
+                                        <p className="text-xs md:text-sm text-gray-600">Average Score</p>
+                                        <p className="text-xl md:text-2xl font-bold text-gray-800">{averageScore}%</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-yellow-100 rounded-lg">
-                                        <Trophy size={24} className="text-yellow-600" />
+                            <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <div className="flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 bg-yellow-100 rounded-lg">
+                                        <Trophy size={20} className="text-yellow-600" />
                                     </div>
                                     <div>
-                                        <p className="text-gray-600 text-sm">Top Score</p>
-                                        <p className="text-2xl font-bold text-gray-800">
-                                            {topPerformer ? topPerformer.percentange : '0%'}
+                                        <p className="text-xs md:text-sm text-gray-600">Top Score</p>
+                                        <p className="text-xl md:text-2xl font-bold text-gray-800">
+                                            {topPerformers.length > 0 ? topPerformers[0].percentange : '0%'}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Top Performer Highlight */}
-                        {topPerformer && (
-                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="p-3 bg-yellow-100 rounded-lg">
-                                        <Trophy size={24} className="text-yellow-600" />
+                        {/* Top Performers Highlight */}
+                        {topPerformers.length > 0 && (
+                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg md:rounded-xl p-4 md:p-6 border border-yellow-200">
+                                <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                                    <div className="p-2 md:p-3 bg-yellow-100 rounded-lg">
+                                        <Trophy size={20} className="text-yellow-600" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-800">Top Performer</h3>
-                                        <p className="text-gray-600">Congratulations to our highest scorer!</p>
+                                        <h3 className="text-base md:text-lg font-semibold text-gray-800">
+                                            Top Performer{topPerformers.length > 1 ? 's' : ''}
+                                        </h3>
+                                        <p className="text-xs md:text-sm text-gray-600">
+                                            {topPerformers.length > 1 
+                                                ? `${topPerformers.length} students tied for the highest score!`
+                                                : 'Congratulations to our highest scorer!'
+                                            }
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="bg-white rounded-lg p-4 border border-yellow-200">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-gray-100 rounded-full">
-                                                <User size={20} className="text-gray-600" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">
-                                                    {topPerformer.studentId.firstName} {topPerformer.studentId.lastName}
-                                                </p>
-                                                <p className="text-gray-600 text-sm">{topPerformer.studentId.email}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getGradeColor(topPerformer.results)}`}>
-                                                {topPerformer.results}
-                                            </div>
-                                            <p className={`text-lg font-bold ${getPercentageColor(topPerformer.percentange)}`}>
-                                                {topPerformer.percentange}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Student Results List */}
-                        <div className="mt-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-semibold text-gray-800">All Student Results</h2>
-                                <p className="text-gray-600">{studentMarks.length} student{studentMarks.length !== 1 ? 's' : ''}</p>
-                            </div>
-
-                            {studentMarks.length === 0 ? (
-                                <div className="bg-white rounded-xl p-12 border border-gray-200 shadow-sm text-center">
-                                    <div className="p-4 bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                        <Users size={32} className="text-gray-400" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">No Results Found</h3>
-                                    <p className="text-gray-600">No students have taken this exam yet.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {studentMarks.map((mark, index) => (
-                                        <div
-                                            key={mark._id}
-                                            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-start gap-4 flex-1">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                                            {index + 1}
-                                                        </div>
-                                                        <div className="p-2 bg-gray-100 rounded-full">
-                                                            <User size={20} className="text-gray-600" />
-                                                        </div>
+                                <div className="space-y-3">
+                                    {topPerformers.map((performer, index) => (
+                                        <div key={performer._id} className="bg-white rounded-md md:rounded-lg p-3 md:p-4 border border-yellow-200">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2 md:gap-3">
+                                                    <div className="p-1 md:p-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full text-white font-bold text-xs md:text-sm w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+                                                        {index + 1}
                                                     </div>
-                                                    
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <h3 className="text-lg font-semibold text-gray-800">
-                                                                {mark.studentId.firstName} {mark.studentId.lastName}
-                                                            </h3>
-                                                            {index === 0 && topPerformer?._id === mark._id && (
-                                                                <div className="p-1 bg-yellow-100 rounded">
-                                                                    <Trophy size={16} className="text-yellow-600" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        <div className="flex items-center gap-2 text-gray-600 mb-3">
-                                                            <Mail size={16} />
-                                                            <span className="text-sm">{mark.studentId.email}</span>
-                                                        </div>
-
-                                                        {mark.showComment && mark.comment && (
-                                                            <div className="flex items-start gap-2 bg-gray-50 rounded-lg p-3 mb-3">
-                                                                <MessageSquare size={16} className="text-gray-600 mt-0.5 flex-shrink-0" />
-                                                                <p className="text-gray-700 text-sm">{mark.comment}</p>
-                                                            </div>
-                                                        )}
-
-                                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                                            <div className="flex items-center gap-1">
-                                                                <Calendar size={14} />
-                                                                <span>Submitted: {formatDate(mark.createdAt)}</span>
-                                                            </div>
-                                                        </div>
+                                                    <div className="p-1 md:p-2 bg-gray-100 rounded-full">
+                                                        <User size={16} className="text-gray-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-sm md:text-base text-gray-800 line-clamp-1">
+                                                            {performer.studentId.firstName} {performer.studentId.lastName}
+                                                        </p>
+                                                        <p className="text-xs md:text-sm text-gray-600 line-clamp-1">{performer.studentId.email}</p>
                                                     </div>
                                                 </div>
-
-                                                <div className="text-right ml-4">
-                                                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mb-2 ${getGradeColor(mark.results)}`}>
-                                                        <Award size={14} className="mr-1" />
-                                                        {mark.results}
+                                                <div className="md:text-right pl-8 md:pl-0">
+                                                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs md:text-sm font-medium border ${getGradeColor(performer.results)}`}>
+                                                        {performer.results}
                                                     </div>
-                                                    <p className={`text-2xl font-bold ${getPercentageColor(mark.percentange)}`}>
-                                                        {mark.percentange}
+                                                    <p className={`text-base md:text-lg font-bold ${getPercentageColor(performer.percentange)}`}>
+                                                        {performer.percentange}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Student Results Section */}
+                        <div className="mt-6 md:mt-8">
+                            <div className="flex justify-between items-center mb-4 md:mb-6">
+                                <h2 className="text-lg md:text-xl font-semibold text-gray-800">All Student Results</h2>
+                                <p className="text-xs md:text-sm text-gray-600">{studentMarks.length} student{studentMarks.length !== 1 ? 's' : ''}</p>
+                            </div>
+
+                            {studentMarks.length === 0 ? (
+                                <div className="bg-white rounded-lg md:rounded-xl p-6 md:p-12 border border-gray-200 shadow-sm text-center">
+                                    <div className="p-3 md:p-4 bg-gray-100 rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center mx-auto mb-3 md:mb-4">
+                                        <Users size={24} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-1 md:mb-2">No Results Found</h3>
+                                    <p className="text-sm md:text-base text-gray-600">No students have taken this exam yet.</p>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-lg md:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                    {/* Table Header - Desktop Only */}
+                                    <div className="hidden md:grid bg-gray-50 px-6 py-4 border-b border-gray-200 grid-cols-12 gap-4 items-center font-semibold text-gray-700 text-sm">
+                                        <div className="col-span-1">#</div>
+                                        <div className="col-span-2">Name</div>
+                                        <div className="col-span-2">Surname</div>
+                                        <div className="col-span-3">Email</div>
+                                        <div className="col-span-2">Date Submitted</div>
+                                        <div className="col-span-1">Score</div>
+                                        <div className="col-span-1">Grade</div>
+                                    </div>
+
+                                    {/* Desktop Table Body */}
+                                    <div className="hidden md:block divide-y divide-gray-200">
+                                        {sortedStudentMarks.map((mark, index) => (
+                                            <div key={mark._id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
+                                                <div className="grid grid-cols-12 gap-4 items-center">
+                                                    <div className="col-span-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-gray-600 font-medium">{index + 1}</span>
+                                                            {topPerformers.some(tp => tp._id === mark._id) && (
+                                                                <Trophy size={16} className="text-yellow-500" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="font-medium text-gray-800 line-clamp-1">{mark.studentId.firstName}</span>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="font-medium text-gray-800 line-clamp-1">{mark.studentId.lastName}</span>
+                                                    </div>
+                                                    <div className="col-span-3">
+                                                        <span className="text-gray-600 text-sm line-clamp-1">{mark.studentId.email}</span>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="text-gray-600 text-sm">{formatDate(mark.createdAt)}</span>
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <span className={`font-bold ${getPercentageColor(mark.percentange)}`}>
+                                                            {mark.percentange}
+                                                        </span>
+                                                    </div>
+                                                    <div className="col-span-1">
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getGradeColor(mark.results)}`}>
+                                                            {mark.results}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Mobile List */}
+                                    <div className="md:hidden divide-y divide-gray-200">
+                                        {sortedStudentMarks.map((mark, index) => (
+                                            <div key={mark._id} className="p-4 hover:bg-gray-50 transition-colors duration-150">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-gray-700">{index + 1}.</span>
+                                                        {topPerformers.some(tp => tp._id === mark._id) && (
+                                                            <Trophy size={16} className="text-yellow-500" />
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className={`font-bold text-base ${getPercentageColor(mark.percentange)}`}>
+                                                            {mark.percentange}
+                                                        </span>
+                                                        <div className="mt-1">
+                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getGradeColor(mark.results)}`}>
+                                                                {mark.results}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="mt-3">
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <User size={16} className="text-gray-500" />
+                                                        <span className="font-medium text-gray-800">
+                                                            {mark.studentId.firstName} {mark.studentId.lastName}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2 mt-2 text-sm">
+                                                        <Mail size={16} className="text-gray-500" />
+                                                        <span className="text-gray-600 truncate">{mark.studentId.email}</span>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2 mt-2 text-sm">
+                                                        <Calendar size={16} className="text-gray-500" />
+                                                        <span className="text-gray-600">{formatDateMobile(mark.createdAt)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>

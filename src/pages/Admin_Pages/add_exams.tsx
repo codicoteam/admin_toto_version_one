@@ -36,6 +36,7 @@ interface Question {
     questionText: string;
     options: string[];
     correctAnswer: string;
+    correctAnswerExplanation: string;
 }
 
 interface ExamFormData {
@@ -48,7 +49,6 @@ interface ExamFormData {
     isPublished: boolean;
 }
 
-// Helper function to extract LaTeX from text
 const extractLatexFromText = (text: string): string => {
     if (!text) return "";
     if (text.startsWith("\\(") && text.endsWith("\\)")) {
@@ -57,7 +57,6 @@ const extractLatexFromText = (text: string): string => {
     return text;
 };
 
-// Reusable Math Input Component
 interface MathInputProps {
     value: string;
     onChange: (value: string) => void;
@@ -121,13 +120,11 @@ const MathInput: React.FC<MathInputProps> = ({
             containerRef.current.appendChild(mf);
         }
 
-        // Set initial value
         const unwrappedValue = extractLatexFromText(value || "");
         if (mathfieldRef.current.value !== unwrappedValue) {
             mathfieldRef.current.value = unwrappedValue;
         }
 
-        // Update readOnly state
         mathfieldRef.current.setOptions({ readOnly: !editing });
         mathfieldRef.current.style.pointerEvents = editing ? "auto" : "none";
         mathfieldRef.current.style.backgroundColor = editing ? "#fff" : "transparent";
@@ -207,9 +204,10 @@ const CreateExam: React.FC = () => {
                 questionText: "",
                 options: [""],
                 correctAnswer: "",
+                correctAnswerExplanation: "",
             },
         ],
-        isPublished: true, // Always true now
+        isPublished: true,
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -224,7 +222,6 @@ const CreateExam: React.FC = () => {
                 const response = await TopicInSubjectService.getAllTopics();
                 setTopics(response.data);
 
-                // If topicId is provided in URL, set it as selected
                 if (topicId) {
                     const topic = response.data.find(t => t._id === topicId);
                     if (topic) {
@@ -252,7 +249,6 @@ const CreateExam: React.FC = () => {
         fetchTopics();
     }, [topicId, toast]);
 
-    // Toggle editing state for a specific field
     const toggleEditing = (fieldPath: string) => {
         setEditingStates((prev) => ({
             ...prev,
@@ -260,7 +256,6 @@ const CreateExam: React.FC = () => {
         }));
     };
 
-    // Save value for a specific field
     const saveMathValue = (fieldPath: string) => {
         setEditingStates((prev) => ({
             ...prev,
@@ -268,7 +263,6 @@ const CreateExam: React.FC = () => {
         }));
     };
 
-    // Cancel editing for a specific field
     const cancelEditing = (fieldPath: string) => {
         setEditingStates((prev) => ({
             ...prev,
@@ -276,7 +270,6 @@ const CreateExam: React.FC = () => {
         }));
     };
 
-    // Get field path for editing state tracking
     const getFieldPath = (
         questionIndex: number,
         optionIndex: number | null,
@@ -310,6 +303,7 @@ const CreateExam: React.FC = () => {
                     questionText: "",
                     options: [""],
                     correctAnswer: "",
+                    correctAnswerExplanation: "",
                 },
             ],
         }));
@@ -393,7 +387,6 @@ const CreateExam: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Validate main fields
             if (!examData.subject.trim()) {
                 toast({
                     variant: "destructive",
@@ -430,7 +423,6 @@ const CreateExam: React.FC = () => {
                 return;
             }
 
-            // Validate questions
             const questionErrors: number[] = [];
             examData.questions.forEach((question, index) => {
                 if (!question.questionText.trim()) {
@@ -446,7 +438,6 @@ const CreateExam: React.FC = () => {
                     return;
                 }
 
-                // Check if correct answer is one of the options
                 if (!question.options.includes(question.correctAnswer)) {
                     toast({
                         variant: "destructive",
@@ -466,7 +457,6 @@ const CreateExam: React.FC = () => {
                 return;
             }
 
-            // Validate options
             const optionErrors: { question: number; option: number }[] = [];
             examData.questions.forEach((question, questionIndex) => {
                 question.options.forEach((option, optionIndex) => {
@@ -493,7 +483,6 @@ const CreateExam: React.FC = () => {
                 return;
             }
 
-            // In a real app, you would call your API here
             const response = await ExamService.createExam(examData);
             console.log("Exam created successfully:", response.message);
             if (response.message === "Exam created successfully") {
@@ -521,7 +510,6 @@ const CreateExam: React.FC = () => {
     return (
         <div className="min-h-screen w-full bg-gray-100">
             <div className="w-full px-0 py-0">
-                {/* Header */}
                 <div className="relative p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
                     <div className="absolute inset-0 bg-black/10"></div>
                     <div className="relative flex items-center justify-between">
@@ -544,7 +532,6 @@ const CreateExam: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Content */}
                 <div className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
@@ -635,7 +622,6 @@ const CreateExam: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Questions Section */}
                     <div className="mt-8">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-semibold text-gray-800">Questions</h2>
@@ -675,7 +661,6 @@ const CreateExam: React.FC = () => {
                                         )}
                                     </div>
 
-                                    {/* Question Text */}
                                     <div className="mb-5">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Question Text
@@ -735,7 +720,6 @@ const CreateExam: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Options */}
                                     <div className="mb-5">
                                         <div className="flex justify-between items-center mb-3">
                                             <label className="block text-sm font-medium text-gray-700">
@@ -862,8 +846,7 @@ const CreateExam: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Correct Answer */}
-                                    <div>
+                                    <div className="mb-5">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Correct Answer
                                         </label>
@@ -929,13 +912,79 @@ const CreateExam: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Correct Answer Explanation
+                                        </label>
+                                        <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                            {editingStates[
+                                                getFieldPath(questionIndex, null, "correctAnswerExplanation")
+                                            ] ? (
+                                                <MathInput
+                                                    value={question.correctAnswerExplanation}
+                                                    onChange={(value) =>
+                                                        updateQuestionField(
+                                                            questionIndex,
+                                                            "correctAnswerExplanation",
+                                                            value
+                                                        )
+                                                    }
+                                                    editing={true}
+                                                    onSave={() =>
+                                                        saveMathValue(
+                                                            getFieldPath(
+                                                                questionIndex,
+                                                                null,
+                                                                "correctAnswerExplanation"
+                                                            )
+                                                        )
+                                                    }
+                                                    onCancel={() =>
+                                                        cancelEditing(
+                                                            getFieldPath(
+                                                                questionIndex,
+                                                                null,
+                                                                "correctAnswerExplanation"
+                                                            )
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <MathInput
+                                                            value={question.correctAnswerExplanation}
+                                                            editing={false}
+                                                            placeholder="Click edit to add explanation"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-gray-400 hover:text-blue-500"
+                                                        onClick={() =>
+                                                            toggleEditing(
+                                                                getFieldPath(
+                                                                    questionIndex,
+                                                                    null,
+                                                                    "correctAnswerExplanation"
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+                                                        <Edit size={16} />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="flex-shrink-0 px-6 py-4 bg-gray-50/80 border-t border-gray-200">
                     <div className="flex justify-between w-full items-center">
                         <Button

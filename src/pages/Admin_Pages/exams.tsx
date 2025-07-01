@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import ExamCard from "@/components/exam_card";
 import ExamService from "@/services/Admin_Service/exams_services";
 import Sidebar from "@/components/Sidebar";
+import { useToast } from "@/components/ui/use-toast";
 
 const Exams = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -20,6 +21,7 @@ const Exams = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
   // Toggle sidebar function
   const toggleSidebar = () => {
@@ -40,20 +42,42 @@ const Exams = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        const response = await ExamService.getAllExams();
-        setExams(response.data);
-      } catch (err) {
-        setError(err.message || "Failed to fetch exams");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchExams = async () => {
+    try {
+      const response = await ExamService.getAllExams();
+      setExams(response.data);
+    } catch (err) {
+      setError(err.message || "Failed to fetch exams");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchExams();
   }, [token]);
+
+  // Handle exam deletion
+  const handleDeleteExam = async (examId: string) => {
+    if (window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) {
+      try {
+        await ExamService.deleteExamById(examId);
+        toast({
+          title: "Success",
+          description: "Exam deleted successfully",
+        });
+        // Refresh exam list
+        fetchExams();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete exam",
+          variant: "destructive",
+        });
+        console.error("Delete error:", error);
+      }
+    }
+  };
 
   // Get unique exam levels for tabs
   const availableLevels = useMemo(() => {
@@ -220,6 +244,7 @@ const Exams = () => {
                   level={exam.level}
                   durationInMinutes={exam.durationInMinutes}
                   thumbnailUrl={exam.subject?.imageUrl || "/default-exam.png"}
+                  onDelete={() => handleDeleteExam(exam._id)}
                 />
               ))}
             </div>
