@@ -40,6 +40,23 @@ const AdminService = {
       throw error.response?.data || "Failed to retrieve admin";
     }
   },
+
+  /**
+   * Get admin dashboard data
+   * @returns {Promise} Promise containing dashboard data
+   */
+  getAdminDashboard: async () => {
+    try {
+      const response = await axios.get(`https://toto-academy-backend.onrender.com/api/v1/dashboards/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to retrieve dashboard data";
+    }
+  },
 };
 
 /**

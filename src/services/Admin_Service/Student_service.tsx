@@ -58,6 +58,25 @@ const StudentService = {
     }
   },
 
+
+  /**
+   * Fetches dashboard statistics (students count, levels, subjects, etc.)
+   * @returns {Promise} Promise with dashboard stats data
+   */
+  getAllDashboardData: async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Failed to fetch dashboard data";
+    }
+  },
+
+
   // Commented out as per your code but kept for future implementation
   /*
   postStudent: async (studentData) => {
