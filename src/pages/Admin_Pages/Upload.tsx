@@ -64,6 +64,15 @@ export default function BookUploadForm() {
     fetchSubjects();
   }, []);
 
+  // Sanitize filenames for Supabase compatibility
+  const sanitizeFilename = (filename) => {
+    return filename
+      .replace(/[^a-zA-Z0-9!\-_.*'()]/g, '_') // Replace invalid chars with underscore
+      .replace(/~+/g, '_')                      // Replace tildes specifically
+      .replace(/\s+/g, '_')                     // Replace spaces with underscores
+      .replace(/_{2,}/g, '_');                  // Replace multiple underscores with single
+  };
+
   const handleDragEnter = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -179,12 +188,14 @@ export default function BookUploadForm() {
     let filePath = "";
 
     try {
-      // Upload file to Supabase
-      const fileName = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+      // Sanitize filename before upload
+      const sanitizedFileName = sanitizeFilename(file.name);
+      const fileName = `${Date.now()}_${sanitizedFileName}`;
+      
       console.log("Uploading to Supabase:", fileName);
 
       const { error: uploadError } = await supabase.storage
-        .from("topics")  // Fixed bucket name (was "topics")
+        .from("topics")
         .upload(fileName, file, {
           cacheControl: "3600",
           upsert: false,
@@ -230,7 +241,6 @@ export default function BookUploadForm() {
       const createResponse = await LibraryService.createBook(bookData);
       console.log("Book creation response:", createResponse);
 
-      // FIXED: Changed success condition to match service response
       if (!createResponse || createResponse.error) {
         const errorMsg = createResponse?.message || "Book creation failed";
         console.error("Book creation failed:", createResponse);
