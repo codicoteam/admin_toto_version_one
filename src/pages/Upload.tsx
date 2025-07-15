@@ -6,7 +6,7 @@ const SubjectService = {
   getAllSubjects: async () => {
     try {
       const response = await fetch(
-        "https://toto-academy-backend.onrender.com/api/v1/subject/getall",
+        "http://13.61.185.238:4071/api/v1/subject/getall",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("adminToken")}`,

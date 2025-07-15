@@ -35,7 +35,7 @@ const Chat = () => {
             setError(null);
             try {
                 const response = await axios.get(
-                    "https://toto-academy-backend.onrender.com/api/v1/community_service/getall",
+                    "http://13.61.185.238:4071/api/v1/community_service/getall",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ const Chat = () => {
                 setLoading(true);
                 try {
                     const response = await axios.get(
-                        `https://toto-academy-backend.onrender.com/api/v1/community_service/get/${communityId}`,
+                        `http://13.61.185.238:4071/api/v1/community_service/get/${communityId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ const Chat = () => {
         setCreateLoading(true);
         try {
             const response = await axios.post(
-                "https://toto-academy-backend.onrender.com/api/v1/community_service/create",
+                "http://13.61.185.238:4071/api/v1/community_service/create",
                 {
                     name: createName,
                     Level: createLevel,
@@ -139,7 +139,7 @@ const Chat = () => {
         const fetchSubjects = async () => {
             try {
                 const response = await axios.get(
-                    "https://toto-academy-backend.onrender.com/api/v1/subject/getall",
+                    "http://13.61.185.238:4071/api/v1/subject/getall",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

@@ -36,7 +36,7 @@ const Community = () => {
         const fetchCommunities = async () => {
             try {
                 const response = await axios.get(
-                    "https://toto-academy-backend.onrender.com/api/v1/community_service/getall",
+                    "http://13.61.185.238:4071/api/v1/community_service/getall",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -63,11 +63,11 @@ const Community = () => {
             try {
                 const [messagesRes, detailsRes] = await Promise.all([
                     axios.get(
-                        `https://toto-academy-backend.onrender.com/api/v1/message_community_route/community/${id}`,
+                        `http://13.61.185.238:4071/api/v1/message_community_route/community/${id}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     ),
                     axios.get(
-                        `https://toto-academy-backend.onrender.com/api/v1/community_service/get/${id}`,
+                        `http://13.61.185.238:4071/api/v1/community_service/get/${id}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     )
                 ]);
@@ -101,7 +101,7 @@ const Community = () => {
             // For now, we skip file upload and send empty imagePath
 
             await axios.post(
-                "https://toto-academy-backend.onrender.com/api/v1/message_community_route/create",
+                "http://13.61.185.238:4071/api/v1/message_community_route/create",
                 {
                     community: id,
                     sender: user?._id,

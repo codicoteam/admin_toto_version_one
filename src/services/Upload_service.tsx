@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const BASE_URL =
-  "https://toto-academy-backend.onrender.com/api/v1/library_book";
+  "http://13.61.185.238:4071/api/v1/library_book";
 
 /**
  * Service for handling file upload and update operations

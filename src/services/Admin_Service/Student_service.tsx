@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BASE_URL =
-  "https://toto-academy-backend.onrender.com/api/v1/student_route";
+  "http://13.61.185.238:4071/api/v1/student_route";
 
 /**
  * Service for handling student-related API requests
