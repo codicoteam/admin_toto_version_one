@@ -1,5 +1,5 @@
 import Sidebar from "@/components/Sidebar";
-import { Menu, X } from "lucide-react";
+import { Loader2, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import WalleService from "../services/Walle_service";
 
@@ -149,7 +149,7 @@ function Resourcewalle() {
           {error ? (
             <div className="text-red-500 p-4">{error}</div>
           ) : isLoading ? (
-            <div className="text-center p-4">Loading wallets...</div>
+            <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
           ) : dashboardData.latestWallets.length === 0 ? (
             <div className="text-center p-4 text-gray-500">No wallets found</div>
           ) : (

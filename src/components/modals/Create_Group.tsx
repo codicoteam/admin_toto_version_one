@@ -427,9 +427,7 @@ const ChatApp = () => {
           {/* Group List - Now using data from API */}
           <div className="p-3 space-y-2 flex-grow overflow-y-auto">
             {loading ? (
-              <div className="text-center py-4 text-gray-500">
-                Loading groups...
-              </div>
+             <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
             ) : error ? (
               <div className="text-center py-4 text-red-500">{error}</div>
             ) : communities.length === 0 ? (

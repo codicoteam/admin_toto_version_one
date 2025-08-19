@@ -149,24 +149,28 @@ const Course = () => {
     }
 
     if (error) {
-        return <div className="min-h-[70vh] flex items-center justify-center ">
+        return <div className="min-h-[70vh] flex items-center justify-center">
             <div className="text-center">
-                <TriangleAlert className="h-32 w-32  mx-auto" />
-                <h1 className="text-4xl font-bold mb-4">Error Loading Subject</h1>
-                <p className="text-xl text-gray-600 mb-4">{error}</p>
-                <div className="flex gap-3  mt-7">
+                <TriangleAlert className="h-32 w-32 text-yellow-500 mx-auto" />
+                <h1 className="text-4xl font-bold mb-4">Oops! Something went wrong</h1>
+                <p className="text-xl text-gray-600 mb-4">
+                    We couldn’t load this subject right now. Please try again.
+                </p>
+
+                <div className="flex gap-3 mt-7 justify-center">
                     <Button onClick={() => navigate(-1)} variant="ghost" className="mb-2">
                         <ChevronLeft className="mr-2 h-4 w-4" />
                         Back to Courses
                     </Button>
+
                     <Button onClick={() => window.location.reload()} variant="ghost" className="mb-2">
                         <RotateCcwIcon className="mr-2 h-4 w-4" />
-                        Reload
+                        Retry
                     </Button>
-
                 </div>
             </div>
         </div>
+
     }
 
 

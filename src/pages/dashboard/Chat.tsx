@@ -82,11 +82,22 @@ const Chat = () => {
 
     const handleCreateCommunity = async () => {
         if (!createName.trim() || !createLevel.trim() || !createSubject.trim()) {
-            toast({
-                title: "Validation Error",
-                description: "Please provide name, level, and subject.",
+            const t = toast({
+                title: "Oops! Missing Information",
+                description: "Please make sure to provide a name, level, and subject before continuing.",
                 variant: "destructive",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-white text-red-600 hover:bg-red-100"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Dismiss
+                    </Button>
+                ),
             });
+
             return;
         }
         setCreateLoading(true);
@@ -107,11 +118,22 @@ const Chat = () => {
                     },
                 }
             );
-            toast({
-                title: "Community Created",
-                description: "Your community has been created successfully.",
+            const t = toast({
+                title: "🎉 Community Created Successfully",
+                description: "Your community is ready! You can now start interacting with members.",
                 variant: "default",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-green-600 text-white hover:bg-green-700"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Got it
+                    </Button>
+                ),
             });
+
             setCreateDialogOpen(false);
             setCreateName("");
             setCreateLevel("");
@@ -119,11 +141,25 @@ const Chat = () => {
             // Optionally refresh communities
             setCommunities((prev) => [response.data.data, ...prev]);
         } catch (error: any) {
-            toast({
-                title: "Create Community Error",
-                description: error?.response?.data?.message || error?.message || "An error occurred while creating community.",
+            const t = toast({
+                title: "Oops! Something went wrong",
+                description:
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "We couldn’t create your community right now. Please try again.",
                 variant: "destructive",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-white text-red-600 hover:bg-red-100"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Dismiss
+                    </Button>
+                ),
             });
+
         } finally {
             setCreateLoading(false);
         }
@@ -165,9 +201,12 @@ const Chat = () => {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                <TriangleAlert className="h-12 w-12 text-red-500 mb-4" />
-                <h2 className="text-xl font-bold mb-2">Error Loading Communities</h2>
-                <p className="text-muted-foreground mb-4">{error}</p>
+                <TriangleAlert className="h-12 w-12 text-yellow-500 mb-4" />
+                <h2 className="text-xl font-bold mb-2">Oops! Something went wrong</h2>
+                <p className="text-muted-foreground mb-4">
+                    We couldn’t load your communities right now. Please try again.
+                </p>
+
                 {error?.toLowerCase().includes("invalid token") ? (
                     <Button onClick={logout}>
                         Log out and log in again
@@ -176,6 +215,7 @@ const Chat = () => {
                     <Button onClick={() => window.location.reload()}>Retry</Button>
                 )}
             </div>
+
         );
     }
 

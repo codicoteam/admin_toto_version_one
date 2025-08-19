@@ -2,6 +2,8 @@ import Sidebar from "@/components/Sidebar";
 import { toast } from "@/hooks/use-toast";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 import ChatService from "@/services/Admin_Service/chat_service";
+import { Button } from "@/components/ui/button";
+
 import {
   ChevronDown,
   ChevronUp,
@@ -111,7 +113,7 @@ const ChatApp = (ChatServiceData: any) => {
 
         // Sort messages by createdAt in ascending order (oldest first)
         transformedMessages.sort((a, b) => a.createdAt - b.createdAt);
-        
+
         setMessages(transformedMessages);
       } catch (error) {
         console.error("Failed to fetch messages:", error);
@@ -191,11 +193,22 @@ const ChatApp = (ChatServiceData: any) => {
     } catch (err) {
       console.error("Failed to fetch chat groups:", err);
       setError("Failed to load chat groups. Please try again.");
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load chat groups. Please try again.",
+        title: "Oops! Something went wrong",
+        description: "We couldn’t load your chat groups right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setLoading(false);
     }
@@ -285,11 +298,22 @@ const ChatApp = (ChatServiceData: any) => {
 
   const handleUpdateGroup = async () => {
     if (!activeGroup?._id) {
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "No active group selected.",
+        title: "Oops! No Group Selected",
+        description: "Please select an active group to continue.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
       return;
     }
 
@@ -305,9 +329,20 @@ const ChatApp = (ChatServiceData: any) => {
       const result = await ChatService.updateGroup(activeGroup._id, updateData);
 
       if (result?.message) {
-        toast({
-          title: "Success",
-          description: "Group updated successfully",
+        const t = toast({
+          title: "✅ Group Updated Successfully",
+          description: "Your group has been updated and is ready to use.",
+          variant: "default",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Got it
+            </Button>
+          ),
         });
 
         setUpdatedGroupName("");
@@ -321,13 +356,23 @@ const ChatApp = (ChatServiceData: any) => {
       }
     } catch (err) {
       console.error("Failed to update group:", err);
-
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
+        title: "Oops! Couldn’t Update Group",
         description:
-          err?.message || "Failed to update group. Please try again.",
+          err?.message || "We couldn’t update the group right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +385,7 @@ const ChatApp = (ChatServiceData: any) => {
 
     try {
       setIsSending(true);
-      
+
       const messageData = {
         community: activeGroup._id,
         sender: user?._id?.trim() ? user._id : ADMIN_ID,
@@ -388,11 +433,22 @@ const ChatApp = (ChatServiceData: any) => {
       });
     } catch (error) {
       console.error("Failed to send message:", error);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to send message. Please try again.",
+        title: "Oops! Message Not Sent",
+        description: "We couldn’t send your message right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setIsSending(false);
     }
@@ -433,32 +489,62 @@ const ChatApp = (ChatServiceData: any) => {
 
         fetchChatGroups();
       } else {
-        toast({
+        const t = toast({
           variant: "destructive",
-          title: "Failed",
-          description: result?.message || "Could not delete the group.",
+          title: "Oops! Couldn’t Delete Group",
+          description: "We couldn’t delete the group right now. Please try again.",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
       }
     } catch (err) {
       console.error("Failed to delete group:", err);
 
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description:
-          err?.response?.data?.message ||
-          "Failed to delete group. Please try again.",
+        title: "Oops! Couldn’t Delete Group",
+        description: "We couldn’t delete the group right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     }
   };
 
   const handleExitGroup = async () => {
     if (!activeGroup || !activeGroup._id) {
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "No active group selected.",
+        title: "Oops! No Group Selected",
+        description: "Please select an active group to continue.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
       return;
     }
 
@@ -466,9 +552,20 @@ const ChatApp = (ChatServiceData: any) => {
       const result = await ChatService.exitGroup(activeGroup._id);
 
       if (result?.success) {
-        toast({
-          title: "Success",
-          description: "You have left the group successfully",
+        const t = toast({
+          title: "✅ Left Group Successfully",
+          description: "You have left the group. You can join another group anytime.",
+          variant: "default",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Got it
+            </Button>
+          ),
         });
 
         toggleFavorite(activeGroup._id);
@@ -481,11 +578,22 @@ const ChatApp = (ChatServiceData: any) => {
     } catch (err) {
       console.error("Failed to exit group:", err);
 
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: err?.message || "Failed to leave group. Please try again.",
+        title: "Oops! Something went wrong",
+        description: err?.message || "We couldn’t leave the group right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     }
   };
 
@@ -564,9 +672,8 @@ const ChatApp = (ChatServiceData: any) => {
         <div className="flex">
           <button
             onClick={() => setGroupsListOpen(!groupsListOpen)}
-            className={`p-1 mr-2 ${
-              groupsListOpen ? "bg-blue-800 rounded" : ""
-            }`}
+            className={`p-1 mr-2 ${groupsListOpen ? "bg-blue-800 rounded" : ""
+              }`}
           >
             <Users size={20} />
           </button>
@@ -591,10 +698,9 @@ const ChatApp = (ChatServiceData: any) => {
         {/* Groups List */}
         <div
           className={`
-            ${
-              groupsListOpen
-                ? "translate-x-0"
-                : "-translate-x-full md:translate-x-0"
+            ${groupsListOpen
+              ? "translate-x-0"
+              : "-translate-x-full md:translate-x-0"
             } 
             transition-transform duration-300 ease-in-out
             fixed md:relative left-0 z-30 w-full md:w-80 md:min-w-64 bg-white h-[calc(100%-3rem)] md:h-full
@@ -643,11 +749,10 @@ const ChatApp = (ChatServiceData: any) => {
                 .map((community) => (
                   <div key={community._id} className="group relative">
                     <button
-                      className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                        activeGroup?._id === community._id
-                          ? "bg-blue-900 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`w-full text-left py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeGroup?._id === community._id
+                        ? "bg-blue-900 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                       onClick={() => {
                         setActiveGroup(community);
                         if (!isMediumScreen) {
@@ -677,13 +782,11 @@ const ChatApp = (ChatServiceData: any) => {
                             ) : null}
                             {/* Fallback avatar with initials */}
                             <div
-                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                                community.profilePicture ? "hidden" : "flex"
-                              } ${
-                                activeGroup?._id === community._id
+                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${community.profilePicture ? "hidden" : "flex"
+                                } ${activeGroup?._id === community._id
                                   ? "bg-blue-700 text-white"
                                   : "bg-gray-300 text-gray-600"
-                              }`}
+                                }`}
                               style={{
                                 display: community.profilePicture
                                   ? "none"
@@ -725,10 +828,9 @@ const ChatApp = (ChatServiceData: any) => {
         <div
           className={`
             flex-1 flex flex-col bg-gray-50 h-full
-            ${
-              (groupsListOpen && !isMediumScreen) || (infoSidebarOpen && !isLargeScreen)
-                ? "hidden md:flex"
-                : "flex"
+            ${(groupsListOpen && !isMediumScreen) || (infoSidebarOpen && !isLargeScreen)
+              ? "hidden md:flex"
+              : "flex"
             }
           `}
         >
@@ -755,11 +857,10 @@ const ChatApp = (ChatServiceData: any) => {
                 messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${
-                      message.sender === "user"
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
+                    className={`flex ${message.sender === "user"
+                      ? "justify-end"
+                      : "justify-start"
+                      }`}
                   >
                     {message.sender === "other" && (
                       <div className="flex-shrink-0 mr-2">
@@ -778,19 +879,17 @@ const ChatApp = (ChatServiceData: any) => {
                         </div>
                       )}
                       <div
-                        className={`rounded-lg px-4 py-2 ${
-                          message.sender === "user"
-                            ? "bg-blue-500 text-white"
-                            : "bg-blue-200 text-blue-900"
-                        }`}
+                        className={`rounded-lg px-4 py-2 ${message.sender === "user"
+                          ? "bg-blue-500 text-white"
+                          : "bg-blue-200 text-blue-900"
+                          }`}
                       >
                         <div className="mb-1">{message.text}</div>
                         <div
-                          className={`text-xs ${
-                            message.sender === "user"
-                              ? "text-blue-100"
-                              : "text-blue-700"
-                          }`}
+                          className={`text-xs ${message.sender === "user"
+                            ? "text-blue-100"
+                            : "text-blue-700"
+                            }`}
                         >
                           {message.time}
                         </div>
@@ -819,11 +918,10 @@ const ChatApp = (ChatServiceData: any) => {
                 disabled={isSending || !activeGroup}
               />
               <button
-                className={`absolute right-2 p-2 transition-colors ${
-                  isSending || !activeGroup || !newMessage.trim()
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-500 hover:text-blue-600"
-                }`}
+                className={`absolute right-2 p-2 transition-colors ${isSending || !activeGroup || !newMessage.trim()
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-blue-500 hover:text-blue-600"
+                  }`}
                 onClick={handleSendMessage}
                 disabled={isSending || !activeGroup || !newMessage.trim()}
               >
@@ -845,10 +943,9 @@ const ChatApp = (ChatServiceData: any) => {
         {/* Right Sidebar - Group Info */}
         <div
           className={`
-            ${
-              infoSidebarOpen
-                ? "translate-x-0"
-                : "translate-x-full lg:translate-x-0"
+            ${infoSidebarOpen
+              ? "translate-x-0"
+              : "translate-x-full lg:translate-x-0"
             } 
             transition-transform duration-300 ease-in-out
             fixed lg:relative right-0 z-30 w-full sm:w-80 lg:w-64 bg-white h-[calc(100%-3rem)] md:h-full
@@ -1044,11 +1141,10 @@ const ChatApp = (ChatServiceData: any) => {
           <div className="p-4 mt-auto space-y-2">
             <button
               onClick={() => activeGroup && toggleFavorite(activeGroup._id)}
-              className={`w-full py-2 px-4 border rounded font-medium flex items-center justify-center ${
-                activeGroup && isFavorite(activeGroup._id)
-                  ? "bg-yellow-100 border-yellow-500 text-yellow-700"
-                  : "border-blue-500 text-blue-500"
-              } hover:bg-yellow-50 transition-colors`}
+              className={`w-full py-2 px-4 border rounded font-medium flex items-center justify-center ${activeGroup && isFavorite(activeGroup._id)
+                ? "bg-yellow-100 border-yellow-500 text-yellow-700"
+                : "border-blue-500 text-blue-500"
+                } hover:bg-yellow-50 transition-colors`}
               disabled={!activeGroup}
             >
               {activeGroup && isFavorite(activeGroup._id) ? (

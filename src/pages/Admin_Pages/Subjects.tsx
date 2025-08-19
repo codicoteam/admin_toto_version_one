@@ -280,11 +280,22 @@ const AdminSubjects: React.FC = () => {
       return result.data || [];
     } catch (err) {
       console.error(`Failed to fetch topics for subject ${subjectId}:`, err);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to load topics for this subject. Please try again.`,
+        title: "Oops! Couldn’t Load Topics",
+        description: "We couldn’t load the topics for this subject right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
       return [];
     } finally {
       setLoadingTopics(false);
@@ -329,10 +340,20 @@ const AdminSubjects: React.FC = () => {
     } catch (err) {
       console.error("Failed to fetch subjects:", err);
       setError("Failed to load subjects. Please try again.");
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load subjects. Please try again.",
+        title: "Oops! Couldn’t Load Subjects",
+        description: "We couldn’t load the subjects right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
     } finally {
       setLoading(false);
@@ -462,11 +483,10 @@ const AdminSubjects: React.FC = () => {
       {/* Sidebar - Mobile: overlay, Desktop: static */}
       <div
         className={`
-        ${
-          sidebarOpen
+        ${sidebarOpen
             ? "translate-x-0 opacity-100"
             : "-translate-x-full opacity-0"
-        } 
+          } 
         transition-all duration-300 ease-in-out 
         fixed md:relative z-40 md:z-auto w-64
       `}
@@ -534,8 +554,8 @@ const AdminSubjects: React.FC = () => {
 
               {/* Topics List */}
               {!loadingTopics &&
-              selectedSubject.topics &&
-              selectedSubject.topics.length > 0 ? (
+                selectedSubject.topics &&
+                selectedSubject.topics.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {selectedSubject.topics.map((topic, index) => (
                     <TopicCard
@@ -651,11 +671,10 @@ const AdminSubjects: React.FC = () => {
                   {generateTabs(subjects).map((tab) => (
                     <li key={tab.id}>
                       <button
-                        className={`py-2 ${
-                          activeTab === tab.id
+                        className={`py-2 ${activeTab === tab.id
                             ? "text-blue-900 font-medium border-b-2 border-blue-900"
                             : "text-gray-600"
-                        }`}
+                          }`}
                         onClick={() => setActiveTab(tab.id)}
                       >
                         {tab.label}

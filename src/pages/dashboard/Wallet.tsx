@@ -46,10 +46,21 @@ const Wallet = () => {
           const errMsg = error?.response?.data?.message || error?.message || "An error occurred while fetching wallet data.";
           setWalletError(errMsg);
           toast({
-            title: "Error loading wallet",
-            description: errMsg,
+            title: "Oops! Something went wrong",
+            description: "We couldn’t load your wallet right now. Please try again.",
+            duration: 8000, // show for 8 seconds
             variant: "destructive",
+            action: (
+              <Button
+                variant="secondary"
+                className="bg-white text-red-600 hover:bg-red-100"
+                onClick={() => toast.dismiss()}
+              >
+                Dismiss
+              </Button>
+            ),
           });
+
         }
       } catch (error) {
         setWalletData(null);
@@ -131,16 +142,41 @@ const Wallet = () => {
       setWalletData(response.data.data || null);
       setWalletError(null);
       toast({
-        title: "Wallet Created",
-        description: "Your wallet has been created successfully.",
+        title: "🎉 Wallet Created Successfully",
+        description: "Your wallet is ready to use. You can now start making transactions.",
         variant: "default",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => toast.dismiss()}
+          >
+            Got it
+          </Button>
+        ),
       });
+
     } catch (error: any) {
       toast({
-        title: "Create Wallet Error",
-        description: error?.response?.data?.message || error?.message || "An error occurred while creating wallet.",
+        title: "Oops! Something went wrong",
+        description:
+          error?.response?.data?.message ||
+          error?.message ||
+          "We couldn’t create your wallet right now. Please try again.",
         variant: "destructive",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => toast.dismiss()}
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setLoading(false);
     }
@@ -183,10 +219,9 @@ const Wallet = () => {
             <div className="mt-6">
               <Button onClick={handleCreateWallet} disabled={loading}>
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></span>
-                    Creating Wallet...
-                  </span>
+                   <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+                </div>
                 ) : (
                   "Create Wallet"
                 )}

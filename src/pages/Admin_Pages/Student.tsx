@@ -20,6 +20,7 @@ import {
   BookOpen,
   Building,
   UserCheck,
+  Loader2,
 } from "lucide-react";
 import {
   BarChart,
@@ -982,7 +983,7 @@ const StudentDashboard = () => {
 
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <p>Loading student data...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
             </div>
           ) : error ? (
             <div className="flex justify-center items-center h-64 text-red-500">

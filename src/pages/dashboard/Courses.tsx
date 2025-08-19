@@ -75,22 +75,29 @@ const Courses = () => {
       </div>
       <div className="pt-10">
 
-        Loading courses...
-      </div>
+ <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+                </div>      </div>
     </div>;
   }
 
   if (error) {
-    return <div className="min-h-[70vh] flex items-center justify-center ">
+    return <div className="min-h-[70vh] flex items-center justify-center">
       <div className="text-center">
-        <TriangleAlert className="h-32 w-32  mx-auto" />
-        <h1 className="text-4xl font-bold mb-4">Error Loading Subjects</h1>
-        <p className="text-xl text-gray-600 mb-4">{error}</p>
-        <a href="/courses" className="text-blue-500 hover:text-blue-700 underline">
-          reload
+        <TriangleAlert className="h-32 w-32 text-yellow-500 mx-auto" />
+        <h1 className="text-4xl font-bold mb-4">Oops! Something went wrong</h1>
+        <p className="text-xl text-gray-600 mb-4">
+          We couldn’t load your subjects right now. Please try again.
+        </p>
+        <a
+          href="/courses"
+          className="text-blue-500 hover:text-blue-700 underline font-medium"
+        >
+          Retry
         </a>
       </div>
     </div>
+
   }
 
   return (

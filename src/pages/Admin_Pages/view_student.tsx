@@ -65,18 +65,29 @@ const ViewStudentMarks: React.FC = () => {
     useEffect(() => {
         const fetchStudentMarks = async () => {
             if (!examId) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Error",
-                    description: "Exam ID is required",
+                    title: "Oops! Missing Exam ID",
+                    description: "Please provide an exam ID before continuing.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 navigate(-1);
                 return;
             }
 
             try {
                 setLoading(true);
-                
+
                 // Fetch student marks
                 const response: ApiResponse = await ExamService.getStudentsMarksByExamId(examId);
                 setStudentMarks(response.data);
@@ -92,11 +103,22 @@ const ViewStudentMarks: React.FC = () => {
 
             } catch (error) {
                 console.error("Failed to fetch student marks:", error);
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Error",
-                    description: "Failed to fetch student marks. Please try again.",
+                    title: "Oops! Couldn’t Fetch Marks",
+                    description: "We couldn’t fetch the student marks right now. Please try again.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 navigate(-1);
             } finally {
                 setLoading(false);
@@ -157,12 +179,12 @@ const ViewStudentMarks: React.FC = () => {
 
     const getTopPerformers = (): StudentMark[] => {
         if (studentMarks.length === 0) return [];
-        
-        const maxPercentage = Math.max(...studentMarks.map(mark => 
+
+        const maxPercentage = Math.max(...studentMarks.map(mark =>
             parseInt(mark.percentange.replace('%', ''))
         ));
-        
-        return studentMarks.filter(mark => 
+
+        return studentMarks.filter(mark =>
             parseInt(mark.percentange.replace('%', '')) === maxPercentage
         );
     };
@@ -196,10 +218,9 @@ const ViewStudentMarks: React.FC = () => {
                 {/* Sidebar */}
                 <div
                     className={`
-                        ${
-                            sidebarOpen
-                                ? "translate-x-0 opacity-100"
-                                : "-translate-x-full opacity-0"
+                        ${sidebarOpen
+                            ? "translate-x-0 opacity-100"
+                            : "-translate-x-full opacity-0"
                         } 
                         transition-all duration-300 ease-in-out 
                         fixed md:relative z-40 md:z-auto w-64
@@ -211,7 +232,7 @@ const ViewStudentMarks: React.FC = () => {
                 {/* Main Content */}
                 <div className="flex-1 w-full min-h-screen flex items-center justify-center">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading student marks...</p>
                         <p className="mt-4 text-gray-600">Loading student marks...</p>
                     </div>
                 </div>
@@ -235,10 +256,9 @@ const ViewStudentMarks: React.FC = () => {
             {/* Sidebar */}
             <div
                 className={`
-                    ${
-                        sidebarOpen
-                            ? "translate-x-0 opacity-100"
-                            : "-translate-x-full opacity-0"
+                    ${sidebarOpen
+                        ? "translate-x-0 opacity-100"
+                        : "-translate-x-full opacity-0"
                     } 
                     transition-all duration-300 ease-in-out 
                     fixed md:relative z-40 md:z-auto w-64
@@ -341,7 +361,7 @@ const ViewStudentMarks: React.FC = () => {
                                             Top Performer{topPerformers.length > 1 ? 's' : ''}
                                         </h3>
                                         <p className="text-xs md:text-sm text-gray-600">
-                                            {topPerformers.length > 1 
+                                            {topPerformers.length > 1
                                                 ? `${topPerformers.length} students tied for the highest score!`
                                                 : 'Congratulations to our highest scorer!'
                                             }
@@ -471,7 +491,7 @@ const ViewStudentMarks: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="mt-3">
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <User size={16} className="text-gray-500" />
@@ -479,12 +499,12 @@ const ViewStudentMarks: React.FC = () => {
                                                             {mark.studentId.firstName} {mark.studentId.lastName}
                                                         </span>
                                                     </div>
-                                                    
+
                                                     <div className="flex items-center gap-2 mt-2 text-sm">
                                                         <Mail size={16} className="text-gray-500" />
                                                         <span className="text-gray-600 truncate">{mark.studentId.email}</span>
                                                     </div>
-                                                    
+
                                                     <div className="flex items-center gap-2 mt-2 text-sm">
                                                         <Calendar size={16} className="text-gray-500" />
                                                         <span className="text-gray-600">{formatDateMobile(mark.createdAt)}</span>

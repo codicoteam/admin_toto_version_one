@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Menu, X } from "lucide-react";
+import { BookOpen, Loader2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/Sidebar";
 import { Link } from "react-router-dom";
@@ -70,7 +70,8 @@ const Library = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        Loading...
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+        
       </div>
     );
   }

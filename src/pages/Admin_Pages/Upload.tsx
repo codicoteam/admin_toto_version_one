@@ -5,6 +5,7 @@ import LibraryService from "@/services/Library_service";
 import SubjectService from "@/services/Admin_Service/Subject_service";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/helper/SupabaseClient";
+import { Button } from "@/components/ui/button";
 
 export default function BookUploadForm() {
   const [isDragging, setIsDragging] = useState(false);
@@ -191,7 +192,7 @@ export default function BookUploadForm() {
       // Sanitize filename before upload
       const sanitizedFileName = sanitizeFilename(file.name);
       const fileName = `${Date.now()}_${sanitizedFileName}`;
-      
+
       console.log("Uploading to Supabase:", fileName);
 
       const { error: uploadError } = await supabase.storage
@@ -227,6 +228,7 @@ export default function BookUploadForm() {
 
       // Prepare book data for JSON submission
       const bookData = {
+        title: bookTitle.trim(),
         level: groupLevel.trim(),
         subject: groupSubject.trim(),
         authorFullName: authorFullName.trim(),
@@ -261,11 +263,22 @@ export default function BookUploadForm() {
         fileInputRef.current.value = "";
       }
 
-      toast({
-        title: "Success",
-        description: "Book uploaded successfully!",
+      const t = toast({
+        title: "✅ Book Uploaded Successfully",
+        description: "Your book has been uploaded and is ready to use.",
         variant: "default",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Got it
+          </Button>
+        ),
       });
+
     } catch (err) {
       console.error("Upload error:", err);
 
@@ -276,11 +289,22 @@ export default function BookUploadForm() {
       if (err.response?.data?.message) errorMsg = err.response.data.message;
 
       setError(errorMsg);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Upload Error",
-        description: errorMsg,
+        title: "Oops! Upload Failed",
+        description: errorMsg || "We couldn’t upload your book. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setIsLoading(false);
     }
@@ -301,13 +325,12 @@ export default function BookUploadForm() {
         {/* Left Panel - Upload Section */}
         <div className="w-1/2 border-r border-gray-200 p-8 bg-white">
           <div
-            className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 h-64 ${
-              isDragging
-                ? "border-blue-500 bg-blue-50"
-                : file
+            className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 h-64 ${isDragging
+              ? "border-blue-500 bg-blue-50"
+              : file
                 ? "border-green-500 bg-green-50"
                 : "border-gray-300 hover:border-blue-400"
-            }`}
+              }`}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
@@ -324,13 +347,12 @@ export default function BookUploadForm() {
 
             <Upload
               size={32}
-              className={`mb-3 ${
-                isDragging
-                  ? "text-blue-500"
-                  : file
+              className={`mb-3 ${isDragging
+                ? "text-blue-500"
+                : file
                   ? "text-green-500"
                   : "text-gray-400"
-              }`}
+                }`}
             />
 
             <div className="text-center">
@@ -341,12 +363,12 @@ export default function BookUploadForm() {
                     {getFileTypeDisplay(file)} •{" "}
                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
-                  
+
                   {/* Upload progress indicator */}
                   {isLoading && uploadProgress > 0 && (
                     <div className="mt-3 w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                       <p className="text-xs text-gray-500 mt-1">
@@ -554,11 +576,10 @@ export default function BookUploadForm() {
             <button
               onClick={handleSubmit}
               disabled={isLoading || isLoadingSubjects}
-              className={`w-full py-2 ${
-                isLoading || isLoadingSubjects
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              } text-white rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+              className={`w-full py-2 ${isLoading || isLoadingSubjects
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+                } text-white rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">

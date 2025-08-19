@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Upload,
   File,
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -395,21 +396,43 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
         setContents(result.data || []);
       }
 
-      toast({
-        title: "Success",
-        description: "Content updated successfully",
+      const t = toast({
+        title: "✅ Content Updated Successfully",
+        description: "Your content has been updated and is ready to use.",
+        variant: "default",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Got it
+          </Button>
+        ),
       });
+
 
       setUpdateDialogOpen(false);
       setUploadedFilesForUpdate([]);
     } catch (error) {
       console.error("Failed to update content:", error);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description:
-          error.message || "Failed to update content. Please try again.",
+        title: "Oops! Couldn’t Update Content",
+        description: "We couldn’t update the content right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setIsSubmitting(false);
     }
@@ -426,20 +449,42 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
       setContents(
         contents.filter((content) => content._id !== contentToDelete)
       );
-
-      toast({
-        title: "Success",
-        description: "Content deleted successfully",
+      const t = toast({
+        title: "✅ Content Deleted Successfully",
+        description: "The content has been deleted and removed from your list.",
+        variant: "default",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Got it
+          </Button>
+        ),
       });
+
 
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Failed to delete content:", error);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to delete content. Please try again.",
+        title: "Oops! Couldn’t Delete Content",
+        description: "We couldn’t delete the content right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     } finally {
       setIsSubmitting(false);
       setContentToDelete(null);
@@ -526,11 +571,10 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                       Status
                     </h3>
                     <Badge
-                      className={`${
-                        topic.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
+                      className={`${topic.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-amber-100 text-amber-800"
+                        }`}
                     >
                       {topic.status || "draft"}
                     </Badge>
@@ -543,7 +587,7 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
             <div className="flex-grow p-6 overflow-auto">
               {loading ? (
                 <div className="flex justify-center items-center h-40">
-                  <p>Loading topic contents...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
                 </div>
               ) : error ? (
                 <div className="bg-red-50 p-4 rounded-md flex items-start">
@@ -584,13 +628,12 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
                             </CardDescription>
                           </div>
                           <Badge
-                            className={`${
-                              content.file_type === "document"
-                                ? "bg-blue-100 text-blue-800"
-                                : content.file_type === "video"
+                            className={`${content.file_type === "document"
+                              ? "bg-blue-100 text-blue-800"
+                              : content.file_type === "video"
                                 ? "bg-purple-100 text-purple-800"
                                 : "bg-amber-100 text-amber-800"
-                            }`}
+                              }`}
                           >
                             {content.file_type}
                           </Badge>

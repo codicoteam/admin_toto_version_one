@@ -61,32 +61,67 @@ const Profile = () => {
             });
             // Show success toast
             if (req) {
-                toast({
-                    title: "Profile Update Error",
-                    description: req,
+                const t = toast({
+                    title: "Oops! Profile Update Failed",
+                    description: "We couldn’t update your profile right now. Please try again.",
                     variant: "destructive",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
             } else {
                 setEditDialogOpen(false);
-                toast({
-                    title: "Profile Updated",
-                    description: 'Account updated successfully.',
-                    variant: 'default',
+                const t = toast({
+                    title: "✅ Profile Updated Successfully",
+                    description: "Your account has been updated. Everything is good to go!",
+                    variant: "default",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Got it
+                        </Button>
+                    ),
                 });
+
             }
         } catch (error) {
-            toast({
-                title: "Update failed",
-                description: (error as Error)?.message || "Failed to update profile.",
+            const t = toast({
+                title: "Oops! Update Failed",
+                description: (error as Error)?.message || "We couldn’t update your profile right now. Please try again.",
                 variant: "destructive",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-white text-red-600 hover:bg-red-100"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Dismiss
+                    </Button>
+                ),
             });
+
         } finally {
             setIsSaving(false);
         }
     };
 
     if (!user) {
-        return <div>Loading user data...</div>;
+        return <div> <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+                </div></div>;
     }
 
     return (

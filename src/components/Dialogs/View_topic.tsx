@@ -21,6 +21,7 @@ import {
   Music,
   Video,
   Calculator,
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -852,9 +853,7 @@ const insertQuickSymbol = (symbol: string) => {
             >
               <div className="py-4 px-6">
                 {loading ? (
-                  <div className="flex justify-center items-center py-16">
-                    <div className="h-16 w-16 rounded-full border-t-4 border-b-4 border-green-600 animate-spin" />
-                  </div>
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
                 ) : error ? (
                   <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mx-auto">
                     <div className="flex items-center">

@@ -411,38 +411,82 @@ const EditExam: React.FC = () => {
             setIsSubmitting(true);
 
             if (!examData.subject.trim()) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: "Subject is required",
+                    title: "Oops! Missing Subject",
+                    description: "Please provide a subject before continuing.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
             if (!examData.Topic.trim()) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: "Topic is required",
+                    title: "Oops! Missing Topic",
+                    description: "Please provide a topic before continuing.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
             if (!examData.title.trim()) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: "Title is required",
+                    title: "Oops! Invalid Duration",
+                    description: "Please enter a duration greater than 0.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
             if (examData.durationInMinutes <= 0) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: "Duration must be greater than 0",
+                    title: "Oops! Invalid Duration",
+                    description: "Please enter a duration greater than 0.",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
@@ -453,30 +497,63 @@ const EditExam: React.FC = () => {
                 }
 
                 if (!question.correctAnswer.trim()) {
-                    toast({
+                    const t = toast({
                         variant: "destructive",
-                        title: "Validation Error",
-                        description: `Correct answer is required for question ${index + 1}`,
+                        title: "Oops! Missing Correct Answer",
+                        description: `Please provide a correct answer for question ${index + 1}.`,
+                        duration: 8000,
+                        action: (
+                            <Button
+                                variant="secondary"
+                                className="bg-white text-red-600 hover:bg-red-100"
+                                onClick={() => t.dismiss()} // dismiss the toast safely
+                            >
+                                Dismiss
+                            </Button>
+                        ),
                     });
+
                     return;
                 }
 
                 if (!question.options.includes(question.correctAnswer)) {
-                    toast({
+                    const t = toast({
                         variant: "destructive",
-                        title: "Validation Error",
-                        description: `Correct answer must be one of the options for question ${index + 1}`,
+                        title: "Oops! Invalid Correct Answer",
+                        description: `Please ensure the correct answer for question ${index + 1} matches one of the provided options.`,
+                        duration: 8000,
+                        action: (
+                            <Button
+                                variant="secondary"
+                                className="bg-white text-red-600 hover:bg-red-100"
+                                onClick={() => t.dismiss()} // dismiss the toast safely
+                            >
+                                Dismiss
+                            </Button>
+                        ),
                     });
+
                     return;
                 }
             });
 
             if (questionErrors.length > 0) {
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: `Question text is required for questions: ${questionErrors.join(", ")}`,
+                    title: "Oops! Missing Question Text",
+                    description: `Please provide text for the following questions: ${questionErrors.join(", ")}`,
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
@@ -498,21 +575,44 @@ const EditExam: React.FC = () => {
                         (err) => `Question ${err.question} Option ${err.option}`
                     )
                     .join(", ");
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: `Option text is required for: ${errorList}`,
+                    title: "Oops! Missing Option Text",
+                    description: `Please provide option text for the following: ${errorList}`,
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
             const response = await ExamService.updateExam(examData._id!, examData);
             console.log("Exam updated successfully:", response.message);
             if (response.message === "Exam updated successfully") {
-                toast({
-                    title: "Success",
-                    description: "Exam updated successfully",
+                const t = toast({
+                    title: "✅ Exam Updated Successfully",
+                    description: "The exam has been updated and is ready to use.",
+                    variant: "default",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Got it
+                        </Button>
+                    ),
                 });
+
                 navigate(-1);
             } else {
                 throw new Error(`Unexpected status: ${response.status}`);
@@ -520,11 +620,22 @@ const EditExam: React.FC = () => {
 
         } catch (error) {
             console.error("Failed to update exam:", error);
-            toast({
+            const t = toast({
                 variant: "destructive",
-                title: "Error",
-                description: "Failed to update exam. Please try again.",
+                title: "Oops! Couldn’t Update Exam",
+                description: "We couldn’t update the exam right now. Please try again.",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-white text-red-600 hover:bg-red-100"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Dismiss
+                    </Button>
+                ),
             });
+
         } finally {
             setIsSubmitting(false);
         }

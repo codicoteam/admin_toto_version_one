@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Clock, BookOpen, Edit, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, Edit, Plus, Trash2, Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,10 +59,21 @@ const AddTopicDialog = ({ courseId, onTopicAdded, open, onOpenChange }) => {
       onTopicAdded(result.data);
 
       // Show success message
-      toast({
-        title: "Topic created",
-        description: "The topic has been added to the course.",
-      });
+const t = toast({
+  title: "✅ Topic Created Successfully",
+  description: "The topic has been added to your course and is ready to use.",
+  variant: "default",
+  duration: 8000,
+  action: (
+    <Button
+      variant="secondary"
+      className="bg-green-600 text-white hover:bg-green-700"
+      onClick={() => t.dismiss()} // dismiss the toast safely
+    >
+      Got it
+    </Button>
+  ),
+});
 
       // Reset form and close dialog
       setTopicData({
@@ -72,12 +83,23 @@ const AddTopicDialog = ({ courseId, onTopicAdded, open, onOpenChange }) => {
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create topic:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          error.message || "Failed to create topic. Please try again.",
-      });
+    const t = toast({
+  variant: "destructive",
+  title: "Oops! Couldn’t Create Topic",
+  description:
+    error.message || "We couldn’t create the topic right now. Please try again.",
+  duration: 8000,
+  action: (
+    <Button
+      variant="secondary"
+      className="bg-white text-red-600 hover:bg-red-100"
+      onClick={() => t.dismiss()} // dismiss the toast safely
+    >
+      Dismiss
+    </Button>
+  ),
+});
+
     } finally {
       setIsSubmitting(false);
     }
@@ -359,26 +381,49 @@ const CourseDetail = () => {
   const handleDeleteCourse = async () => {
     try {
       await CourseService.deleteCourse(id);
-      toast({
-        title: "Course deleted",
-        description: "The course has been deleted successfully.",
+      const t = toast({
+        title: "✅ Course Deleted Successfully",
+        description: "The course has been deleted and removed from your list.",
+        variant: "default",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Got it
+          </Button>
+        ),
       });
+
       navigate("/admin/courses");
     } catch (error) {
       console.error("Failed to delete course:", error);
-      toast({
+      const t = toast({
         variant: "destructive",
-        title: "Error",
+        title: "Oops! Couldn’t Delete Course",
         description:
-          error.message || "Failed to delete course. Please try again.",
+          error.message || "We couldn’t delete the course right now. Please try again.",
+        duration: 8000,
+        action: (
+          <Button
+            variant="secondary"
+            className="bg-white text-red-600 hover:bg-red-100"
+            onClick={() => t.dismiss()} // dismiss the toast safely
+          >
+            Dismiss
+          </Button>
+        ),
       });
+
     }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
+       <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
       </div>
     );
   }

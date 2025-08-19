@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Calendar, Menu, Search, User, X, TrendingUp, Users, Bookmark, GraduationCap, BarChart3, PieChart, Activity, Target } from "lucide-react";
+import { BookOpen, Calendar, Menu, Search, User, X, TrendingUp, Users, Bookmark, GraduationCap, BarChart3, PieChart, Activity, Target, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -287,7 +287,7 @@ const Admin_Dashboard = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 space-y-4 md:space-y-0 mt-10 md:mt-0">
             <div>
               <h1 className="text-4xl font-bold text-blue-900 drop-shadow-sm">Dashboard</h1>
-              <p className="text-gray-600 mt-2">Welcome back! Here's what's happening today.</p>
+              <p className="text-gray-600 mt-2">Here's what's happening today.</p>
             </div>
 
             <div onClick={handleLogout} className="bg-blue-900 text-white rounded-lg py-3 px-6 flex items-center shadow-md hover:shadow-lg transition-all hover:bg-blue-800 cursor-pointer">
@@ -310,11 +310,14 @@ const Admin_Dashboard = () => {
                 </Card>
               ))
             ) : dashboardError ? (
-              <Card className="col-span-full bg-red-50 border-red-200">
+              <Card className="col-span-full bg-yellow-50 border-yellow-200">
                 <CardContent className="p-6 text-center">
-                  <p className="text-red-600">Error loading dashboard data: {dashboardError}</p>
+                  <p className="text-yellow-700">
+                    Oops! Something went wrong while loading your dashboard. Please try again.
+                  </p>
                 </CardContent>
               </Card>
+
             ) : (
               statsCards.map((card) => (
                 <Card key={card.key} className={`bg-white shadow-lg hover:shadow-xl transition-shadow border-0 border-l-4 ${card.borderColor}`}>
@@ -471,8 +474,7 @@ const Admin_Dashboard = () => {
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {loading ? (
                     <div className="text-center p-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900 mx-auto"></div>
-                      <p className="text-gray-600 mt-2">Loading students...</p>
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
                     </div>
                   ) : error ? (
                     <div className="text-center p-8 text-red-500">

@@ -265,7 +265,7 @@ const CreateNewContent: React.FC = () => {
   const [uploadedVideoNames, setUploadedVideoNames] = useState<(string | null)[]>(
     newContent.lesson.map(() => null)
   );
-  
+
   // State for image upload status
   const [imageStatuses, setImageStatuses] = useState<("idle" | "uploading" | "success")[]>(
     newContent.lesson.map(() => "idle")
@@ -273,7 +273,7 @@ const CreateNewContent: React.FC = () => {
   const [uploadedImageNames, setUploadedImageNames] = useState<(string | null)[]>(
     newContent.lesson.map(() => null)
   );
-  
+
   // Toggle editing state for a specific field
   const toggleEditing = (fieldPath: string) => {
     setEditingStates(prev => ({
@@ -297,7 +297,7 @@ const CreateNewContent: React.FC = () => {
       [fieldPath]: false
     }));
   };
-  
+
 
   // Get field path for editing state tracking
   const getFieldPath = (lessonIndex: number, subHeadingIndex: number | null, fieldName: string) => {
@@ -353,13 +353,13 @@ const CreateNewContent: React.FC = () => {
       setUploadedVideoNames(prev => prev.filter((_, i) => i !== index));
       setImageStatuses(prev => prev.filter((_, i) => i !== index)); // Added image status removal
       setUploadedImageNames(prev => prev.filter((_, i) => i !== index)); // Added image name removal
-      
+
       if (index === activeLessonIndex) {
         setActiveLessonIndex(Math.max(0, index - 1));
       }
     }
   };
-  
+
   // Helper function to update per-lesson states
   const updateAudioState = (lessonIndex: number, status: "idle" | "uploading" | "success", fileName?: string) => {
     setAudioStatuses(prev => {
@@ -367,7 +367,7 @@ const CreateNewContent: React.FC = () => {
       newStatuses[lessonIndex] = status;
       return newStatuses;
     });
-    
+
     if (fileName !== undefined) {
       setUploadedAudioNames(prev => {
         const newNames = [...prev];
@@ -383,7 +383,7 @@ const CreateNewContent: React.FC = () => {
       newStatuses[lessonIndex] = status;
       return newStatuses;
     });
-    
+
     if (fileName !== undefined) {
       setUploadedVideoNames(prev => {
         const newNames = [...prev];
@@ -400,7 +400,7 @@ const CreateNewContent: React.FC = () => {
       newStatuses[lessonIndex] = status;
       return newStatuses;
     });
-    
+
     if (fileName !== undefined) {
       setUploadedImageNames(prev => {
         const newNames = [...prev];
@@ -546,23 +546,45 @@ const CreateNewContent: React.FC = () => {
   const handleCreateContent = async () => {
     try {
       setIsSubmitting(true);
-      
+
       // Validate main fields
       if (!newContent.title.trim()) {
-        toast({
+        const t = toast({
           variant: "destructive",
-          title: "Validation Error",
-          description: "Title is required",
+          title: "Oops! Missing Title",
+          description: "Please provide a title before continuing.",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
+
         return;
       }
 
       if (!newContent.description.trim()) {
-        toast({
+        const t = toast({
           variant: "destructive",
-          title: "Validation Error",
-          description: "Short description is required",
+          title: "Oops! Missing Short Description",
+          description: "Please provide a short description before continuing.",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
+
         return;
       }
 
@@ -575,11 +597,22 @@ const CreateNewContent: React.FC = () => {
       });
 
       if (lessonErrors.length > 0) {
-        toast({
+        const t = toast({
           variant: "destructive",
-          title: "Validation Error",
-          description: `Lesson titles are required for lessons: ${lessonErrors.join(", ")}`,
+          title: "Oops! Missing Lesson Titles",
+          description: `Please provide titles for the following lessons: ${lessonErrors.join(", ")}`,
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
+
         return;
       }
 
@@ -600,11 +633,22 @@ const CreateNewContent: React.FC = () => {
         const errorList = subHeadingErrors
           .map((err) => `Lesson ${err.lesson} Section ${err.section}`)
           .join(", ");
-        toast({
+        const t = toast({
           variant: "destructive",
-          title: "Validation Error",
-          description: `Section content is required for: ${errorList}`,
+          title: "Oops! Missing Section Content",
+          description: `Please provide content for the following sections: ${errorList}`,
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
+
         return;
       }
 
@@ -621,19 +665,41 @@ const CreateNewContent: React.FC = () => {
 
       await TopicContentService.createTopicContent(contentToCreate);
 
-      toast({
-        title: "Success",
-        description: "Content created successfully",
-      });
+const t = toast({
+  title: "✅ Content Created Successfully",
+  description: "Your content has been added and is ready to use.",
+  variant: "default",
+  duration: 8000,
+  action: (
+    <Button
+      variant="secondary"
+      className="bg-green-600 text-white hover:bg-green-700"
+      onClick={() => t.dismiss()} // dismiss the toast safely
+    >
+      Got it
+    </Button>
+  ),
+});
 
       navigate(-1);
     } catch (error) {
       console.error("Failed to create content:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create content. Please try again.",
-      });
+      const t = toast({
+  variant: "destructive",
+  title: "Oops! Couldn’t Create Content",
+  description: "We couldn’t create the content right now. Please try again.",
+  duration: 8000,
+  action: (
+    <Button
+      variant="secondary"
+      className="bg-white text-red-600 hover:bg-red-100"
+      onClick={() => t.dismiss()} // dismiss the toast safely
+    >
+      Dismiss
+    </Button>
+  ),
+});
+
     } finally {
       setIsSubmitting(false);
     }
@@ -660,7 +726,7 @@ const CreateNewContent: React.FC = () => {
   }, [newContent.file_type]);
 
   // Get the current subheading item for the modal
-  const currentSubHeadingItem = currentQuestionData.lessonIndex !== -1 && 
+  const currentSubHeadingItem = currentQuestionData.lessonIndex !== -1 &&
     currentQuestionData.subHeadingIndex !== -1
     ? newContent.lesson[currentQuestionData.lessonIndex].subHeading[currentQuestionData.subHeadingIndex]
     : null;
@@ -726,11 +792,10 @@ const CreateNewContent: React.FC = () => {
               <button
                 key={index}
                 onClick={() => setActiveLessonIndex(index)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  activeLessonIndex === index
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                }`}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${activeLessonIndex === index
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                  }`}
               >
                 Lesson {index + 1}
               </button>
@@ -789,7 +854,7 @@ const CreateNewContent: React.FC = () => {
                         </div>
 
                         {/* Lesson Audio/Video */}
-                 
+
                       </div>
 
                       {/* Subheadings */}
@@ -841,11 +906,11 @@ const CreateNewContent: React.FC = () => {
                                       {editingStates[getFieldPath(lessonIndex, subHeadingIndex, "text")] ? (
                                         <MathInput
                                           value={subHeadingItem.text}
-                                          onChange={(value) => 
+                                          onChange={(value) =>
                                             updateSubHeadingItem(
-                                              lessonIndex, 
-                                              subHeadingIndex, 
-                                              "text", 
+                                              lessonIndex,
+                                              subHeadingIndex,
+                                              "text",
                                               value
                                             )
                                           }
@@ -877,7 +942,7 @@ const CreateNewContent: React.FC = () => {
                                   </div>
 
                                   {/* Audio Upload */}
-                   
+
 
                                   {/* Comment Field - Math Input */}
                                   <div className="space-y-2">
@@ -888,11 +953,11 @@ const CreateNewContent: React.FC = () => {
                                       {editingStates[getFieldPath(lessonIndex, subHeadingIndex, "comment")] ? (
                                         <MathInput
                                           value={subHeadingItem.comment}
-                                          onChange={(value) => 
+                                          onChange={(value) =>
                                             updateSubHeadingItem(
-                                              lessonIndex, 
-                                              subHeadingIndex, 
-                                              "comment", 
+                                              lessonIndex,
+                                              subHeadingIndex,
+                                              "comment",
                                               value
                                             )
                                           }
@@ -926,163 +991,162 @@ const CreateNewContent: React.FC = () => {
                                   {/* Question Button */}
 
                                   <div className="flex items-center justify-between w-full">
-  {/* Left-aligned button */}
-  <div>
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={() => openQuestionModal(lessonIndex, subHeadingIndex)}
-      className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
-    >
-      <Plus size={14} className="mr-1" />
-      Add Question
-    </Button>
-  </div>
+                                    {/* Left-aligned button */}
+                                    <div>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => openQuestionModal(lessonIndex, subHeadingIndex)}
+                                        className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                                      >
+                                        <Plus size={14} className="mr-1" />
+                                        Add Question
+                                      </Button>
+                                    </div>
 
-  {/* Right-aligned button with dropdown */}
-  <div className="flex flex-col items-end">
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
-            uploadedFileName
-              ? "bg-green-600"
-              : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-          }`}
-        >
-          {selectedFileType === "audio" && <Music size={16} />}
-          {selectedFileType === "video" && <Video size={16} />}
-          {selectedFileType === "document" && <FileText size={16} />}
-          {selectedFileType === "image" && <ImageIcon size={16} />} {/* Added ImageIcon */}
-          {uploadedFileName 
-            ? (uploading ? "Uploading..." : uploadedFileName)
-            : `Upload ${selectedFileType}`}
-          <ChevronDown size={14} className="ml-1" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        <DropdownMenuItem 
-          onClick={() => setSelectedFileType("audio")}
-          className="flex items-center gap-2"
-        >
-          <Music size={14} /> Audio
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setSelectedFileType("video")}
-          className="flex items-center gap-2"
-        >
-          <Video size={14} /> Video
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setSelectedFileType("document")}
-          className="flex items-center gap-2"
-        >
-          <FileText size={14} /> Document
-        </DropdownMenuItem>
-        {/* Added Image option */}
-        <DropdownMenuItem 
-          onClick={() => setSelectedFileType("image")}
-          className="flex items-center gap-2"
-        >
-          <ImageIcon size={14} /> Image
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+                                    {/* Right-aligned button with dropdown */}
+                                    <div className="flex flex-col items-end">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${uploadedFileName
+                                              ? "bg-green-600"
+                                              : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                                              }`}
+                                          >
+                                            {selectedFileType === "audio" && <Music size={16} />}
+                                            {selectedFileType === "video" && <Video size={16} />}
+                                            {selectedFileType === "document" && <FileText size={16} />}
+                                            {selectedFileType === "image" && <ImageIcon size={16} />} {/* Added ImageIcon */}
+                                            {uploadedFileName
+                                              ? (uploading ? "Uploading..." : uploadedFileName)
+                                              : `Upload ${selectedFileType}`}
+                                            <ChevronDown size={14} className="ml-1" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-48">
+                                          <DropdownMenuItem
+                                            onClick={() => setSelectedFileType("audio")}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <Music size={14} /> Audio
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => setSelectedFileType("video")}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <Video size={14} /> Video
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => setSelectedFileType("document")}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <FileText size={14} /> Document
+                                          </DropdownMenuItem>
+                                          {/* Added Image option */}
+                                          <DropdownMenuItem
+                                            onClick={() => setSelectedFileType("image")}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <ImageIcon size={14} /> Image
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
 
-    {/* Upload button */}
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      className="mt-2 bg-blue-500 text-white hover:bg-blue-600 w-full"
-      disabled={uploading}
-      onClick={async () => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = getAcceptedFileTypes(selectedFileType);
-        input.onchange = async (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (file) {
-            setUploadedFileName(file.name);
-            setUploading(true);
-            
-            try {
-              const fileName = `${Date.now()}_${file.name}`;
-              const { error } = await supabase.storage
-                .from("topics")
-                .upload(fileName, file);
-              
-              if (error) throw error;
+                                      {/* Upload button */}
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2 bg-blue-500 text-white hover:bg-blue-600 w-full"
+                                        disabled={uploading}
+                                        onClick={async () => {
+                                          const input = document.createElement("input");
+                                          input.type = "file";
+                                          input.accept = getAcceptedFileTypes(selectedFileType);
+                                          input.onchange = async (e) => {
+                                            const file = (e.target as HTMLInputElement).files?.[0];
+                                            if (file) {
+                                              setUploadedFileName(file.name);
+                                              setUploading(true);
 
-              const { data: publicData } = supabase.storage
-                .from("topics")
-                .getPublicUrl(fileName);
-              
-              if (publicData) {
-                // Update the appropriate field based on file type
-                if (selectedFileType === "image") {
-                  updateSubHeadingItem(
-                    lessonIndex,
-                    subHeadingIndex,
-                    "imagePath",
-                    publicData.publicUrl
-                  );
-                } else if (selectedFileType === "audio") {
-                  updateSubHeadingItem(
-                    lessonIndex,
-                    subHeadingIndex,
-                    "subheadingAudioPath",
-                    publicData.publicUrl
-                  );
-                }
-                
-                toast({
-                  title: "Success",
-                  description: `${selectedFileType.charAt(0).toUpperCase() + selectedFileType.slice(1)} uploaded successfully`,
-                  duration: 5000,
-                });
-              }
-            } catch (error) {
-              console.error("Upload failed:", error);
-              toast({
-                variant: "destructive",
-                title: "Error",
-                description: `Failed to upload ${selectedFileType} file`,
-              });
-              setUploadedFileName(null);
-            } finally {
-              setUploading(false);
-            }
-          }
-        };
-        input.click();
-      }}
-    >
-      {uploading ? (
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin" />
-          Selecting...
-        </div>
-      ) : (
-        <div className="flex items-center gap-1">
-          <Upload size={14} className="mr-1" />
-          Select File
-        </div>
-      )}
-    </Button>
-    
-    {/* File status indicator */}
-    {uploading && (
-      <div className="text-xs text-gray-500 mt-1">
-        Uploading {uploadedFileName} to server...
-      </div>
-    )}
-  </div>
-</div>
+                                              try {
+                                                const fileName = `${Date.now()}_${file.name}`;
+                                                const { error } = await supabase.storage
+                                                  .from("topics")
+                                                  .upload(fileName, file);
+
+                                                if (error) throw error;
+
+                                                const { data: publicData } = supabase.storage
+                                                  .from("topics")
+                                                  .getPublicUrl(fileName);
+
+                                                if (publicData) {
+                                                  // Update the appropriate field based on file type
+                                                  if (selectedFileType === "image") {
+                                                    updateSubHeadingItem(
+                                                      lessonIndex,
+                                                      subHeadingIndex,
+                                                      "imagePath",
+                                                      publicData.publicUrl
+                                                    );
+                                                  } else if (selectedFileType === "audio") {
+                                                    updateSubHeadingItem(
+                                                      lessonIndex,
+                                                      subHeadingIndex,
+                                                      "subheadingAudioPath",
+                                                      publicData.publicUrl
+                                                    );
+                                                  }
+
+                                                  toast({
+                                                    title: "Success",
+                                                    description: `${selectedFileType.charAt(0).toUpperCase() + selectedFileType.slice(1)} uploaded successfully`,
+                                                    duration: 5000,
+                                                  });
+                                                }
+                                              } catch (error) {
+                                                console.error("Upload failed:", error);
+                                                toast({
+                                                  variant: "destructive",
+                                                  title: "Error",
+                                                  description: `Failed to upload ${selectedFileType} file`,
+                                                });
+                                                setUploadedFileName(null);
+                                              } finally {
+                                                setUploading(false);
+                                              }
+                                            }
+                                          };
+                                          input.click();
+                                        }}
+                                      >
+                                        {uploading ? (
+                                          <div className="flex items-center gap-2">
+                                            <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin" />
+                                            Selecting...
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center gap-1">
+                                            <Upload size={14} className="mr-1" />
+                                            Select File
+                                          </div>
+                                        )}
+                                      </Button>
+
+                                      {/* File status indicator */}
+                                      {uploading && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          Uploading {uploadedFileName} to server...
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
 
                                   {/* Show question if it exists */}
                                   {subHeadingItem.question && (
@@ -1122,8 +1186,8 @@ const CreateNewContent: React.FC = () => {
                           )}
                         </div>
 
-                               <div className="space-y-1">
-                                <Button
+                        <div className="space-y-1">
+                          <Button
                             type="button"
                             variant="outline"
                             size="sm"
@@ -1133,209 +1197,206 @@ const CreateNewContent: React.FC = () => {
                             <Plus size={14} className="mr-1" />
                             Add Section
                           </Button>
-                              <div className="flex justify-end">
-                                      <div className="flex gap-2">
-                                 <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={audioStatuses[lessonIndex] === "uploading"}
-            className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${
-              audioStatuses[lessonIndex] === "success"
-                ? "bg-green-600"
-                : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-            }`}
-            onClick={async () => {
-              const input = document.createElement("input");
-              input.type = "file";
-              input.accept = "audio/*";
-              input.onchange = async (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                  updateAudioState(lessonIndex, "uploading", file.name);
-                  
-                  try {
-                    const fileName = `${Date.now()}_${file.name}`;
-                    const { error } = await supabase.storage
-                      .from("topics")
-                      .upload(fileName, file);
-                    
-                    if (error) throw error;
+                          <div className="flex justify-end">
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={audioStatuses[lessonIndex] === "uploading"}
+                                className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${audioStatuses[lessonIndex] === "success"
+                                  ? "bg-green-600"
+                                  : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                                  }`}
+                                onClick={async () => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.accept = "audio/*";
+                                  input.onchange = async (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) {
+                                      updateAudioState(lessonIndex, "uploading", file.name);
 
-                    const { data: publicData } = supabase.storage
-                      .from("topics")
-                      .getPublicUrl(fileName);
-                    
-                    if (publicData) {
-                      updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
-                      updateAudioState(lessonIndex, "success");
-                      
-                      toast({
-                        title: "Success",
-                        description: "Audio uploaded successfully",
-                          duration: 5000, // 5 seconds
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Audio upload failed:", error);
-                    updateAudioState(lessonIndex, "idle", null);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to upload audio file",
-                    });
-                  }
-                }
-              };
-              input.click();
-            }}
-          >
-            <Music size={16} />
-            {audioStatuses[lessonIndex] === "uploading"
-              ? `Uploading ${uploadedAudioNames[lessonIndex]}...`
-              : audioStatuses[lessonIndex] === "success"
-              ? uploadedAudioNames[lessonIndex] || "Uploaded"
-              : "Upload Audio"}
-          </Button>
+                                      try {
+                                        const fileName = `${Date.now()}_${file.name}`;
+                                        const { error } = await supabase.storage
+                                          .from("topics")
+                                          .upload(fileName, file);
 
-          {/* Video Upload Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={videoStatuses[lessonIndex] === "uploading"}
-            className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
-              videoStatuses[lessonIndex] === "success"
-                ? "bg-indigo-600"
-                : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-            }`}
-            onClick={async () => {
-              const input = document.createElement("input");
-              input.type = "file";
-              input.accept = "video/*";
-              input.onchange = async (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                  updateVideoState(lessonIndex, "uploading", file.name);
-                  
-                  try {
-                    const fileName = `${Date.now()}_${file.name}`;
-                    const { error } = await supabase.storage
-                      .from("topics")
-                      .upload(fileName, file);
-                    
-                    if (error) throw error;
+                                        if (error) throw error;
 
-                    const { data: publicData } = supabase.storage
-                      .from("topics")
-                      .getPublicUrl(fileName);
-                    
-                    if (publicData) {
-                      updateLessonItem(lessonIndex, "video", publicData.publicUrl);
-                      updateVideoState(lessonIndex, "success");
-                      
-                      toast({
-                        title: "Success",
-                        description: "Video uploaded successfully",
-                          duration: 3000, // 5 seconds
+                                        const { data: publicData } = supabase.storage
+                                          .from("topics")
+                                          .getPublicUrl(fileName);
 
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Video upload failed:", error);
-                    updateVideoState(lessonIndex, "idle", null);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to upload video file",
-                        duration: 5000, // 5 seconds
+                                        if (publicData) {
+                                          updateLessonItem(lessonIndex, "audio", publicData.publicUrl);
+                                          updateAudioState(lessonIndex, "success");
 
-                    });
-                  }
-                }
-              };
-              input.click();
-            }}
-          >
-            <Video size={16} />
-            {videoStatuses[lessonIndex] === "uploading"
-              ? `Uploading ${uploadedVideoNames[lessonIndex]}...`
-              : videoStatuses[lessonIndex] === "success"
-              ? uploadedVideoNames[lessonIndex] || "Uploaded"
-              : "Upload Video"}
-          </Button>
-          
-          {/* Image Upload Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={imageStatuses[lessonIndex] === "uploading"}
-            className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${
-              imageStatuses[lessonIndex] === "success"
-                ? "bg-yellow-600"
-                : "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
-            }`}
-            onClick={async () => {
-              const input = document.createElement("input");
-              input.type = "file";
-              input.accept = "image/*";
-              input.onchange = async (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                  updateImageState(lessonIndex, "uploading", file.name);
-                  
-                  try {
-                    const fileName = `${Date.now()}_${file.name}`;
-                    const { error } = await supabase.storage
-                      .from("topics")
-                      .upload(fileName, file);
-                    
-                    if (error) throw error;
+                                          toast({
+                                            title: "Success",
+                                            description: "Audio uploaded successfully",
+                                            duration: 5000, // 5 seconds
+                                          });
+                                        }
+                                      } catch (error) {
+                                        console.error("Audio upload failed:", error);
+                                        updateAudioState(lessonIndex, "idle", null);
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to upload audio file",
+                                        });
+                                      }
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                <Music size={16} />
+                                {audioStatuses[lessonIndex] === "uploading"
+                                  ? `Uploading ${uploadedAudioNames[lessonIndex]}...`
+                                  : audioStatuses[lessonIndex] === "success"
+                                    ? uploadedAudioNames[lessonIndex] || "Uploaded"
+                                    : "Upload Audio"}
+                              </Button>
 
-                    const { data: publicData } = supabase.storage
-                      .from("topics")
-                      .getPublicUrl(fileName);
-                    
-                    if (publicData) {
-                      // Store image URL in state
-                      // You might want to update a lesson-level image field
-                      // or handle it differently based on your needs
-                      toast({
-                        title: "Success",
-                        description: "Image uploaded successfully",
-                        duration: 3000,
-                      });
-                      updateImageState(lessonIndex, "success");
-                    }
-                  } catch (error) {
-                    console.error("Image upload failed:", error);
-                    updateImageState(lessonIndex, "idle", null);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to upload image file",
-                      duration: 5000,
-                    });
-                  }
-                }
-              };
-              input.click();
-            }}
-          >
-            <ImageIcon size={16} />
-            {imageStatuses[lessonIndex] === "uploading"
-              ? `Uploading ${uploadedImageNames[lessonIndex]}...`
-              : imageStatuses[lessonIndex] === "success"
-              ? uploadedImageNames[lessonIndex] || "Uploaded"
-              : "Upload Image"}
-          </Button>
+                              {/* Video Upload Button */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={videoStatuses[lessonIndex] === "uploading"}
+                                className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${videoStatuses[lessonIndex] === "success"
+                                  ? "bg-indigo-600"
+                                  : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+                                  }`}
+                                onClick={async () => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.accept = "video/*";
+                                  input.onchange = async (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) {
+                                      updateVideoState(lessonIndex, "uploading", file.name);
+
+                                      try {
+                                        const fileName = `${Date.now()}_${file.name}`;
+                                        const { error } = await supabase.storage
+                                          .from("topics")
+                                          .upload(fileName, file);
+
+                                        if (error) throw error;
+
+                                        const { data: publicData } = supabase.storage
+                                          .from("topics")
+                                          .getPublicUrl(fileName);
+
+                                        if (publicData) {
+                                          updateLessonItem(lessonIndex, "video", publicData.publicUrl);
+                                          updateVideoState(lessonIndex, "success");
+
+                                          toast({
+                                            title: "Success",
+                                            description: "Video uploaded successfully",
+                                            duration: 3000, // 5 seconds
+
+                                          });
+                                        }
+                                      } catch (error) {
+                                        console.error("Video upload failed:", error);
+                                        updateVideoState(lessonIndex, "idle", null);
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to upload video file",
+                                          duration: 5000, // 5 seconds
+
+                                        });
+                                      }
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                <Video size={16} />
+                                {videoStatuses[lessonIndex] === "uploading"
+                                  ? `Uploading ${uploadedVideoNames[lessonIndex]}...`
+                                  : videoStatuses[lessonIndex] === "success"
+                                    ? uploadedVideoNames[lessonIndex] || "Uploaded"
+                                    : "Upload Video"}
+                              </Button>
+
+                              {/* Image Upload Button */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={imageStatuses[lessonIndex] === "uploading"}
+                                className={`flex items-center gap-2 px-3 text-white h-9 border-0 shadow-md transition-all duration-200 ${imageStatuses[lessonIndex] === "success"
+                                  ? "bg-yellow-600"
+                                  : "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
+                                  }`}
+                                onClick={async () => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.accept = "image/*";
+                                  input.onchange = async (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) {
+                                      updateImageState(lessonIndex, "uploading", file.name);
+
+                                      try {
+                                        const fileName = `${Date.now()}_${file.name}`;
+                                        const { error } = await supabase.storage
+                                          .from("topics")
+                                          .upload(fileName, file);
+
+                                        if (error) throw error;
+
+                                        const { data: publicData } = supabase.storage
+                                          .from("topics")
+                                          .getPublicUrl(fileName);
+
+                                        if (publicData) {
+                                          // Store image URL in state
+                                          // You might want to update a lesson-level image field
+                                          // or handle it differently based on your needs
+                                          toast({
+                                            title: "Success",
+                                            description: "Image uploaded successfully",
+                                            duration: 3000,
+                                          });
+                                          updateImageState(lessonIndex, "success");
+                                        }
+                                      } catch (error) {
+                                        console.error("Image upload failed:", error);
+                                        updateImageState(lessonIndex, "idle", null);
+                                        toast({
+                                          variant: "destructive",
+                                          title: "Error",
+                                          description: "Failed to upload image file",
+                                          duration: 5000,
+                                        });
+                                      }
+                                    }
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                <ImageIcon size={16} />
+                                {imageStatuses[lessonIndex] === "uploading"
+                                  ? `Uploading ${uploadedImageNames[lessonIndex]}...`
+                                  : imageStatuses[lessonIndex] === "success"
+                                    ? uploadedImageNames[lessonIndex] || "Uploaded"
+                                    : "Upload Image"}
+                              </Button>
+                            </div>
+
+
                           </div>
+                        </div>
 
-              
-                        </div>
-                        </div>
-                    
                       </div>
 
 
@@ -1402,7 +1463,7 @@ const CreateNewContent: React.FC = () => {
                   {editingStates[`question_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
                     <MathInput
                       value={currentSubHeadingItem.question}
-                      onChange={(value) => 
+                      onChange={(value) =>
                         updateSubHeadingItem(
                           currentQuestionData.lessonIndex,
                           currentQuestionData.subHeadingIndex,
@@ -1459,7 +1520,7 @@ const CreateNewContent: React.FC = () => {
                   {editingStates[`expectedAnswer_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
                     <MathInput
                       value={currentSubHeadingItem.expectedAnswer}
-                      onChange={(value) => 
+                      onChange={(value) =>
                         updateSubHeadingItem(
                           currentQuestionData.lessonIndex,
                           currentQuestionData.subHeadingIndex,
@@ -1516,7 +1577,7 @@ const CreateNewContent: React.FC = () => {
                   {editingStates[`hint_modal_${currentQuestionData.lessonIndex}_${currentQuestionData.subHeadingIndex}`] ? (
                     <MathInput
                       value={currentSubHeadingItem.hint}
-                      onChange={(value) => 
+                      onChange={(value) =>
                         updateSubHeadingItem(
                           currentQuestionData.lessonIndex,
                           currentQuestionData.subHeadingIndex,
@@ -1584,7 +1645,7 @@ const CreateNewContent: React.FC = () => {
         </div>
       )}
     </div>
-  );  
+  );
 };
 
 export default CreateNewContent;

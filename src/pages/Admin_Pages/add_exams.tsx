@@ -475,21 +475,44 @@ const CreateExam: React.FC = () => {
                         (err) => `Question ${err.question} Option ${err.option}`
                     )
                     .join(", ");
-                toast({
+                const t = toast({
                     variant: "destructive",
-                    title: "Validation Error",
-                    description: `Option text is required for: ${errorList}`,
+                    title: "Oops! Missing Option Text",
+                    description: `Please provide option text for the following: ${errorList}`,
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-white text-red-600 hover:bg-red-100"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Dismiss
+                        </Button>
+                    ),
                 });
+
                 return;
             }
 
             const response = await ExamService.createExam(examData);
             console.log("Exam created successfully:", response.message);
             if (response.message === "Exam created successfully") {
-                toast({
-                    title: "Success",
-                    description: "Exam created successfully",
+                const t = toast({
+                    title: "🎉 Exam Created Successfully",
+                    description: "Your exam has been created and is ready to use.",
+                    variant: "default",
+                    duration: 8000,
+                    action: (
+                        <Button
+                            variant="secondary"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                            onClick={() => t.dismiss()} // dismiss the toast safely
+                        >
+                            Got it
+                        </Button>
+                    ),
                 });
+
                 navigate(-1);
             } else {
                 throw new Error(`Unexpected status: ${response.status}`);
@@ -497,11 +520,22 @@ const CreateExam: React.FC = () => {
 
         } catch (error) {
             console.error("Failed to create exam:", error);
-            toast({
+            const t = toast({
                 variant: "destructive",
-                title: "Error",
-                description: "Failed to create exam. Please try again.",
+                title: "Oops! Something went wrong",
+                description: "We couldn’t create your exam right now. Please try again.",
+                duration: 8000,
+                action: (
+                    <Button
+                        variant="secondary"
+                        className="bg-white text-red-600 hover:bg-red-100"
+                        onClick={() => t.dismiss()} // dismiss the toast safely
+                    >
+                        Dismiss
+                    </Button>
+                ),
             });
+
         } finally {
             setIsSubmitting(false);
         }
@@ -540,11 +574,7 @@ const CreateExam: React.FC = () => {
                                     Topic
                                 </label>
                                 {loadingTopics ? (
-                                    <Input
-                                        value="Loading topics..."
-                                        readOnly
-                                        className="w-full bg-gray-100"
-                                    />
+                                    <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
                                 ) : (
                                     <select
                                         value={examData.Topic}

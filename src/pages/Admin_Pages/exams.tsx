@@ -62,18 +62,41 @@ const Exams = () => {
     if (window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) {
       try {
         await ExamService.deleteExamById(examId);
-        toast({
-          title: "Success",
-          description: "Exam deleted successfully",
+        const t = toast({
+          title: "✅ Exam Deleted Successfully",
+          description: "The exam has been removed successfully.",
+          variant: "default",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Got it
+            </Button>
+          ),
         });
+
         // Refresh exam list
         fetchExams();
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete exam",
+        const t = toast({
           variant: "destructive",
+          title: "Oops! Couldn’t Delete Exam",
+          description: "We couldn’t delete the exam right now. Please try again.",
+          duration: 8000,
+          action: (
+            <Button
+              variant="secondary"
+              className="bg-white text-red-600 hover:bg-red-100"
+              onClick={() => t.dismiss()} // dismiss the toast safely
+            >
+              Dismiss
+            </Button>
+          ),
         });
+
         console.error("Delete error:", error);
       }
     }
@@ -93,7 +116,7 @@ const Exams = () => {
   // Filter exams based on active tab and search term
   const filteredExams = useMemo(() => {
     let result = exams;
-    
+
     // Filter by active tab
     if (activeTab !== "all") {
       result = result.filter(exam => {
@@ -101,15 +124,15 @@ const Exams = () => {
         return examLevel === activeTab;
       });
     }
-    
+
     // Fixed search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase().trim();
-      result = result.filter(exam => 
+      result = result.filter(exam =>
         exam.title.toLowerCase().includes(term)
       );
     }
-    
+
     return result;
   }, [exams, activeTab, searchTerm]);
 
@@ -133,16 +156,22 @@ const Exams = () => {
   }
 
   if (error) {
-    return <div className="min-h-[70vh] flex items-center justify-center ">
+    return <div className="min-h-[70vh] flex items-center justify-center">
       <div className="text-center">
-        <TriangleAlert className="h-32 w-32  mx-auto" />
-        <h1 className="text-4xl font-bold mb-4">Error Loading Exams</h1>
-        <p className="text-xl text-gray-600 mb-4">{error}</p>
-        <a href="/exams" className="text-blue-500 hover:text-blue-700 underline">
-          reload
+        <TriangleAlert className="h-32 w-32 text-yellow-500 mx-auto" />
+        <h1 className="text-4xl font-bold mb-4">Oops! Something went wrong</h1>
+        <p className="text-xl text-gray-600 mb-4">
+          We couldn’t load your exams right now. Please try again.
+        </p>
+        <a
+          href="/exams"
+          className="text-blue-500 hover:text-blue-700 underline font-medium"
+        >
+          Reload
         </a>
       </div>
     </div>
+
   }
 
   // Function to format level names for display
@@ -169,10 +198,9 @@ const Exams = () => {
       {/* Sidebar */}
       <div
         className={`
-          ${
-            sidebarOpen
-              ? "translate-x-0 opacity-100"
-              : "-translate-x-full opacity-0"
+          ${sidebarOpen
+            ? "translate-x-0 opacity-100"
+            : "-translate-x-full opacity-0"
           } 
           transition-all duration-300 ease-in-out 
           fixed md:relative z-40 md:z-auto w-64
@@ -198,15 +226,15 @@ const Exams = () => {
           >
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
-                <Input 
-                  placeholder="Search exams by title..." 
-                  className="pl-10 w-full sm:w-[240px]" 
+                <Input
+                  placeholder="Search exams by title..."
+                  className="pl-10 w-full sm:w-[240px]"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex items-center gap-2"
                 onClick={() => setSearchTerm("")}
               >
@@ -257,8 +285,8 @@ const Exams = () => {
                   ? `No exams match your search for "${searchTerm}"`
                   : "No exams available for the selected filters"}
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-6"
                 onClick={() => {
                   setSearchTerm("");
