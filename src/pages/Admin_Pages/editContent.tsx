@@ -13,7 +13,8 @@ import {
   Edit,
   Check,
   ChevronDown,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Eye
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,7 +44,6 @@ interface SubHeadingItem {
   expectedAnswer: string;
   comment: string;
   hint: string;
-  imagePath: string;
   _id?: string;
 }
 
@@ -248,7 +248,6 @@ const EditContent: React.FC = () => {
         expectedAnswer: "",
         comment: "",
         hint: "",
-        imagePath: ""
       }],
       audio: "",
       video: "",
@@ -387,7 +386,6 @@ const EditContent: React.FC = () => {
               _id: subItem._id,
               text: subItem.text,
               subheadingAudioPath: subItem.subheadingAudioPath,
-              imagePath: subItem.imagePath || "",
               question: subItem.question,
               expectedAnswer: subItem.expectedAnswer,
               comment: subItem.comment,
@@ -419,14 +417,14 @@ const EditContent: React.FC = () => {
         console.error("Failed to fetch content:", error);
         const t = toast({
           variant: "destructive",
-          title: "Oops! Couldn’t Load Content",
-          description: "We couldn’t load the content data right now. Please try again.",
+          title: "Oops! Couldn't Load Content",
+          description: "We couldn't load the content data right now. Please try again.",
           duration: 8000,
           action: (
             <Button
               variant="secondary"
               className="bg-white text-red-600 hover:bg-red-100"
-              onClick={() => t.dismiss()} // dismiss the toast safely
+              onClick={() => t.dismiss()}
             >
               Dismiss
             </Button>
@@ -456,7 +454,6 @@ const EditContent: React.FC = () => {
             expectedAnswer: "",
             comment: "",
             hint: "",
-            imagePath: ""
           }],
           audio: "",
           video: "",
@@ -509,7 +506,6 @@ const EditContent: React.FC = () => {
           expectedAnswer: "",
           comment: "",
           hint: "",
-          imagePath: ""
         },
       ],
     };
@@ -645,7 +641,7 @@ const EditContent: React.FC = () => {
             <Button
               variant="secondary"
               className="bg-white text-red-600 hover:bg-red-100"
-              onClick={() => t.dismiss()} // dismiss the toast safely
+              onClick={() => t.dismiss()}
             >
               Dismiss
             </Button>
@@ -665,7 +661,7 @@ const EditContent: React.FC = () => {
             <Button
               variant="secondary"
               className="bg-white text-red-600 hover:bg-red-100"
-              onClick={() => t.dismiss()} // dismiss the toast safely
+              onClick={() => t.dismiss()}
             >
               Dismiss
             </Button>
@@ -693,7 +689,7 @@ const EditContent: React.FC = () => {
             <Button
               variant="secondary"
               className="bg-white text-red-600 hover:bg-red-100"
-              onClick={() => t.dismiss()} // dismiss the toast safely
+              onClick={() => t.dismiss()}
             >
               Dismiss
             </Button>
@@ -729,7 +725,7 @@ const EditContent: React.FC = () => {
           <Button
             variant="secondary"
             className="bg-green-600 text-white hover:bg-green-700"
-            onClick={() => t.dismiss()} // dismiss the toast safely
+            onClick={() => t.dismiss()}
           >
             Got it
           </Button>
@@ -1043,7 +1039,7 @@ const EditContent: React.FC = () => {
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${subHeadingItem.subheadingAudioPath || subHeadingItem.imagePath
+                                            className={`flex items-center gap-2 px-3 text-white h-9 shadow-md transition-all duration-200 border-0 ${subHeadingItem.subheadingAudioPath
                                               ? "bg-green-600"
                                               : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                                               }`}
@@ -1054,9 +1050,7 @@ const EditContent: React.FC = () => {
                                             {selectedFileType === "image" && <ImageIcon size={16} />}
                                             {subHeadingItem.subheadingAudioPath
                                               ? shortenFilename(extractFilenameFromUrl(subHeadingItem.subheadingAudioPath))
-                                              : subHeadingItem.imagePath
-                                                ? shortenFilename(extractFilenameFromUrl(subHeadingItem.imagePath))
-                                                : `Upload ${selectedFileType}`}
+                                              : `Upload ${selectedFileType}`}
                                             <ChevronDown size={14} className="ml-1" />
                                           </Button>
                                         </DropdownMenuTrigger>
@@ -1117,21 +1111,12 @@ const EditContent: React.FC = () => {
                                                   .getPublicUrl(fileName);
 
                                                 if (publicData) {
-                                                  if (selectedFileType === "image") {
-                                                    updateSubHeadingItem(
-                                                      lessonIndex,
-                                                      subHeadingIndex,
-                                                      "imagePath",
-                                                      publicData.publicUrl
-                                                    );
-                                                  } else {
-                                                    updateSubHeadingItem(
-                                                      lessonIndex,
-                                                      subHeadingIndex,
-                                                      "subheadingAudioPath",
-                                                      publicData.publicUrl
-                                                    );
-                                                  }
+                                                  updateSubHeadingItem(
+                                                    lessonIndex,
+                                                    subHeadingIndex,
+                                                    "subheadingAudioPath",
+                                                    publicData.publicUrl
+                                                  );
 
                                                   toast({
                                                     title: "Success",
@@ -1167,6 +1152,20 @@ const EditContent: React.FC = () => {
                                           </div>
                                         )}
                                       </Button>
+
+                                      {/* View file button if file exists */}
+                                      {subHeadingItem.subheadingAudioPath && (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          className="mt-2 bg-gray-500 text-white hover:bg-gray-600 w-full"
+                                          onClick={() => window.open(subHeadingItem.subheadingAudioPath, '_blank')}
+                                        >
+                                          <Eye size={14} className="mr-1" />
+                                          View File
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
 
@@ -1290,6 +1289,20 @@ const EditContent: React.FC = () => {
                               : "Upload Audio"}
                         </Button>
 
+                        {/* View audio button */}
+                        {lessonItem.audio && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-500 text-white hover:bg-gray-600"
+                            onClick={() => window.open(lessonItem.audio, '_blank')}
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View Audio
+                          </Button>
+                        )}
+
                         <Button
                           type="button"
                           variant="outline"
@@ -1357,6 +1370,20 @@ const EditContent: React.FC = () => {
                               : "Upload Video"}
                         </Button>
 
+                        {/* View video button */}
+                        {lessonItem.video && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-500 text-white hover:bg-gray-600"
+                            onClick={() => window.open(lessonItem.video, '_blank')}
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View Video
+                          </Button>
+                        )}
+
                         <Button
                           type="button"
                           variant="outline"
@@ -1423,6 +1450,20 @@ const EditContent: React.FC = () => {
                               )
                               : "Upload Image"}
                         </Button>
+
+                        {/* View image button */}
+                        {lessonItem.image && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-500 text-white hover:bg-gray-600"
+                            onClick={() => window.open(lessonItem.image, '_blank')}
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View Image
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
