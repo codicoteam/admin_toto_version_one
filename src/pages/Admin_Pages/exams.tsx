@@ -83,8 +83,8 @@ const Exams = () => {
       } catch (error) {
         const t = toast({
           variant: "destructive",
-          title: "Oops! Couldn’t Delete Exam",
-          description: "We couldn’t delete the exam right now. Please try again.",
+          title: "Oops! Couldn't Delete Exam",
+          description: "We couldn't delete the exam right now. Please try again.",
           duration: 8000,
           action: (
             <Button
@@ -136,42 +136,79 @@ const Exams = () => {
     return result;
   }, [exams, activeTab, searchTerm]);
 
-  if (loading) {
-    return <div className="justify-center items-center py-[10vh] text-center gap-11">
-      <div className="flex justify-center items-center">
-        <div className="loader">
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
-          <div className="loader-square"></div>
+  // Shimmer loading component
+  const ExamCardShimmer = () => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+      <div className="h-40 bg-gray-300"></div>
+      <div className="p-4">
+        <div className="h-6 bg-gray-300 rounded mb-2"></div>
+        <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
+        <div className="flex justify-between">
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
         </div>
       </div>
-      <div className="pt-10">
-        Loading exams...
-      </div>
-    </div>;
-  }
+    </div>
+  );
 
   if (error) {
-    return <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="text-center">
-        <TriangleAlert className="h-32 w-32 text-yellow-500 mx-auto" />
-        <h1 className="text-4xl font-bold mb-4">Oops! Something went wrong</h1>
-        <p className="text-xl text-gray-600 mb-4">
-          We couldn’t load your exams right now. Please try again.
-        </p>
-        <a
-          href="/exams"
-          className="text-blue-500 hover:text-blue-700 underline font-medium"
+    return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+        {/* Sidebar - Always visible even on error */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        
+        {/* Mobile Menu Toggle */}
+        <button
+          className="md:hidden fixed top-4 left-4 z-50 bg-blue-900 text-white p-2 rounded-md"
+          onClick={toggleSidebar}
         >
-          Reload
-        </a>
-      </div>
-    </div>
+          {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
+        </button>
 
+        {/* Sidebar for mobile */}
+        <div
+          className={`
+            ${sidebarOpen
+              ? "translate-x-0 opacity-100"
+              : "-translate-x-full opacity-0"
+            } 
+            transition-all duration-300 ease-in-out 
+            fixed md:relative z-40 md:z-auto w-64
+          `}
+        >
+          <Sidebar />
+        </div>
+
+        {/* Backdrop Overlay for Mobile */}
+        {sidebarOpen && !isLargeScreen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={toggleSidebar}
+          />
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 w-full">
+          <div className="min-h-[70vh] flex items-center justify-center">
+            <div className="text-center">
+              <TriangleAlert className="h-32 w-32 text-yellow-500 mx-auto" />
+              <h1 className="text-4xl font-bold mb-4">Oops! Something went wrong</h1>
+              <p className="text-xl text-gray-600 mb-4">
+                We couldn't load your exams right now. Please try again.
+              </p>
+              <a
+                href="/exams"
+                className="text-blue-500 hover:text-blue-700 underline font-medium"
+              >
+                Reload
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Function to format level names for display
@@ -195,10 +232,10 @@ const Exams = () => {
         {sidebarOpen && !isLargeScreen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar - Always visible even during loading */}
       <div
         className={`
-          ${sidebarOpen
+          ${sidebarOpen || isLargeScreen
             ? "translate-x-0 opacity-100"
             : "-translate-x-full opacity-0"
           } 
@@ -248,54 +285,69 @@ const Exams = () => {
             </div>
           </SectionTitle>
 
-          {availableLevels.length > 0 && (
-            <Tabs defaultValue="all" className="sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All Levels</TabsTrigger>
-                {availableLevels.map(level => (
-                  <TabsTrigger key={level} value={level}>
-                    {formatLevelName(level)}
-                  </TabsTrigger>
+          {loading ? (
+            // Shimmer loading state
+            <>
+              <div className="h-10 bg-gray-200 rounded-md animate-pulse mb-6 w-1/2"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, index) => (
+                  <ExamCardShimmer key={index} />
                 ))}
-              </TabsList>
-            </Tabs>
-          )}
-
-          {filteredExams.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredExams.map(exam => (
-                <ExamCard
-                  key={exam._id}
-                  id={exam._id}
-                  title={exam.title}
-                  subjectName={exam.subject?.subjectName || "Unknown Subject"}
-                  level={exam.level}
-                  durationInMinutes={exam.durationInMinutes}
-                  thumbnailUrl={exam.subject?.imageUrl || "/default-exam.png"}
-                  onDelete={() => handleDeleteExam(exam._id)}
-                />
-              ))}
-            </div>
+              </div>
+            </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20">
-              <TriangleAlert className="h-24 w-24 text-yellow-500 mb-6" />
-              <h3 className="text-2xl font-semibold mb-2">No Exams Found</h3>
-              <p className="text-gray-600 text-center max-w-md">
-                {searchTerm
-                  ? `No exams match your search for "${searchTerm}"`
-                  : "No exams available for the selected filters"}
-              </p>
-              <Button
-                variant="outline"
-                className="mt-6"
-                onClick={() => {
-                  setSearchTerm("");
-                  setActiveTab("all");
-                }}
-              >
-                Clear Filters
-              </Button>
-            </div>
+            // Actual content when not loading
+            <>
+              {availableLevels.length > 0 && (
+                <Tabs defaultValue="all" className="sticky top-0 bg-white dark:bg-slate-950 z-20 py-4" onValueChange={setActiveTab}>
+                  <TabsList>
+                    <TabsTrigger value="all">All Levels</TabsTrigger>
+                    {availableLevels.map(level => (
+                      <TabsTrigger key={level} value={level}>
+                        {formatLevelName(level)}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              )}
+
+              {filteredExams.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {filteredExams.map(exam => (
+                    <ExamCard
+                      key={exam._id}
+                      id={exam._id}
+                      title={exam.title}
+                      subjectName={exam.subject?.subjectName || "Unknown Subject"}
+                      level={exam.level}
+                      durationInMinutes={exam.durationInMinutes}
+                      thumbnailUrl={exam.subject?.imageUrl || "/default-exam.png"}
+                      onDelete={() => handleDeleteExam(exam._id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <TriangleAlert className="h-24 w-24 text-yellow-500 mb-6" />
+                  <h3 className="text-2xl font-semibold mb-2">No Exams Found</h3>
+                  <p className="text-gray-600 text-center max-w-md">
+                    {searchTerm
+                      ? `No exams match your search for "${searchTerm}"`
+                      : "No exams available for the selected filters"}
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setActiveTab("all");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
