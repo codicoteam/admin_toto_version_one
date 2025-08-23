@@ -189,11 +189,10 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
                 <div>
                   <p className="text-base font-medium">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        student.subscription_status === "active"
+                      className={`px-3 py-1 rounded-full text-sm ${student.subscription_status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {(student.subscription_status || "N/A").toUpperCase()}
                     </span>
@@ -281,11 +280,11 @@ const StudentDetailModal = ({ student, isOpen, onClose }) => {
 };
 
 // Delete Confirmation Dialog Component
-const DeleteConfirmationDialog = ({ 
-  isOpen, 
-  onClose, 
-  student, 
-  onConfirm 
+const DeleteConfirmationDialog = ({
+  isOpen,
+  onClose,
+  student,
+  onConfirm
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -299,7 +298,7 @@ const DeleteConfirmationDialog = ({
             Are you sure you want to delete this student?
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="bg-red-50 p-4 rounded-lg border border-red-100">
           <div className="font-medium text-gray-800">
             {student?.firstName} {student?.lastName}
@@ -311,20 +310,20 @@ const DeleteConfirmationDialog = ({
             Level: {student?.level || "N/A"}
           </div>
         </div>
-        
+
         <p className="text-red-500 text-sm mt-2">
           This action cannot be undone. All student data will be permanently removed.
         </p>
-        
+
         <DialogFooter className="pt-6">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={onClose}
             className="border-gray-300 hover:bg-gray-50"
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             variant="destructive"
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 ml-2"
@@ -340,10 +339,10 @@ const DeleteConfirmationDialog = ({
 // Chart Components
 const LevelDistributionChart = ({ data = [] }) => {
   const COLORS = ['#1e3a8a', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-  
+
   // Ensure data is properly formatted
   const chartData = Array.isArray(data) ? data : [];
-  
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -388,7 +387,7 @@ const SubscriptionStatusChart = ({ data = [] }) => {
   // Combine 'active' and 'Active ' into one category
   const formattedData = Array.isArray(data) ? data.reduce((acc, item) => {
     if (!item || !item._id) return acc;
-    
+
     const status = item._id.trim().toLowerCase();
     if (status === 'active') {
       const existing = acc.find(i => i.name === 'Active');
@@ -533,11 +532,11 @@ const TopSubjectsChart = ({ data = [] }) => {
 
 const SchoolsChart = ({ data = [] }) => {
   // Only show top 5 schools for better visualization and truncate names
-  const topSchools = Array.isArray(data) 
+  const topSchools = Array.isArray(data)
     ? data.slice(0, 5).map(item => ({
-        ...item,
-        _id: truncateText(item._id, 7)
-      }))
+      ...item,
+      _id: truncateText(item._id, 7)
+    }))
     : [];
 
   return (
@@ -628,16 +627,16 @@ const StudentDashboard = () => {
   // Handle actual student deletion
   const handleDeleteStudent = async () => {
     if (!studentToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await StudentService.deleteStudent(studentToDelete._id);
-      
+
       // Remove deleted student from state
-      setStudents(prevStudents => 
+      setStudents(prevStudents =>
         prevStudents.filter(student => student._id !== studentToDelete._id)
       );
-      
+
       // Close dialog and show success message
       handleCloseDeleteDialog();
       console.log("Student deleted successfully");
@@ -662,7 +661,7 @@ const StudentDashboard = () => {
         } else {
           throw new Error("Invalid student data received");
         }
-        
+
         // Fetch dashboard data
         const dashboardResponse = await StudentService.getAllDashboardData();
         if (dashboardResponse && dashboardResponse.data) {
@@ -936,10 +935,9 @@ const StudentDashboard = () => {
       {/* Sidebar */}
       <div
         className={`
-          ${
-            sidebarOpen
-              ? "translate-x-0 opacity-100"
-              : "-translate-x-full opacity-0"
+          ${sidebarOpen
+            ? "translate-x-0 opacity-100"
+            : "-translate-x-full opacity-0"
           } 
           transition-all duration-300 ease-in-out 
           fixed md:relative z-40 md:z-auto w-64
@@ -982,9 +980,134 @@ const StudentDashboard = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+            <div className="space-y-6">
+              {/* Dashboard Overview Shimmer */}
+              <div className="mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {[...Array(4)].map((_, i) => (
+                    <Card key={i} className="border-0 shadow-md">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i} className="h-64 border-0 shadow-md">
+                      <CardHeader>
+                        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                      </CardHeader>
+                      <CardContent className="h-48 flex items-center justify-center">
+                        <div className="h-32 w-32 bg-gray-200 rounded-full animate-pulse"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                  {[...Array(2)].map((_, i) => (
+                    <Card key={i} className="h-64 border-0 shadow-md">
+                      <CardHeader>
+                        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                      </CardHeader>
+                      <CardContent className="h-48">
+                        <div className="h-full w-full bg-gray-200 rounded animate-pulse"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filters and Student List Shimmer */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Section - Filters and Student Count */}
+                <div className="col-span-1 lg:col-span-5 space-y-6">
+                  <div className="mb-4 flex flex-col sm:flex-row gap-4">
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i} className="w-full sm:w-1/2">
+                        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Student Count Card Shimmer */}
+                  <Card className="border-0 shadow-md">
+                    <CardHeader>
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row mb-8 gap-4 sm:gap-0">
+                        {[...Array(2)].map((_, i) => (
+                          <div key={i} className="flex-1">
+                            <div className="h-10 w-16 bg-gray-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Student Level Breakdown Shimmer */}
+                      <div className="space-y-3">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="flex items-center">
+                            <div className="w-20 h-3 bg-gray-200 rounded animate-pulse"></div>
+                            <div className="flex-1 relative h-6">
+                              <div className="absolute top-0 left-0 h-full w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div className="w-12 h-3 bg-gray-200 rounded animate-pulse"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Right Section - Student List Shimmer */}
+                <div className="col-span-1 lg:col-span-7">
+                  <Card className="border-0 shadow-md">
+                    <CardHeader>
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="max-h-96 overflow-y-auto">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border-spacing-y-2 border-separate">
+                            <thead className="sticky top-0 bg-white z-10">
+                              <tr>
+                                {[...Array(6)].map((_, i) => (
+                                  <th key={i} className="py-2">
+                                    <div className="h-3 w-16 bg-gray-200 rounded animate-pulse mx-auto"></div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[...Array(5)].map((_, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  {[...Array(6)].map((_, cellIndex) => (
+                                    <td key={cellIndex} className="px-2 py-3 whitespace-nowrap">
+                                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mx-auto"></div>
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
+
+
+
           ) : error ? (
             <div className="flex justify-center items-center h-64 text-red-500">
               <p>Error: {error}</p>
@@ -1006,7 +1129,7 @@ const StudentDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200">
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
@@ -1023,7 +1146,7 @@ const StudentDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200">
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm font-medium">Phone Verified</CardTitle>
@@ -1035,7 +1158,7 @@ const StudentDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200">
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-sm font-medium">Schools</CardTitle>
@@ -1048,20 +1171,20 @@ const StudentDashboard = () => {
                       </CardContent>
                     </Card>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <LevelDistributionChart data={dashboardData.levels} />
                     <SubscriptionStatusChart data={dashboardData.subscriptionStatus} />
                     <PhoneVerificationChart data={dashboardData.phoneVerificationStats} />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                     <TopSubjectsChart data={dashboardData.topSubjects} />
                     <SchoolsChart data={dashboardData.studentsPerSchool} />
                   </div>
                 </div>
               )}
-              
+
               {/* Filters and Student List */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Section - Filters and Student Count */}
@@ -1118,19 +1241,17 @@ const StudentDashboard = () => {
                             <div className="w-20 text-xs">{item.level}</div>
                             <div className="flex-1 relative h-6">
                               <div
-                                className={`absolute top-0 left-0 h-full ${
-                                  index === 0
+                                className={`absolute top-0 left-0 h-full ${index === 0
                                     ? "bg-blue-900"
                                     : index === 1
-                                    ? "bg-yellow-400"
-                                    : "bg-blue-300"
-                                }`}
+                                      ? "bg-yellow-400"
+                                      : "bg-blue-300"
+                                  }`}
                                 style={{
-                                  width: `${
-                                    totalStudents > 0
+                                  width: `${totalStudents > 0
                                       ? (item.count / totalStudents) * 100
                                       : 0
-                                  }%`,
+                                    }%`,
                                 }}
                               ></div>
                             </div>
@@ -1205,11 +1326,10 @@ const StudentDashboard = () => {
                                     </td>
                                     <td className="px-2 py-3 whitespace-nowrap">
                                       <span
-                                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                          student.subscription_status === "active"
+                                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.subscription_status === "active"
                                             ? "bg-green-100 text-green-800"
                                             : "bg-red-100 text-red-800"
-                                        }`}
+                                          }`}
                                       >
                                         {(
                                           student.subscription_status || "N/A"
@@ -1270,7 +1390,7 @@ const StudentDashboard = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-      
+
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}

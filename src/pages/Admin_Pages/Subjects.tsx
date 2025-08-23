@@ -57,6 +57,41 @@ import AddSubjectDialog from "@/components/Dialogs/Add__Subject";
 import DeleteSubjectDialog from "@/components/Dialogs/Delete_Subject";
 import EditSubjectDialog from "@/components/Dialogs/Edit_Subject";
 
+// Shimmer Loading Components
+const SubjectCardShimmer = () => (
+  <Card className="overflow-hidden">
+    <div className="h-48 bg-gray-200 animate-pulse"></div>
+    <CardHeader>
+      <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>
+    </CardHeader>
+    <CardContent>
+      <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+    </CardContent>
+    <CardFooter className="flex justify-between">
+      <div className="h-9 bg-gray-200 rounded animate-pulse w-20"></div>
+      <div className="h-9 bg-gray-200 rounded animate-pulse w-20"></div>
+    </CardFooter>
+  </Card>
+);
+
+const TopicCardShimmer = () => (
+  <Card className="overflow-hidden">
+    <div className="h-40 bg-gray-200 animate-pulse"></div>
+    <CardHeader>
+      <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>
+    </CardHeader>
+    <CardFooter className="flex justify-between gap-2 flex-wrap">
+      <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+      <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+      <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+      <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+    </CardFooter>
+  </Card>
+);
+
 const AdminSubjects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -282,8 +317,8 @@ const AdminSubjects: React.FC = () => {
       console.error(`Failed to fetch topics for subject ${subjectId}:`, err);
       const t = toast({
         variant: "destructive",
-        title: "Oops! Couldn’t Load Topics",
-        description: "We couldn’t load the topics for this subject right now. Please try again.",
+        title: "Oops! Couldn't Load Topics",
+        description: "We couldn't load the topics for this subject right now. Please try again.",
         duration: 8000,
         action: (
           <Button
@@ -342,8 +377,8 @@ const AdminSubjects: React.FC = () => {
       setError("Failed to load subjects. Please try again.");
       const t = toast({
         variant: "destructive",
-        title: "Oops! Couldn’t Load Subjects",
-        description: "We couldn’t load the subjects right now. Please try again.",
+        title: "Oops! Couldn't Load Subjects",
+        description: "We couldn't load the subjects right now. Please try again.",
         duration: 8000,
         action: (
           <Button
@@ -547,8 +582,10 @@ const AdminSubjects: React.FC = () => {
 
               {/* Loading State for Topics */}
               {loadingTopics && (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, index) => (
+                    <TopicCardShimmer key={index} />
+                  ))}
                 </div>
               )}
 
@@ -686,8 +723,10 @@ const AdminSubjects: React.FC = () => {
 
               {/* Loading State */}
               {loading && (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-900"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, index) => (
+                    <SubjectCardShimmer key={index} />
+                  ))}
                 </div>
               )}
 

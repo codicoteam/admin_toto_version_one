@@ -71,6 +71,37 @@ function Resourcewalle() {
     }).format(amount);
   };
 
+  // Shimmer loading component for stats cards
+  const StatCardShimmer = () => (
+    <div className="bg-white p-4 rounded-lg shadow">
+      <div className="h-4 bg-gray-200 rounded w-1/3 mb-3 shimmer"></div>
+      <div className="h-8 bg-gray-200 rounded w-2/3 shimmer"></div>
+    </div>
+  );
+
+  // Shimmer loading component for table rows
+  const TableRowShimmer = () => (
+    <tr>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="ml-4">
+            <div className="h-4 bg-gray-200 rounded w-24 mb-2 shimmer"></div>
+            <div className="h-3 bg-gray-200 rounded w-32 shimmer"></div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-200 rounded w-16 shimmer"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-200 rounded w-12 shimmer"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-200 rounded w-20 shimmer"></div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Mobile Menu Toggle */}
@@ -106,41 +137,52 @@ function Resourcewalle() {
 
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
-          {/* Total Deposits Card */}
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm">Total Deposits</h3>
-            <p className="text-2xl font-bold text-green-500">
-              {isLoading ? "Loading..." : formatCurrency(dashboardData.totalDeposits)}
-            </p>
-          </div>
+          {isLoading ? (
+            <>
+              <StatCardShimmer />
+              <StatCardShimmer />
+              <StatCardShimmer />
+              <StatCardShimmer />
+            </>
+          ) : (
+            <>
+              {/* Total Deposits Card */}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="text-gray-500 text-sm">Total Deposits</h3>
+                <p className="text-2xl font-bold text-green-500">
+                  {formatCurrency(dashboardData.totalDeposits)}
+                </p>
+              </div>
 
-          {/* Total Withdrawals Card */}
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm">Total Withdrawals</h3>
-            <p className="text-2xl font-bold text-red-500">
-              {isLoading ? "Loading..." : formatCurrency(dashboardData.totalWithdrawals)}
-            </p>
-          </div>
+              {/* Total Withdrawals Card */}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="text-gray-500 text-sm">Total Withdrawals</h3>
+                <p className="text-2xl font-bold text-red-500">
+                  {formatCurrency(dashboardData.totalWithdrawals)}
+                </p>
+              </div>
 
-          {/* Amount Left Card (New Card) */}
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm">Amount Left</h3>
-            <p 
-              className={`text-2xl font-bold ${
-                amountLeft >= 0 ? 'text-blue-500' : 'text-orange-500'
-              }`}
-            >
-              {isLoading ? "Loading..." : formatCurrency(amountLeft)}
-            </p>
-          </div>
+              {/* Amount Left Card (New Card) */}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="text-gray-500 text-sm">Amount Left</h3>
+                <p 
+                  className={`text-2xl font-bold ${
+                    amountLeft >= 0 ? 'text-blue-500' : 'text-orange-500'
+                  }`}
+                >
+                  {formatCurrency(amountLeft)}
+                </p>
+              </div>
 
-          {/* Wallet Count Card */}
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm">Wallet Count</h3>
-            <p className="text-2xl font-bold text-purple-500">
-              {isLoading ? "Loading..." : dashboardData.walletCount}
-            </p>
-          </div>
+              {/* Wallet Count Card */}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="text-gray-500 text-sm">Wallet Count</h3>
+                <p className="text-2xl font-bold text-purple-500">
+                  {dashboardData.walletCount}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Latest Wallets Section */}
@@ -149,7 +191,23 @@ function Resourcewalle() {
           {error ? (
             <div className="text-red-500 p-4">{error}</div>
           ) : isLoading ? (
-            <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {[...Array(5)].map((_, index) => (
+                    <TableRowShimmer key={index} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : dashboardData.latestWallets.length === 0 ? (
             <div className="text-center p-4 text-gray-500">No wallets found</div>
           ) : (
@@ -193,6 +251,30 @@ function Resourcewalle() {
           )}
         </div>
       </div>
+
+      {/* Add CSS for shimmer effect */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -468px 0;
+          }
+          100% {
+            background-position: 468px 0;
+          }
+        }
+        
+        .shimmer {
+          animation-duration: 1.5s;
+          animation-fill-mode: forwards;
+          animation-iteration-count: infinite;
+          animation-name: shimmer;
+          animation-timing-function: linear;
+          background: #f6f7f8;
+          background: linear-gradient(to right, #eeeeee 8%, #dddddd 18%, #eeeeee 33%);
+          background-size: 800px 104px;
+          position: relative;
+        }
+      `}</style>
     </div>
   );
 }

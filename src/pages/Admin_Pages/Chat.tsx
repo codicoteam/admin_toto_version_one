@@ -730,9 +730,17 @@ const ChatApp = (ChatServiceData: any) => {
           {/* Group List */}
           <div className="p-3 space-y-2 flex-grow overflow-y-auto">
             {loading ? (
-              <div className="text-center py-4 text-gray-500">
-                Loading groups...
-              </div>
+             <div className="p-3 space-y-2 flex-grow overflow-y-auto">
+    {/* Shimmer for groups list */}
+    {Array.from({ length: 5 }).map((_, index) => (
+      <div key={index} className="w-full py-2 px-4 rounded-md">
+        <div className="flex items-center space-x-3">
+          <div className="h-8 w-8 bg-gray-300 rounded-full animate-pulse"></div>
+          <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
+        </div>
+      </div>
+    ))}
+  </div>
             ) : error ? (
               <div className="text-center py-4 text-red-500">{error}</div>
             ) : communities.length === 0 ? (
@@ -846,9 +854,29 @@ const ChatApp = (ChatServiceData: any) => {
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-3">
               {isLoadingMessages ? (
-                <div className="flex justify-center items-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
+               <div className="space-y-3">
+    {/* Shimmer for incoming messages */}
+    {Array.from({ length: 3 }).map((_, index) => (
+      <div key={index} className="flex justify-start">
+        <div className="flex-shrink-0 mr-2">
+          <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+        </div>
+        <div className="flex flex-col max-w-xs">
+          <div className="h-4 bg-gray-300 rounded w-16 mb-1 animate-pulse"></div>
+          <div className="bg-gray-300 rounded-lg px-4 py-2 w-48 h-12 animate-pulse"></div>
+        </div>
+      </div>
+    ))}
+    
+    {/* Shimmer for outgoing messages */}
+    {Array.from({ length: 2 }).map((_, index) => (
+      <div key={index + 3} className="flex justify-end">
+        <div className="flex flex-col max-w-xs">
+          <div className="bg-blue-300 rounded-lg px-4 py-2 w-40 h-10 animate-pulse"></div>
+        </div>
+      </div>
+    ))}
+  </div>
               ) : messages.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   No messages yet. Start the conversation!
@@ -1107,7 +1135,16 @@ const ChatApp = (ChatServiceData: any) => {
           {/* Members List */}
           <div className="p-4">
             {loading ? (
-              <div className="text-center">Loading...</div>
+                <div className="space-y-2">
+    {Array.from({ length: 3 }).map((_, index) => (
+      <div key={index} className="bg-white p-2 rounded border">
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 bg-gray-300 rounded-full animate-pulse"></div>
+          <div className="h-4 bg-gray-300 rounded w-32 animate-pulse"></div>
+        </div>
+      </div>
+    ))}
+  </div>
             ) : (
               <>
                 <div className="flex justify-between items-center mb-2">

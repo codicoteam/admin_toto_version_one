@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FC } from "react";
 import {
   Book,
@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import TopicInSubjectService from "../services/Admin_Service/Topic_InSubject_service"; // Import your service
 
 interface Topic {
   name?: string;
@@ -44,7 +45,7 @@ const SubjectCard: FC<SubjectCardProps> = ({
   id,
   title,
   category,
-  topics = [],
+  topics: initialTopics = [],
   imageUrl = "",
   onClickView,
   onClickDelete,
@@ -52,6 +53,8 @@ const SubjectCard: FC<SubjectCardProps> = ({
 }) => {
   const [viewTopicsOpen, setViewTopicsOpen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>(initialTopics);
+  const [loadingTopics, setLoadingTopics] = useState(false);
 
   const displayTitle = title || "Untitled Subject";
   const displayCategory = category || "Unknown Category";
@@ -59,6 +62,33 @@ const SubjectCard: FC<SubjectCardProps> = ({
   // Use a default image if imageUrl is not provided
   const imageSource =
     imageUrl && imageUrl.trim() !== "" ? imageUrl : "/default-course-image.jpg";
+
+  // Fetch topics for this subject when component mounts
+  useEffect(() => {
+    const fetchTopics = async () => {
+      if (!id) return;
+      
+      try {
+        setLoadingTopics(true);
+        const response = await TopicInSubjectService.getTopicsBySubjectId(id);
+        const fetchedTopics = response.data || [];
+        setTopics(fetchedTopics);
+      } catch (error) {
+        console.error(`Error fetching topics for subject ${id}:`, error);
+        // Keep the initial topics if fetch fails
+        setTopics(initialTopics);
+      } finally {
+        setLoadingTopics(false);
+      }
+    };
+
+    // Only fetch if we don't have initial topics or if we want to refresh
+    if (initialTopics.length === 0 || !initialTopics) {
+      fetchTopics();
+    } else {
+      setTopics(initialTopics);
+    }
+  }, [id, initialTopics]);
 
   function setAddTopicOpen(arg0: boolean) {
     throw new Error("Function not implemented.");
@@ -120,7 +150,11 @@ const SubjectCard: FC<SubjectCardProps> = ({
                 Topics
               </p>
               <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">
-                {topics.length} total
+                {loadingTopics ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : (
+                  `${topics.length} total`
+                )}
               </span>
             </div>
 
@@ -128,7 +162,7 @@ const SubjectCard: FC<SubjectCardProps> = ({
               <div className="flex flex-wrap gap-2">
                 {topics.slice(0, 3).map((topic, index) => (
                   <span
-                    key={index}
+                    key={topic._id || topic.id || index}
                     className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs px-3 py-1.5 rounded-full border border-blue-100/50"
                   >
                     {topic.name || topic.title || `Topic ${index + 1}`}
@@ -142,7 +176,7 @@ const SubjectCard: FC<SubjectCardProps> = ({
               </div>
             ) : (
               <p className="text-sm text-gray-500 italic bg-gray-50 rounded-lg p-3 text-center">
-                No topics available
+                {loadingTopics ? "Loading topics..." : "No topics available"}
               </p>
             )}
           </div>
@@ -266,32 +300,34 @@ const SubjectCard: FC<SubjectCardProps> = ({
                   <Book className="h-8 w-8 text-gray-400" />
                 </div>
                 <p className="text-gray-600 font-medium mb-2">
-                  No topics available for this subject
+                  {loadingTopics ? "Loading topics..." : "No topics available for this subject"}
                 </p>
                 <p className="text-gray-500 text-sm max-w-md mx-auto">
-                  Add your first topic to start organizing your subject content
+                  {loadingTopics ? "Please wait..." : "Add your first topic to start organizing your subject content"}
                 </p>
-                <div className="flex gap-3 justify-center mt-6">
-                  <Button
-                    onClick={() => {
-                      setViewTopicsOpen(false);
-                      setAddTopicOpen(true);
-                    }}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add First Topic
-                  </Button>
-                  <Link to={`/admin/subjects/${id}`}>
+                {!loadingTopics && (
+                  <div className="flex gap-3 justify-center mt-6">
                     <Button
-                      className="bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 rounded-lg flex items-center gap-2"
-                      size="sm"
+                      onClick={() => {
+                        setViewTopicsOpen(false);
+                        setAddTopicOpen(true);
+                      }}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg flex items-center gap-2"
                     >
-                      <ExternalLink className="h-4 w-4" />
-                      Subject Details
+                      <Plus className="h-4 w-4" />
+                      Add First Topic
                     </Button>
-                  </Link>
-                </div>
+                    <Link to={`/admin/subjects/${id}`}>
+                      <Button
+                        className="bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 rounded-lg flex items-center gap-2"
+                        size="sm"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Subject Details
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

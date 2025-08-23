@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, X, ChevronLeft, Check, Edit } from "lucide-react";
+import { Plus, X, ChevronLeft, Check, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { MathfieldElement } from "mathlive";

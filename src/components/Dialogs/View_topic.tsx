@@ -140,8 +140,8 @@ const ViewTopicContentDialog: React.FC<ViewTopicContentDialogProps> = ({
 
   //maths
   const [mathExpression, setMathExpression] = useState("");
-const mathFieldRef = useRef<MathfieldElement | null>(null);
-const mathContainerRef = useRef<HTMLDivElement>(null);
+  const mathFieldRef = useRef<MathfieldElement | null>(null);
+  const mathContainerRef = useRef<HTMLDivElement>(null);
   const [showMathInput, setShowMathInput] = useState(false);
   const navigate = useNavigate();
   // Add this to your component's imports/dependencies section
@@ -161,80 +161,80 @@ const mathContainerRef = useRef<HTMLDivElement>(null);
   }, []);
 
   // Updated math field initialization useEffect
-useEffect(() => {
-  if (!showMathInput || !mathContainerRef.current) return;
+  useEffect(() => {
+    if (!showMathInput || !mathContainerRef.current) return;
 
-  // Initialize MathField
-  const mf = new MathfieldElement({
-    defaultMode: "math",
-    smartMode: true,
-    virtualKeyboardMode: "onfocus",
-    virtualKeyboards: "all",
-    onContentDidChange: (mf) => {
-      setMathExpression(mf.value);
-    },
-  });
+    // Initialize MathField
+    const mf = new MathfieldElement({
+      defaultMode: "math",
+      smartMode: true,
+      virtualKeyboardMode: "onfocus",
+      virtualKeyboards: "all",
+      onContentDidChange: (mf) => {
+        setMathExpression(mf.value);
+      },
+    });
 
-  // Style the math field
-  mf.style.width = "100%";
-  mf.style.minHeight = "60px";
-  mf.style.padding = "8px";
-  mf.style.border = "1px solid #d1d5db";
-  mf.style.borderRadius = "6px";
+    // Style the math field
+    mf.style.width = "100%";
+    mf.style.minHeight = "60px";
+    mf.style.padding = "8px";
+    mf.style.border = "1px solid #d1d5db";
+    mf.style.borderRadius = "6px";
 
-  // Clear container and add math field
-  mathContainerRef.current.innerHTML = "";
-  mathContainerRef.current.appendChild(mf);
-  mf.focus();
+    // Clear container and add math field
+    mathContainerRef.current.innerHTML = "";
+    mathContainerRef.current.appendChild(mf);
+    mf.focus();
 
-  // Save reference
-  mathFieldRef.current = mf;
+    // Save reference
+    mathFieldRef.current = mf;
 
-  // Cleanup
-  return () => {
-    if (mathFieldRef.current) {
-      mathFieldRef.current.remove();
-      mathFieldRef.current = null;
+    // Cleanup
+    return () => {
+      if (mathFieldRef.current) {
+        mathFieldRef.current.remove();
+        mathFieldRef.current = null;
+      }
+    };
+  }, [showMathInput]);
+  // Updated insertMathExpression function
+  const insertMathExpression = () => {
+    if (mathExpression && mathFieldRef.current) {
+      const latex = mathFieldRef.current.value;
+      const textarea = document.querySelector(
+        "[data-math-textarea]"
+      ) as HTMLTextAreaElement;
+
+      if (textarea) {
+        const start = textarea.selectionStart || 0;
+        const end = textarea.selectionEnd || 0;
+        const newText =
+          tempText.substring(0, start) + `\\(${latex}\\)` + tempText.substring(end);
+
+        setTempText(newText);
+
+        // Focus back to textarea
+        setTimeout(() => {
+          textarea.focus();
+          const newCursorPos = start + latex.length + 4; // +4 for \( and \)
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+
+        // Reset math field
+        mathFieldRef.current.value = "";
+        setMathExpression("");
+      }
     }
   };
-}, [showMathInput]);
-  // Updated insertMathExpression function
-const insertMathExpression = () => {
-  if (mathExpression && mathFieldRef.current) {
-    const latex = mathFieldRef.current.value;
-    const textarea = document.querySelector(
-      "[data-math-textarea]"
-    ) as HTMLTextAreaElement;
-
-    if (textarea) {
-      const start = textarea.selectionStart || 0;
-      const end = textarea.selectionEnd || 0;
-      const newText =
-        tempText.substring(0, start) + `\\(${latex}\\)` + tempText.substring(end);
-
-      setTempText(newText);
-
-      // Focus back to textarea
-      setTimeout(() => {
-        textarea.focus();
-        const newCursorPos = start + latex.length + 4; // +4 for \( and \)
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-
-      // Reset math field
-      mathFieldRef.current.value = "";
-      setMathExpression("");
-    }
-  }
-};
 
   // Updated quick symbol insertion function
-const insertQuickSymbol = (symbol: string) => {
-  if (mathFieldRef.current) {
-    mathFieldRef.current.executeCommand(["insert", symbol]);
-    mathFieldRef.current.focus();
-  }
-};
+  const insertQuickSymbol = (symbol: string) => {
+    if (mathFieldRef.current) {
+      mathFieldRef.current.executeCommand(["insert", symbol]);
+      mathFieldRef.current.focus();
+    }
+  };
 
   // Add this function to handle text button click
   const handleTextButtonClick = (index) => {
@@ -442,10 +442,10 @@ const insertQuickSymbol = (symbol: string) => {
       fileInputRef.current?.click();
     }
   };
-    const NavigateToEditContent = (contentId: string) => {
-      console.log("Navigating to edit content with ID:", contentId);
-      navigate(`/admin_dashboard/courses/topics/${topic._id}/content/edit/${contentId}`);
-    };
+  const NavigateToEditContent = (contentId: string) => {
+    console.log("Navigating to edit content with ID:", contentId);
+    navigate(`/admin_dashboard/courses/topics/${topic._id}/content/edit/${contentId}`);
+  };
 
 
   const handleCreateContent = async () => {
@@ -715,9 +715,8 @@ const insertQuickSymbol = (symbol: string) => {
       // Use ref to create hidden link and trigger download
       if (exportLinkRef.current) {
         exportLinkRef.current.href = url;
-        exportLinkRef.current.download = `${topic.title || topic.name}_export_${
-          new Date().toISOString().split("T")[0]
-        }.json`;
+        exportLinkRef.current.download = `${topic.title || topic.name}_export_${new Date().toISOString().split("T")[0]
+          }.json`;
         exportLinkRef.current.click();
 
         // Clean up
@@ -781,10 +780,10 @@ const insertQuickSymbol = (symbol: string) => {
                   <DialogTitle className="text-2xl font-bold tracking-tight">
                     {topic.title || topic.name}
                   </DialogTitle>
-              
+
                 </div>
                 <div className="flex space-x-3">
-                 
+
                   <Button
                     onClick={handleClicks}
                     variant="outline"
@@ -831,7 +830,7 @@ const insertQuickSymbol = (symbol: string) => {
                         {Math.round(
                           ((topic.regularPrice - topic.price) /
                             topic.regularPrice) *
-                            100
+                          100
                         )}
                         % Off
                       </span>
@@ -899,15 +898,14 @@ const insertQuickSymbol = (symbol: string) => {
                               </CardTitle>
                               <CardDescription className="text-xs mt-1 flex items-center">
                                 <span
-                                  className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                                    fileType === "document"
+                                  className={`inline-block w-2 h-2 rounded-full mr-1 ${fileType === "document"
                                       ? "bg-green-400"
                                       : fileType === "video"
-                                      ? "bg-blue-400"
-                                      : fileType === "audio"
-                                      ? "bg-purple-400"
-                                      : "bg-gray-400"
-                                  }`}
+                                        ? "bg-blue-400"
+                                        : fileType === "audio"
+                                          ? "bg-purple-400"
+                                          : "bg-gray-400"
+                                    }`}
                                 />
                                 {fileType}
                               </CardDescription>
@@ -950,54 +948,23 @@ const insertQuickSymbol = (symbol: string) => {
                                 </ul>
                               </div>
                             )}
-                            <div className="mt-auto flex justify-end space-x-1">
+                            <div className="mt-auto flex gap-2">
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => handleViewContent(content, 0)}
-                                disabled={
-                                  content.file_path?.length === 0 ||
-                                  !isViewableInBrowser(content.file_path[0])
-                                }
-                              >
-                                <Eye size={12} className="mr-1" /> View
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-blue-600 h-7 text-xs"
-                                onClick={() => {
-                                  // If there's only one file, download it directly
-                                  if (content.file_path?.length === 1) {
-                                    handleDownloadFile(content.file_path[0]);
-                                  } else if (content.file_path?.length > 1) {
-                                    // For multiple files, create a zip or download the first one
-                                    handleDownloadFile(content.file_path[0]);
-                                  }
-                                }}
-                                disabled={!content.file_path?.length}
-                              >
-                                <Download size={12} className="mr-1" /> Download
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-amber-600 h-7 text-xs"
+                                className="text-amber-600 h-10 text-sm w-full flex justify-center items-center"
                                 onClick={() => NavigateToEditContent(content._id)}
-                                // onClick={() => openUpdateDialog(content)}
                               >
-                                <Edit size={12} className="mr-1" /> Edit
+                                <Edit size={16} className="mr-2" /> Edit
                               </Button>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="text-red-600 h-7 text-xs"
+                                className="text-red-600 h-10 text-sm w-full flex justify-center items-center"
                                 onClick={() => openDeleteDialog(content._id)}
                               >
-                                <Trash2 size={12} className="mr-1" /> Delete
+                                <Trash2 size={16} className="mr-2" /> Delete
                               </Button>
                             </div>
+
                           </CardContent>
                         </Card>
                       );
@@ -1022,7 +989,7 @@ const insertQuickSymbol = (symbol: string) => {
                   >
                     Close
                   </Button>
-            
+
                 </div>
               </div>
             </div>
@@ -1059,9 +1026,8 @@ const insertQuickSymbol = (symbol: string) => {
                       key={i}
                       variant={viewingFileIndex === i ? "default" : "outline"}
                       size="sm"
-                      className={`text-xs whitespace-nowrap ${
-                        viewingFileIndex === i ? "bg-blue-600" : "text-blue-600"
-                      }`}
+                      className={`text-xs whitespace-nowrap ${viewingFileIndex === i ? "bg-blue-600" : "text-blue-600"
+                        }`}
                       onClick={() => setViewingFileIndex(i)}
                     >
                       {getFileIcon(file)}
@@ -1402,9 +1368,8 @@ const insertQuickSymbol = (symbol: string) => {
                                   .files?.[0];
                                 if (file) {
                                   try {
-                                    const fileName = `${Date.now()}_${
-                                      file.name
-                                    }`;
+                                    const fileName = `${Date.now()}_${file.name
+                                      }`;
                                     const { data, error } =
                                       await supabase.storage
                                         .from("topics")
@@ -1479,9 +1444,8 @@ const insertQuickSymbol = (symbol: string) => {
                                   .files?.[0];
                                 if (file) {
                                   try {
-                                    const fileName = `${Date.now()}_${
-                                      file.name
-                                    }`;
+                                    const fileName = `${Date.now()}_${file.name
+                                      }`;
                                     const { data, error } =
                                       await supabase.storage
                                         .from("topics")
@@ -1680,9 +1644,8 @@ const insertQuickSymbol = (symbol: string) => {
           <div className="flex-1 overflow-hidden p-6 flex gap-6">
             {/* Text Input Section */}
             <div
-              className={`${
-                showMathInput ? "w-1/2" : "w-full"
-              } flex flex-col transition-all duration-300`}
+              className={`${showMathInput ? "w-1/2" : "w-full"
+                } flex flex-col transition-all duration-300`}
             >
               <div className="space-y-3 flex-1 flex flex-col">
                 <div className="flex justify-between items-center">
@@ -1722,77 +1685,77 @@ const insertQuickSymbol = (symbol: string) => {
             </div>
             {/* Math Input Section */}
 
-           {showMathInput && (
-  <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
-    <div className="space-y-4 flex-1">
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-          Mathematical Expression
-        </label>
-      </div>
+            {showMathInput && (
+              <div className="w-1/2 border-l border-gray-200 pl-6 flex flex-col">
+                <div className="space-y-4 flex-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                      Mathematical Expression
+                    </label>
+                  </div>
 
-      {/* Math Input Field */}
-      <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
-        <div ref={mathContainerRef} className="math-field-container" />
-      </div>
+                  {/* Math Input Field */}
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-4 min-h-[100px]">
+                    <div ref={mathContainerRef} className="math-field-container" />
+                  </div>
 
-      {/* Quick Math Symbols */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-600">Quick Insert:</h4>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { symbol: "\\frac{#@}{#?}", display: "𝑎/𝑏", label: "Fraction" },
-            { symbol: "#@^{#?}", display: "x²", label: "Power" },
-            { symbol: "\\sqrt{#@}", display: "√x", label: "Square Root" },
-            { symbol: "\\sum_{#@}^{#?}", display: "∑", label: "Sum" },
-            { symbol: "\\int_{#@}^{#?}", display: "∫", label: "Integral" },
-            { symbol: "\\alpha", display: "α", label: "Alpha" },
-            { symbol: "\\beta", display: "β", label: "Beta" },
-            { symbol: "\\pi", display: "π", label: "Pi" },
-            { symbol: "\\infty", display: "∞", label: "Infinity" },
-            { symbol: "\\leq", display: "≤", label: "Less Equal" },
-            { symbol: "\\geq", display: "≥", label: "Greater Equal" },
-            { symbol: "\\neq", display: "≠", label: "Not Equal" },
-          ].map((item, index) => (
-            <Button
-              key={index}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-10 text-sm hover:bg-blue-50 border-gray-200"
-              onClick={() => insertQuickSymbol(item.symbol)}
-              title={item.label}
-            >
-              {item.display}
-            </Button>
-          ))}
-        </div>
-      </div>
+                  {/* Quick Math Symbols */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-600">Quick Insert:</h4>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { symbol: "\\frac{#@}{#?}", display: "𝑎/𝑏", label: "Fraction" },
+                        { symbol: "#@^{#?}", display: "x²", label: "Power" },
+                        { symbol: "\\sqrt{#@}", display: "√x", label: "Square Root" },
+                        { symbol: "\\sum_{#@}^{#?}", display: "∑", label: "Sum" },
+                        { symbol: "\\int_{#@}^{#?}", display: "∫", label: "Integral" },
+                        { symbol: "\\alpha", display: "α", label: "Alpha" },
+                        { symbol: "\\beta", display: "β", label: "Beta" },
+                        { symbol: "\\pi", display: "π", label: "Pi" },
+                        { symbol: "\\infty", display: "∞", label: "Infinity" },
+                        { symbol: "\\leq", display: "≤", label: "Less Equal" },
+                        { symbol: "\\geq", display: "≥", label: "Greater Equal" },
+                        { symbol: "\\neq", display: "≠", label: "Not Equal" },
+                      ].map((item, index) => (
+                        <Button
+                          key={index}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 text-sm hover:bg-blue-50 border-gray-200"
+                          onClick={() => insertQuickSymbol(item.symbol)}
+                          title={item.label}
+                        >
+                          {item.display}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
 
-      {/* Math Preview */}
-      {mathExpression && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-600">Preview:</h4>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
-            <math-field read-only math-mode="math" value={mathExpression} />
-          </div>
-        </div>
-      )}
+                  {/* Math Preview */}
+                  {mathExpression && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-600">Preview:</h4>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[50px] flex items-center justify-center">
+                        <math-field read-only math-mode="math" value={mathExpression} />
+                      </div>
+                    </div>
+                  )}
 
-      {/* Insert Button */}
-      <Button
-        type="button"
-        onClick={insertMathExpression}
-        disabled={!mathExpression}
-        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
-      >
-        <Plus size={14} className="mr-1" />
-        Insert Math Expression
-      </Button>
-    </div>
-  </div>
-)}         
+                  {/* Insert Button */}
+                  <Button
+                    type="button"
+                    onClick={insertMathExpression}
+                    disabled={!mathExpression}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 hover:from-green-600 hover:to-emerald-600 transition-all duration-200"
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Insert Math Expression
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

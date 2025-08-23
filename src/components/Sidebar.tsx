@@ -20,9 +20,9 @@ const Sidebar = () => {
       <div className="flex justify-center py-6">
         <div className="relative">
           <div className="w-24 h-24 flex items-center justify-center overflow-hidden">
-            <img src={logo} className="w-full h-full" alt="TOTO" />
+            <img src={logo} className="w-full" alt="TOTO" />
           </div>
-          <div className="text-center mt-1 font-semibold text-black">TOTO</div>
+          {/* <div className="text-center mt-1 font-semibold text-black">TOTO</div> */}
         </div>
       </div>
 
